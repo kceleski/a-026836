@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { 
   Calendar as CalendarIcon, 
@@ -15,80 +14,80 @@ import {
   X
 } from 'lucide-react';
 
-// Mock data for crop planning
+// Mock data for crop planning - Adapté à l'agriculture en Guadeloupe
 const cropsData = [
   { 
     id: 1, 
-    name: 'Blé', 
-    variety: 'Apache', 
-    parcel: 'Parcelle Nord', 
-    plantingDate: '2023-03-15', 
-    harvestDate: '2023-08-15', 
+    name: 'Canne à Sucre', 
+    variety: 'R579', 
+    parcel: 'Grande-Terre Nord', 
+    plantingDate: '2023-02-15', 
+    harvestDate: '2024-02-15', 
     status: 'growing',
-    area: 12.5 
+    area: 15.5 
   },
   { 
     id: 2, 
-    name: 'Maïs', 
-    variety: 'DKC 4444', 
-    parcel: 'Parcelle Est', 
-    plantingDate: '2023-04-20', 
-    harvestDate: '2023-09-20', 
+    name: 'Banane', 
+    variety: 'Poyo', 
+    parcel: 'Basse-Terre Sud', 
+    plantingDate: '2023-04-10', 
+    harvestDate: '2023-12-10', 
     status: 'growing',
     area: 8.3
   },
   { 
     id: 3, 
-    name: 'Tournesol', 
-    variety: 'LG 50505', 
-    parcel: 'Parcelle Sud', 
-    plantingDate: '2023-04-10', 
-    harvestDate: '2023-09-10', 
+    name: 'Ananas', 
+    variety: 'Bouteille', 
+    parcel: 'Capesterre', 
+    plantingDate: '2023-05-20', 
+    harvestDate: '2024-01-20', 
     status: 'growing',
-    area: 15.7 
+    area: 4.7 
   },
   { 
     id: 4, 
-    name: 'Orge', 
-    variety: 'Etincel', 
-    parcel: 'Parcelle Ouest', 
-    plantingDate: '2023-10-15', 
-    harvestDate: '2024-06-15', 
+    name: 'Igname', 
+    variety: 'Pacala', 
+    parcel: 'Nord Grande-Terre', 
+    plantingDate: '2023-09-15', 
+    harvestDate: '2024-03-15', 
     status: 'planned',
-    area: 10.2 
+    area: 5.2 
   },
   { 
     id: 5, 
-    name: 'Luzerne', 
-    variety: 'Galaxie', 
-    parcel: 'Parcelle Centrale', 
-    plantingDate: '2023-03-01', 
-    harvestDate: '2023-10-01', 
+    name: 'Madère', 
+    variety: 'Blanche', 
+    parcel: 'Marie-Galante', 
+    plantingDate: '2023-04-01', 
+    harvestDate: '2023-11-01', 
     status: 'growing',
-    area: 6.8 
+    area: 3.8 
   }
 ];
 
-// Tasks related to crops
+// Tasks related to crops - Adapté au contexte guadeloupéen
 const cropTasks = [
-  { id: 1, cropId: 1, title: 'Fertilisation azotée', date: '2023-08-25', completed: false, priority: 'high' },
-  { id: 2, cropId: 2, title: 'Traitement herbicide', date: '2023-08-28', completed: false, priority: 'medium' },
-  { id: 3, cropId: 3, title: 'Inspection maladies', date: '2023-08-30', completed: false, priority: 'low' },
-  { id: 4, cropId: 5, title: 'Fauche', date: '2023-09-05', completed: false, priority: 'medium' },
-  { id: 5, cropId: 1, title: 'Préparation récolte', date: '2023-09-10', completed: false, priority: 'high' }
+  { id: 1, cropId: 1, title: 'Fertilisation de la canne', date: '2023-09-25', completed: false, priority: 'high' },
+  { id: 2, cropId: 2, title: 'Traitement contre la cercosporiose', date: '2023-09-28', completed: false, priority: 'medium' },
+  { id: 3, cropId: 3, title: 'Inspection croissance ananas', date: '2023-09-30', completed: false, priority: 'low' },
+  { id: 4, cropId: 5, title: 'Désherbage parcelle madère', date: '2023-10-05', completed: false, priority: 'medium' },
+  { id: 5, cropId: 1, title: 'Préparation coupe canne', date: '2024-01-10', completed: false, priority: 'high' }
 ];
 
-// Monthly calendar view mock data
+// Monthly calendar view mock data - Adapté à l'agriculture guadeloupéenne
 const monthlyEvents = [
-  { date: '2023-08-25', events: [{ id: 1, title: 'Fertilisation azotée', crop: 'Blé', priority: 'high' }] },
-  { date: '2023-08-28', events: [{ id: 2, title: 'Traitement herbicide', crop: 'Maïs', priority: 'medium' }] },
-  { date: '2023-08-30', events: [{ id: 3, title: 'Inspection maladies', crop: 'Tournesol', priority: 'low' }] },
-  { date: '2023-09-05', events: [{ id: 4, title: 'Fauche', crop: 'Luzerne', priority: 'medium' }] },
-  { date: '2023-09-10', events: [{ id: 5, title: 'Préparation récolte', crop: 'Blé', priority: 'high' }] },
-  { date: '2023-09-20', events: [{ id: 6, title: 'Récolte', crop: 'Maïs', priority: 'high' }] },
-  { date: '2023-09-10', events: [{ id: 7, title: 'Récolte', crop: 'Tournesol', priority: 'high' }] },
-  { date: '2023-10-01', events: [{ id: 8, title: 'Dernière fauche', crop: 'Luzerne', priority: 'medium' }] },
-  { date: '2023-10-15', events: [{ id: 9, title: 'Semis', crop: 'Orge', priority: 'high' }] }
+  { date: '2023-09-25', events: [{ id: 1, title: 'Fertilisation de la canne', crop: 'Canne à Sucre', priority: 'high' }] },
+  { date: '2023-09-28', events: [{ id: 2, title: 'Traitement contre la cercosporiose', crop: 'Banane', priority: 'medium' }] },
+  { date: '2023-09-30', events: [{ id: 3, title: 'Inspection croissance ananas', crop: 'Ananas', priority: 'low' }] },
+  { date: '2023-10-05', events: [{ id: 4, title: 'Désherbage parcelle madère', crop: 'Madère', priority: 'medium' }] },
+  { date: '2024-01-10', events: [{ id: 5, title: 'Préparation coupe canne', crop: 'Canne à Sucre', priority: 'high' }] },
+  { date: '2023-12-10', events: [{ id: 6, title: 'Récolte', crop: 'Banane', priority: 'high' }] },
+  { date: '2024-01-20', events: [{ id: 7, title: 'Récolte', crop: 'Ananas', priority: 'high' }] },
+  { date: '2023-11-01', events: [{ id: 8, title: 'Récolte', crop: 'Madère', priority: 'medium' }] },
+  { date: '2024-02-15', events: [{ id: 9, title: 'Coupe canne', crop: 'Canne à Sucre', priority: 'high' }] }
 ];
 
 const CropCard = ({ crop }: { crop: any }) => {
@@ -227,8 +226,8 @@ const CropPlanning = () => {
     <div className="p-6 animate-enter">
       <header className="flex flex-col md:flex-row md:justify-between md:items-center mb-6 gap-4">
         <div>
-          <h1 className="text-2xl font-bold mb-1">Planification des Cultures</h1>
-          <p className="text-muted-foreground">Gérez les cultures et planifiez vos activités agricoles</p>
+          <h1 className="text-2xl font-bold mb-1">Planification des Cultures Guadeloupéennes</h1>
+          <p className="text-muted-foreground">Gérez les cultures locales et planifiez vos activités agricoles</p>
         </div>
         <div className="flex space-x-2">
           <button 
