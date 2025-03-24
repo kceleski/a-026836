@@ -83,15 +83,15 @@ const GuadeloupeHarvestTracking = () => {
   
   const handleTableUpdate = (rowIndex: number, columnId: string, value: any) => {
     const newData = [...harvestData];
-    const updatedRow = { ...newData[rowIndex] } as HarvestData;
+    const updatedRow = { ...newData[rowIndex] };
     
     if (columnId === 'currentYield' || columnId === 'previousYield' || columnId === 'harvestArea') {
-      updatedRow[columnId as keyof HarvestData] = Number(value);
-    } else {
-      updatedRow[columnId as keyof HarvestData] = String(value);
+      (updatedRow as any)[columnId] = Number(value);
+    } else if (columnId === 'crop' || columnId === 'unit' || columnId === 'quality') {
+      (updatedRow as any)[columnId] = String(value);
     }
     
-    newData[rowIndex] = updatedRow;
+    newData[rowIndex] = updatedRow as HarvestData;
     setHarvestData(newData);
     toast.success('Données de récolte mises à jour');
   };
@@ -158,7 +158,7 @@ const GuadeloupeHarvestTracking = () => {
               <Tooltip 
                 formatter={(value, name, props) => {
                   if (name === 'différence') {
-                    return [`${value > 0 ? '+' : ''}${value} ${props.payload.unité}`, 'Évolution'];
+                    return [`${Number(value) > 0 ? '+' : ''}${value} ${props.payload.unité}`, 'Évolution'];
                   }
                   return [`${value} ${props.payload.unité}`, name];
                 }}
