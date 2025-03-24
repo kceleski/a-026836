@@ -5,13 +5,21 @@ import Navbar from '../components/Navbar';
 import Statistics from '../components/Statistics';
 import { ChartConfig } from '../components/ui/chart-config';
 import { EditableTable, Column } from '../components/ui/editable-table';
+import { EditableField } from '../components/ui/editable-field';
+
+interface PerformanceData {
+  name: string;
+  current: number;
+  target: number;
+  unit: string;
+}
 
 const StatsPage = () => {
   const [pageTitle, setPageTitle] = useState('Statistiques et Analyses');
   const [pageDescription, setPageDescription] = useState('Visualisez et analysez les données de votre exploitation');
   
   // Exemple de données pour le tableau éditable
-  const [performanceData, setPerformanceData] = useState([
+  const [performanceData, setPerformanceData] = useState<PerformanceData[]>([
     { name: 'Rendement', current: 85, target: 90, unit: '%' },
     { name: 'Qualité', current: 90, target: 92, unit: '%' },
     { name: 'Rentabilité', current: 75, target: 85, unit: '%' },
@@ -30,7 +38,7 @@ const StatsPage = () => {
   // Gestionnaire de mise à jour du tableau
   const handleTableUpdate = (rowIndex: number, columnId: string, value: any) => {
     const newData = [...performanceData];
-    newData[rowIndex][columnId] = value;
+    newData[rowIndex][columnId as keyof PerformanceData] = value;
     setPerformanceData(newData);
   };
   
@@ -43,7 +51,13 @@ const StatsPage = () => {
   
   // Gestionnaire d'ajout de ligne
   const handleAddRow = (newRow: Record<string, any>) => {
-    setPerformanceData([...performanceData, newRow]);
+    const typedRow: PerformanceData = {
+      name: newRow.name || '',
+      current: Number(newRow.current) || 0,
+      target: Number(newRow.target) || 0,
+      unit: newRow.unit || '%',
+    };
+    setPerformanceData([...performanceData, typedRow]);
   };
 
   return (

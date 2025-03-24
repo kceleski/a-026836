@@ -588,7 +588,11 @@ const Inventory = () => {
                   <XAxis dataKey="name" />
                   <YAxis />
                   <Tooltip formatter={(value) => [`${value} unités`, 'Quantité']} />
-                  <Bar dataKey="value" radius={[4, 4, 0, 0]} fill={(entry) => entry.fill || '#4CAF50'} />
+                  <Bar 
+                    dataKey="value" 
+                    radius={[4, 4, 0, 0]} 
+                    fill="#4CAF50" 
+                  />
                 </BarChart>
               </ResponsiveContainer>
             </div>
@@ -615,7 +619,11 @@ const Inventory = () => {
                     // Check if value is a number before using toFixed
                     return [typeof value === 'number' ? `${value.toFixed(2)} €` : `${value} €`, 'Valeur'];
                   }} />
-                  <Bar dataKey="value" radius={[4, 4, 0, 0]} fill={(entry) => entry.fill || '#4CAF50'} />
+                  <Bar 
+                    dataKey="value" 
+                    radius={[4, 4, 0, 0]} 
+                    fill="#4CAF50"
+                  />
                 </BarChart>
               </ResponsiveContainer>
             </div>
