@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { 
   Package, 
@@ -589,7 +588,7 @@ const Inventory = () => {
                   <XAxis dataKey="name" />
                   <YAxis />
                   <Tooltip formatter={(value) => [`${value} unités`, 'Quantité']} />
-                  <Bar dataKey="value" radius={[4, 4, 0, 0]} fill={(entry) => entry.fill} />
+                  <Bar dataKey="value" radius={[4, 4, 0, 0]} fill={(entry) => entry.fill || '#4CAF50'} />
                 </BarChart>
               </ResponsiveContainer>
             </div>
@@ -612,8 +611,11 @@ const Inventory = () => {
                   <CartesianGrid strokeDasharray="3 3" vertical={false} />
                   <XAxis dataKey="name" />
                   <YAxis />
-                  <Tooltip formatter={(value) => [`${value.toFixed(2)} €`, 'Valeur']} />
-                  <Bar dataKey="value" radius={[4, 4, 0, 0]} fill={(entry) => entry.fill} />
+                  <Tooltip formatter={(value) => {
+                    // Check if value is a number before using toFixed
+                    return [typeof value === 'number' ? `${value.toFixed(2)} €` : `${value} €`, 'Valeur'];
+                  }} />
+                  <Bar dataKey="value" radius={[4, 4, 0, 0]} fill={(entry) => entry.fill || '#4CAF50'} />
                 </BarChart>
               </ResponsiveContainer>
             </div>
