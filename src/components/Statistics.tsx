@@ -12,6 +12,7 @@ import {
   Share2, 
   Layers, 
   ArrowRight,
+  Check
 } from 'lucide-react';
 import { 
   BarChart, 
