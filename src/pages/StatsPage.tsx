@@ -16,15 +16,15 @@ interface PerformanceData {
 
 const StatsPage = () => {
   const [pageTitle, setPageTitle] = useState('Statistiques et Analyses');
-  const [pageDescription, setPageDescription] = useState('Visualisez et analysez les données de votre exploitation');
+  const [pageDescription, setPageDescription] = useState('Visualisez et analysez les données de votre exploitation en Guadeloupe');
   
-  // Exemple de données pour le tableau éditable
+  // Exemple de données adaptées à l'agriculture guadeloupéenne
   const [performanceData, setPerformanceData] = useState<PerformanceData[]>([
-    { name: 'Rendement', current: 85, target: 90, unit: '%' },
-    { name: 'Qualité', current: 90, target: 92, unit: '%' },
-    { name: 'Rentabilité', current: 75, target: 85, unit: '%' },
-    { name: 'Environnement', current: 80, target: 85, unit: '%' },
-    { name: 'Innovation', current: 70, target: 80, unit: '%' },
+    { name: 'Rendement Canne à Sucre', current: 75, target: 85, unit: 't/ha' },
+    { name: 'Qualité Banane Export', current: 88, target: 95, unit: '%' },
+    { name: 'Rentabilité Ananas', current: 70, target: 80, unit: '%' },
+    { name: 'Certification Bio', current: 25, target: 40, unit: '%' },
+    { name: 'Innovation Igname', current: 60, target: 75, unit: '%' },
   ]);
   
   // Colonnes du tableau éditable
@@ -61,10 +61,10 @@ const StatsPage = () => {
   // Gestionnaire d'ajout de ligne
   const handleAddRow = (newRow: Record<string, any>) => {
     const typedRow: PerformanceData = {
-      name: newRow.name || '',
-      current: Number(newRow.current) || 0,
-      target: Number(newRow.target) || 0,
-      unit: newRow.unit || '%',
+      name: String(newRow.name || ''),
+      current: Number(newRow.current || 0),
+      target: Number(newRow.target || 0),
+      unit: String(newRow.unit || '%'),
     };
     setPerformanceData([...performanceData, typedRow]);
   };
@@ -95,8 +95,8 @@ const StatsPage = () => {
           
           <div className="mb-8">
             <ChartConfig 
-              title="Indicateurs de performance"
-              description="Suivez vos performances par rapport à vos objectifs"
+              title="Indicateurs de performance agricole en Guadeloupe"
+              description="Suivez vos performances par rapport à vos objectifs pour les cultures guadeloupéennes"
               onTitleChange={(title) => console.log("Title changed to:", title)}
               onDescriptionChange={(desc) => console.log("Description changed to:", desc)}
               onOptionsChange={(options) => console.log("Options changed:", options)}

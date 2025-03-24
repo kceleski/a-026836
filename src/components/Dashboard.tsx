@@ -14,48 +14,40 @@ import {
   Wallet
 } from 'lucide-react';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar } from 'recharts';
+import GuadeloupeWeatherAlerts from './GuadeloupeWeatherAlerts';
 
-// Sample data for charts
+// Sample data for charts - Adapté pour la Guadeloupe
 const revenueData = [
-  { month: 'Jan', revenue: 1200 },
-  { month: 'Fév', revenue: 1900 },
-  { month: 'Mar', revenue: 2100 },
-  { month: 'Avr', revenue: 2400 },
-  { month: 'Mai', revenue: 2800 },
-  { month: 'Juin', revenue: 3200 },
-  { month: 'Juil', revenue: 3800 },
+  { month: 'Jan', revenue: 1500 },
+  { month: 'Fév', revenue: 2200 },
+  { month: 'Mar', revenue: 2500 },
+  { month: 'Avr', revenue: 2800 },
+  { month: 'Mai', revenue: 3200 },
+  { month: 'Juin', revenue: 3500 },
+  { month: 'Juil', revenue: 4000 },
 ];
 
 const productionData = [
-  { name: 'Blé', value: 35 },
-  { name: 'Maïs', value: 25 },
-  { name: 'Légumes', value: 20 },
-  { name: 'Fruits', value: 15 },
-  { name: 'Autre', value: 5 },
+  { name: 'Canne à Sucre', value: 40 },
+  { name: 'Banane', value: 25 },
+  { name: 'Ananas', value: 15 },
+  { name: 'Igname', value: 10 },
+  { name: 'Autre', value: 10 },
 ];
 
-// Weather forecast mock data
-const weatherForecast = [
-  { day: 'Lun', temp: 22, icon: Sun, condition: 'Ensoleillé' },
-  { day: 'Mar', temp: 21, icon: CloudRain, condition: 'Pluvieux' },
-  { day: 'Mer', temp: 19, icon: Wind, condition: 'Venteux' },
-  { day: 'Jeu', temp: 23, icon: Sun, condition: 'Ensoleillé' },
-  { day: 'Ven', temp: 24, icon: Sun, condition: 'Ensoleillé' },
-];
-
-// Task list mock data
+// Task list adapté au contexte guadeloupéen
 const upcomingTasks = [
-  { id: 1, title: 'Récolter le blé', due: 'Aujourd\'hui', priority: 'high' },
-  { id: 2, title: 'Commander des semences', due: 'Demain', priority: 'medium' },
+  { id: 1, title: 'Récolter la canne à sucre', due: 'Aujourd\'hui', priority: 'high' },
+  { id: 2, title: 'Commander des plants de bananier', due: 'Demain', priority: 'medium' },
   { id: 3, title: 'Maintenance du tracteur', due: '28/08', priority: 'low' },
-  { id: 4, title: 'Irrigation des parcelles', due: '30/08', priority: 'medium' },
+  { id: 4, title: 'Irrigation des plantations d\'ananas', due: '30/08', priority: 'medium' },
 ];
 
-// Alerts mock data
+// Alerts pour les agriculteurs en Guadeloupe
 const alerts = [
-  { id: 1, message: 'Niveau bas de semences de maïs', type: 'warning' },
-  { id: 2, message: 'Risque de pluie pour demain', type: 'info' },
-  { id: 3, message: 'Échéance de paiement approche', type: 'danger' },
+  { id: 1, message: 'Niveau bas de plants de bananier', type: 'warning' },
+  { id: 2, message: 'Risque cyclonique pour la semaine prochaine', type: 'danger' },
+  { id: 3, message: 'Échéance de subvention régionale approche', type: 'info' },
 ];
 
 const Dashboard = () => {
@@ -63,8 +55,8 @@ const Dashboard = () => {
     <div className="p-6 space-y-6 animate-enter">
       <header className="flex justify-between items-center mb-6">
         <div>
-          <h1 className="text-2xl font-bold mb-1">Bonjour, Agriculteur</h1>
-          <p className="text-muted-foreground">Voici un aperçu de votre exploitation agricole</p>
+          <h1 className="text-2xl font-bold mb-1">Bonjour, Agriculteur Guadeloupéen</h1>
+          <p className="text-muted-foreground">Voici un aperçu de votre exploitation agricole en Guadeloupe</p>
         </div>
         <div className="flex items-center space-x-4">
           <button className="px-4 py-2 text-sm text-agri-primary font-medium bg-agri-primary/10 rounded-lg hover:bg-agri-primary/20 transition-colors">
@@ -78,14 +70,14 @@ const Dashboard = () => {
         </div>
       </header>
 
-      {/* Quick Stats Row */}
+      {/* Quick Stats Row - Adapté à l'agriculture guadeloupéenne */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         <div className="stat-card card-hover">
           <p className="stat-label">Revenu mensuel</p>
           <div className="flex items-baseline justify-between mt-2">
-            <p className="stat-value">12,345 €</p>
+            <p className="stat-value">15,450 €</p>
             <span className="text-agri-success text-sm font-medium flex items-center">
-              <TrendingUp className="h-4 w-4 mr-1" /> +8.2%
+              <TrendingUp className="h-4 w-4 mr-1" /> +8.5%
             </span>
           </div>
         </div>
@@ -93,7 +85,7 @@ const Dashboard = () => {
         <div className="stat-card card-hover">
           <p className="stat-label">Superficie cultivée</p>
           <div className="flex items-baseline justify-between mt-2">
-            <p className="stat-value">42 ha</p>
+            <p className="stat-value">35 ha</p>
             <span className="text-agri-primary text-sm font-medium">5 parcelles</span>
           </div>
         </div>
@@ -101,9 +93,9 @@ const Dashboard = () => {
         <div className="stat-card card-hover">
           <p className="stat-label">Rendement moyen</p>
           <div className="flex items-baseline justify-between mt-2">
-            <p className="stat-value">7.5 t/ha</p>
+            <p className="stat-value">75 t/ha</p>
             <span className="text-agri-success text-sm font-medium flex items-center">
-              <TrendingUp className="h-4 w-4 mr-1" /> +4.3%
+              <TrendingUp className="h-4 w-4 mr-1" /> +5.2%
             </span>
           </div>
         </div>
@@ -118,6 +110,8 @@ const Dashboard = () => {
           </div>
         </div>
       </div>
+
+      <GuadeloupeWeatherAlerts />
 
       {/* Main Content Area */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -159,7 +153,7 @@ const Dashboard = () => {
           </div>
         </div>
 
-        {/* Production Distribution */}
+        {/* Production Distribution - Adapté aux cultures guadeloupéennes */}
         <div className="dashboard-card card-hover">
           <h3 className="font-semibold mb-4">Répartition des Cultures</h3>
           <div className="h-80">
@@ -167,7 +161,7 @@ const Dashboard = () => {
               <BarChart
                 data={productionData}
                 layout="vertical"
-                margin={{ top: 20, right: 30, left: 20, bottom: 5 }}
+                margin={{ top: 20, right: 30, left: 40, bottom: 5 }}
               >
                 <CartesianGrid strokeDasharray="3 3" horizontal={true} vertical={false} />
                 <XAxis type="number" axisLine={false} tickLine={false} />
@@ -192,47 +186,8 @@ const Dashboard = () => {
       </div>
 
       {/* Bottom Cards Row */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Weather Forecast */}
-        <div className="dashboard-card card-hover">
-          <div className="flex justify-between items-center mb-4">
-            <h3 className="font-semibold">Météo</h3>
-            <span className="text-sm text-muted-foreground">Saint-Étienne, Loire</span>
-          </div>
-          
-          <div className="flex justify-between items-center mb-4">
-            <div className="flex items-center space-x-3">
-              <Sun className="h-10 w-10 text-agri-warning" />
-              <div>
-                <p className="text-2xl font-semibold">22°C</p>
-                <p className="text-sm text-muted-foreground">Ensoleillé</p>
-              </div>
-            </div>
-            <div className="grid grid-cols-3 gap-2 text-xs text-muted-foreground">
-              <div className="flex items-center">
-                <Wind className="h-4 w-4 mr-1" /> 8 km/h
-              </div>
-              <div className="flex items-center">
-                <Droplet className="h-4 w-4 mr-1" /> 42%
-              </div>
-              <div className="flex items-center">
-                <CloudRain className="h-4 w-4 mr-1" /> 5%
-              </div>
-            </div>
-          </div>
-          
-          <div className="grid grid-cols-5 gap-2 mt-6">
-            {weatherForecast.map((day, index) => (
-              <div key={index} className="text-center">
-                <p className="text-sm font-medium">{day.day}</p>
-                <day.icon className="h-6 w-6 mx-auto my-2 text-muted-foreground" />
-                <p className="text-sm font-semibold">{day.temp}°C</p>
-              </div>
-            ))}
-          </div>
-        </div>
-        
-        {/* Upcoming Tasks */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Upcoming Tasks - Adapté au contexte agricole guadeloupéen */}
         <div className="dashboard-card card-hover">
           <div className="flex justify-between items-center mb-4">
             <h3 className="font-semibold">Tâches à venir</h3>
@@ -266,7 +221,7 @@ const Dashboard = () => {
           </div>
         </div>
         
-        {/* Alerts */}
+        {/* Alerts - Adapté à l'agriculture en Guadeloupe */}
         <div className="dashboard-card card-hover">
           <div className="flex justify-between items-center mb-4">
             <h3 className="font-semibold">Alertes</h3>

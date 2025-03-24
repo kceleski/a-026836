@@ -3,11 +3,12 @@ import React, { useState } from 'react';
 import { Toaster } from 'sonner';
 import Navbar from '../components/Navbar';
 import Inventory from '../components/Inventory';
+import GuadeloupeSpecificCrops from '../components/GuadeloupeSpecificCrops';
 import { EditableField } from '../components/ui/editable-field';
 
 const InventoryPage = () => {
   const [pageTitle, setPageTitle] = useState('Gestion des Stocks');
-  const [pageDescription, setPageDescription] = useState('Gérez votre inventaire et suivez les niveaux de stock');
+  const [pageDescription, setPageDescription] = useState('Gérez votre inventaire et suivez les niveaux de stock de vos cultures guadeloupéennes');
 
   return (
     <div className="flex h-screen overflow-hidden bg-background">
@@ -33,6 +34,7 @@ const InventoryPage = () => {
             </div>
           </header>
           
+          <GuadeloupeSpecificCrops />
           <Inventory />
         </div>
       </div>
