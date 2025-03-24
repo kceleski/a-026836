@@ -2,18 +2,18 @@
 import React from 'react';
 import { Toaster } from 'sonner';
 import Navbar from '../components/Navbar';
-import Dashboard from '../components/Dashboard';
+import Statistics from '../components/Statistics';
 
-const Index = () => {
+const StatsPage = () => {
   return (
     <div className="flex h-screen overflow-hidden bg-background">
       <Navbar />
       <div className="flex-1 overflow-y-auto">
-        <Dashboard />
+        <Statistics />
       </div>
       <Toaster position="top-right" />
     </div>
   );
 };
 
-export default Index;
+export default StatsPage;
