@@ -89,20 +89,29 @@ const GuadeloupeSpecificCrops = () => {
     }]);
   };
 
+  // Correction: convertir correctement les types pour EditableField
+  const handleTitleChange = (value: string | number) => {
+    setTitle(String(value));
+  };
+
+  const handleDescriptionChange = (value: string | number) => {
+    setDescription(String(value));
+  };
+
   return (
     <div className="bg-white rounded-xl border p-6 mb-6">
       <div className="mb-4">
         <h2 className="text-xl font-bold">
           <EditableField
             value={title}
-            onSave={setTitle}
+            onSave={handleTitleChange}
             className="inline-block"
           />
         </h2>
         <p className="text-muted-foreground">
           <EditableField
             value={description}
-            onSave={setDescription}
+            onSave={handleDescriptionChange}
             className="inline-block"
           />
         </p>

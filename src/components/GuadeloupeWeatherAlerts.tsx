@@ -1,261 +1,321 @@
 
 import React, { useState } from 'react';
-import { Cloud, CloudRain, Sun, Wind, AlertTriangle, Droplet, Thermometer } from 'lucide-react';
+import { Cloud, CloudRain, Umbrella, AlertTriangle, Wind, Thermometer, Edit, Plus, Trash2 } from 'lucide-react';
+import { 
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow
+} from './ui/table';
 import { EditableField } from './ui/editable-field';
+import { toast } from 'sonner';
 
 interface WeatherAlert {
   id: number;
-  type: 'cyclone' | 'drought' | 'heavyRain' | 'heatWave';
-  severity: 'low' | 'medium' | 'high';
-  message: string;
+  type: 'cyclone' | 'pluie' | 'secheresse' | 'canicule' | 'vent';
   region: string;
-  date: string;
+  startDate: string;
+  endDate: string;
+  description: string;
+  severity: 'faible' | 'modérée' | 'élevée' | 'critique';
 }
 
+const alertTypeIcons = {
+  cyclone: <AlertTriangle className="h-5 w-5 text-red-500" />,
+  pluie: <CloudRain className="h-5 w-5 text-blue-500" />,
+  secheresse: <Thermometer className="h-5 w-5 text-orange-500" />,
+  canicule: <Thermometer className="h-5 w-5 text-red-500" />,
+  vent: <Wind className="h-5 w-5 text-teal-500" />
+};
+
+const alertSeverityColors = {
+  faible: 'bg-emerald-100 text-emerald-800',
+  modérée: 'bg-amber-100 text-amber-800',
+  élevée: 'bg-orange-100 text-orange-800',
+  critique: 'bg-red-100 text-red-800'
+};
+
 const GuadeloupeWeatherAlerts = () => {
-  const [title, setTitle] = useState('Météo et Alertes Guadeloupe');
-  const [location, setLocation] = useState('Pointe-à-Pitre, Guadeloupe');
-  
-  const [currentWeather, setCurrentWeather] = useState({
-    temperature: 29,
-    condition: 'Ensoleillé',
-    humidity: 75,
-    windSpeed: 12,
-    rainChance: 20,
-    icon: Sun,
-  });
-  
   const [alerts, setAlerts] = useState<WeatherAlert[]>([
     {
       id: 1,
       type: 'cyclone',
-      severity: 'medium',
-      message: 'Vigilance cyclonique - Surveillance renforcée',
-      region: 'Archipel Guadeloupéen',
-      date: '15/09/2023'
+      region: 'Toute la Guadeloupe',
+      startDate: '2023-09-10',
+      endDate: '2023-09-12',
+      description: 'Cyclone tropical de catégorie 2 en approche',
+      severity: 'critique'
     },
     {
       id: 2,
-      type: 'drought',
-      severity: 'high',
-      message: 'Sécheresse persistante - Restrictions d\'eau en vigueur',
-      region: 'Grande-Terre',
-      date: '25/08/2023'
+      type: 'pluie',
+      region: 'Basse-Terre',
+      startDate: '2023-09-20',
+      endDate: '2023-09-23',
+      description: 'Fortes précipitations attendues',
+      severity: 'modérée'
     },
     {
       id: 3,
-      type: 'heavyRain',
-      severity: 'low',
-      message: 'Fortes pluies attendues - Risques d\'inondations localisées',
-      region: 'Basse-Terre',
-      date: '10/09/2023'
+      type: 'secheresse',
+      region: 'Grande-Terre',
+      startDate: '2023-10-01',
+      endDate: '2023-10-15',
+      description: 'Risque de sécheresse agricole',
+      severity: 'élevée'
     }
   ]);
-  
-  // Prévisions pour les prochains jours (adapté au climat tropical)
-  const [forecast, setForecast] = useState([
-    { day: 'Lun', temp: 29, icon: Sun, condition: 'Ensoleillé' },
-    { day: 'Mar', temp: 28, icon: CloudRain, condition: 'Averses' },
-    { day: 'Mer', temp: 30, icon: Sun, condition: 'Chaud' },
-    { day: 'Jeu', temp: 29, icon: Cloud, condition: 'Nuageux' },
-    { day: 'Ven', temp: 28, icon: CloudRain, condition: 'Pluie' }
-  ]);
-  
-  const handleEditAlert = (id: number, field: keyof WeatherAlert, value: string) => {
-    setAlerts(alerts.map(alert => 
-      alert.id === id ? { ...alert, [field]: value } : alert
-    ));
-  };
-  
-  const handleDeleteAlert = (id: number) => {
+
+  const [title, setTitle] = useState('Alertes Météorologiques');
+  const [description, setDescription] = useState('Suivez les alertes météorologiques impactant l\'agriculture en Guadeloupe');
+  const [showAddForm, setShowAddForm] = useState(false);
+  const [newAlert, setNewAlert] = useState<Omit<WeatherAlert, 'id'>>({
+    type: 'pluie',
+    region: '',
+    startDate: '',
+    endDate: '',
+    description: '',
+    severity: 'modérée'
+  });
+
+  const handleDelete = (id: number) => {
     setAlerts(alerts.filter(alert => alert.id !== id));
+    toast.success('Alerte supprimée avec succès');
   };
-  
-  const handleAddAlert = () => {
+
+  const handleAddSubmit = () => {
+    if (!newAlert.region || !newAlert.startDate || !newAlert.endDate || !newAlert.description) {
+      toast.error('Veuillez remplir tous les champs');
+      return;
+    }
+
     const newId = Math.max(0, ...alerts.map(a => a.id)) + 1;
-    setAlerts([...alerts, {
-      id: newId,
-      type: 'heavyRain',
-      severity: 'medium',
-      message: 'Nouvelle alerte',
-      region: 'Toute l\'île',
-      date: new Date().toLocaleDateString('fr-FR')
-    }]);
+    setAlerts([...alerts, { ...newAlert, id: newId }]);
+    setShowAddForm(false);
+    toast.success('Nouvelle alerte météo ajoutée');
   };
-  
-  const getAlertIcon = (type: WeatherAlert['type']) => {
-    switch (type) {
-      case 'cyclone': return <Wind className="h-5 w-5 text-red-500" />;
-      case 'drought': return <Thermometer className="h-5 w-5 text-orange-500" />;
-      case 'heavyRain': return <CloudRain className="h-5 w-5 text-blue-500" />;
-      case 'heatWave': return <Sun className="h-5 w-5 text-yellow-500" />;
-      default: return <AlertTriangle className="h-5 w-5 text-gray-500" />;
-    }
+
+  // Conversion des handlers pour corriger les erreurs de typage
+  const handleTitleChange = (value: string | number) => {
+    setTitle(String(value));
   };
-  
-  const getAlertClass = (severity: WeatherAlert['severity']) => {
-    switch (severity) {
-      case 'high': return 'bg-red-100 border-l-4 border-red-500';
-      case 'medium': return 'bg-orange-100 border-l-4 border-orange-500';
-      case 'low': return 'bg-yellow-100 border-l-4 border-yellow-500';
-      default: return 'bg-gray-100 border-l-4 border-gray-500';
-    }
+
+  const handleDescriptionChange = (value: string | number) => {
+    setDescription(String(value));
   };
 
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
-      <div className="bg-white rounded-xl border p-6">
-        <div className="flex justify-between items-center mb-4">
-          <h3 className="font-semibold">
-            <EditableField value={title} onSave={setTitle} />
-          </h3>
-          <span className="text-sm text-muted-foreground">
-            <EditableField value={location} onSave={setLocation} />
-          </span>
-        </div>
-        
-        <div className="flex justify-between items-center mb-6">
-          <div className="flex items-center space-x-3">
-            <currentWeather.icon className="h-12 w-12 text-yellow-500" />
-            <div>
-              <p className="text-3xl font-semibold">
-                <EditableField 
-                  value={currentWeather.temperature.toString()} 
-                  onSave={(value) => setCurrentWeather({...currentWeather, temperature: Number(value)})}
-                  type="number"
-                />°C
-              </p>
-              <p className="text-sm text-muted-foreground">
-                <EditableField 
-                  value={currentWeather.condition} 
-                  onSave={(value) => setCurrentWeather({...currentWeather, condition: value.toString()})}
-                />
-              </p>
-            </div>
-          </div>
-          
-          <div className="grid grid-cols-3 gap-3 text-xs text-muted-foreground">
-            <div className="flex items-center">
-              <Wind className="h-4 w-4 mr-1" /> 
-              <EditableField 
-                value={currentWeather.windSpeed.toString()} 
-                onSave={(value) => setCurrentWeather({...currentWeather, windSpeed: Number(value)})}
-                type="number"
-              /> km/h
-            </div>
-            <div className="flex items-center">
-              <Droplet className="h-4 w-4 mr-1" /> 
-              <EditableField 
-                value={currentWeather.humidity.toString()} 
-                onSave={(value) => setCurrentWeather({...currentWeather, humidity: Number(value)})}
-                type="number"
-              />%
-            </div>
-            <div className="flex items-center">
-              <CloudRain className="h-4 w-4 mr-1" /> 
-              <EditableField 
-                value={currentWeather.rainChance.toString()} 
-                onSave={(value) => setCurrentWeather({...currentWeather, rainChance: Number(value)})}
-                type="number"
-              />%
-            </div>
-          </div>
-        </div>
-        
-        <h4 className="text-sm font-medium mb-3">Prévisions 5 jours</h4>
-        <div className="grid grid-cols-5 gap-2">
-          {forecast.map((day, index) => (
-            <div key={index} className="text-center">
-              <p className="text-sm font-medium">{day.day}</p>
-              <day.icon className="h-8 w-8 mx-auto my-2 text-muted-foreground" />
-              <p className="text-sm font-semibold">{day.temp}°C</p>
-              <p className="text-xs text-muted-foreground">{day.condition}</p>
-            </div>
-          ))}
-        </div>
-        
-        <div className="mt-4 pt-4 border-t">
-          <p className="text-xs text-muted-foreground">
-            Ces prévisions sont adaptées au climat tropical de la Guadeloupe et sont modifiables à des fins de démonstration.
+    <div className="bg-white rounded-xl border p-6">
+      <div className="flex justify-between items-center mb-4">
+        <div>
+          <h2 className="text-xl font-bold">
+            <EditableField
+              value={title}
+              onSave={handleTitleChange}
+              className="inline-block"
+            />
+          </h2>
+          <p className="text-muted-foreground">
+            <EditableField
+              value={description}
+              onSave={handleDescriptionChange}
+              className="inline-block"
+            />
           </p>
         </div>
+        <button 
+          className="flex items-center px-4 py-2 text-sm bg-agri-primary text-white rounded-lg hover:bg-agri-primary-dark"
+          onClick={() => setShowAddForm(true)}
+        >
+          <Plus className="h-4 w-4 mr-2" />
+          Ajouter une alerte
+        </button>
       </div>
-      
-      <div className="bg-white rounded-xl border p-6">
-        <div className="flex justify-between items-center mb-4">
-          <h3 className="font-semibold">Alertes Météorologiques</h3>
-          <button 
-            onClick={handleAddAlert}
-            className="text-xs px-3 py-1 bg-agri-primary text-white rounded hover:bg-agri-primary-dark"
-          >
-            Ajouter alerte
-          </button>
-        </div>
-        
-        <div className="space-y-3">
+
+      <Table>
+        <TableHeader>
+          <TableRow>
+            <TableHead>Type</TableHead>
+            <TableHead>Région</TableHead>
+            <TableHead>Période</TableHead>
+            <TableHead>Sévérité</TableHead>
+            <TableHead>Description</TableHead>
+            <TableHead className="w-16">Actions</TableHead>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
           {alerts.map((alert) => (
-            <div key={alert.id} className={`p-3 rounded-lg ${getAlertClass(alert.severity)}`}>
-              <div className="flex items-start">
-                {getAlertIcon(alert.type)}
-                <div className="ml-2 flex-1">
-                  <div className="flex justify-between items-start">
-                    <div>
-                      <p className="text-sm font-medium">
-                        <EditableField 
-                          value={alert.message} 
-                          onSave={(value) => handleEditAlert(alert.id, 'message', value.toString())}
-                        />
-                      </p>
-                      <p className="text-xs text-muted-foreground">
-                        Région: <EditableField 
-                          value={alert.region} 
-                          onSave={(value) => handleEditAlert(alert.id, 'region', value.toString())}
-                        />
-                      </p>
-                      <p className="text-xs text-muted-foreground">
-                        Date: <EditableField 
-                          value={alert.date} 
-                          onSave={(value) => handleEditAlert(alert.id, 'date', value.toString())}
-                        />
-                      </p>
-                    </div>
-                    <button 
-                      onClick={() => handleDeleteAlert(alert.id)}
-                      className="text-gray-400 hover:text-red-500"
-                    >
-                      <AlertTriangle className="h-4 w-4" />
-                    </button>
+            <TableRow key={alert.id}>
+              <TableCell className="font-medium">
+                <div className="flex items-center">
+                  {alertTypeIcons[alert.type]}
+                  <span className="ml-2">{alert.type.charAt(0).toUpperCase() + alert.type.slice(1)}</span>
+                </div>
+              </TableCell>
+              <TableCell>
+                <EditableField
+                  value={alert.region}
+                  onSave={(value) => {
+                    setAlerts(alerts.map(a => 
+                      a.id === alert.id ? { ...a, region: String(value) } : a
+                    ));
+                  }}
+                />
+              </TableCell>
+              <TableCell>
+                <div className="space-y-1">
+                  <div>
+                    <span className="text-xs text-muted-foreground">Début: </span>
+                    <EditableField
+                      value={alert.startDate}
+                      onSave={(value) => {
+                        setAlerts(alerts.map(a => 
+                          a.id === alert.id ? { ...a, startDate: String(value) } : a
+                        ));
+                      }}
+                      type="text"
+                    />
+                  </div>
+                  <div>
+                    <span className="text-xs text-muted-foreground">Fin: </span>
+                    <EditableField
+                      value={alert.endDate}
+                      onSave={(value) => {
+                        setAlerts(alerts.map(a => 
+                          a.id === alert.id ? { ...a, endDate: String(value) } : a
+                        ));
+                      }}
+                      type="text"
+                    />
                   </div>
                 </div>
+              </TableCell>
+              <TableCell>
+                <span className={`px-2 py-1 rounded-full text-xs ${alertSeverityColors[alert.severity]}`}>
+                  {alert.severity}
+                </span>
+              </TableCell>
+              <TableCell>
+                <EditableField
+                  value={alert.description}
+                  onSave={(value) => {
+                    setAlerts(alerts.map(a => 
+                      a.id === alert.id ? { ...a, description: String(value) } : a
+                    ));
+                  }}
+                />
+              </TableCell>
+              <TableCell>
+                <button 
+                  onClick={() => handleDelete(alert.id)}
+                  className="p-1.5 hover:bg-agri-danger/10 text-agri-danger rounded"
+                >
+                  <Trash2 className="h-4 w-4" />
+                </button>
+              </TableCell>
+            </TableRow>
+          ))}
+        </TableBody>
+      </Table>
+
+      {showAddForm && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-xl p-6 max-w-md w-full">
+            <h3 className="text-lg font-medium mb-4">Ajouter une alerte météorologique</h3>
+            
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium mb-1">Type d'alerte</label>
+                <select 
+                  className="w-full px-3 py-2 border rounded-md"
+                  value={newAlert.type}
+                  onChange={(e) => setNewAlert({...newAlert, type: e.target.value as WeatherAlert['type']})}
+                >
+                  <option value="cyclone">Cyclone</option>
+                  <option value="pluie">Pluie</option>
+                  <option value="secheresse">Sécheresse</option>
+                  <option value="canicule">Canicule</option>
+                  <option value="vent">Vent fort</option>
+                </select>
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium mb-1">Région</label>
+                <input 
+                  type="text" 
+                  className="w-full px-3 py-2 border rounded-md"
+                  value={newAlert.region}
+                  onChange={(e) => setNewAlert({...newAlert, region: e.target.value})}
+                  placeholder="Ex: Toute la Guadeloupe, Basse-Terre..."
+                />
+              </div>
+              
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium mb-1">Date de début</label>
+                  <input 
+                    type="date" 
+                    className="w-full px-3 py-2 border rounded-md"
+                    value={newAlert.startDate}
+                    onChange={(e) => setNewAlert({...newAlert, startDate: e.target.value})}
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-1">Date de fin</label>
+                  <input 
+                    type="date" 
+                    className="w-full px-3 py-2 border rounded-md"
+                    value={newAlert.endDate}
+                    onChange={(e) => setNewAlert({...newAlert, endDate: e.target.value})}
+                  />
+                </div>
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium mb-1">Sévérité</label>
+                <select 
+                  className="w-full px-3 py-2 border rounded-md"
+                  value={newAlert.severity}
+                  onChange={(e) => setNewAlert({...newAlert, severity: e.target.value as WeatherAlert['severity']})}
+                >
+                  <option value="faible">Faible</option>
+                  <option value="modérée">Modérée</option>
+                  <option value="élevée">Élevée</option>
+                  <option value="critique">Critique</option>
+                </select>
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium mb-1">Description</label>
+                <textarea 
+                  className="w-full px-3 py-2 border rounded-md"
+                  rows={3}
+                  value={newAlert.description}
+                  onChange={(e) => setNewAlert({...newAlert, description: e.target.value})}
+                  placeholder="Décrivez l'alerte météorologique..."
+                />
               </div>
             </div>
-          ))}
-          
-          {alerts.length === 0 && (
-            <p className="text-center text-muted-foreground py-4">
-              Aucune alerte en cours
-            </p>
-          )}
-        </div>
-        
-        <div className="mt-4 pt-4 border-t">
-          <h4 className="text-sm font-medium mb-2">Légende des alertes</h4>
-          <div className="grid grid-cols-2 gap-2 text-xs">
-            <div className="flex items-center">
-              <Wind className="h-4 w-4 mr-1 text-red-500" /> Cyclone
-            </div>
-            <div className="flex items-center">
-              <Thermometer className="h-4 w-4 mr-1 text-orange-500" /> Sécheresse
-            </div>
-            <div className="flex items-center">
-              <CloudRain className="h-4 w-4 mr-1 text-blue-500" /> Fortes pluies
-            </div>
-            <div className="flex items-center">
-              <Sun className="h-4 w-4 mr-1 text-yellow-500" /> Canicule
+            
+            <div className="flex justify-end space-x-3 mt-6">
+              <button 
+                className="px-4 py-2 border rounded-md hover:bg-muted/50"
+                onClick={() => setShowAddForm(false)}
+              >
+                Annuler
+              </button>
+              <button 
+                className="px-4 py-2 bg-agri-primary text-white rounded-md hover:bg-agri-primary-dark"
+                onClick={handleAddSubmit}
+              >
+                Ajouter
+              </button>
             </div>
           </div>
         </div>
-      </div>
+      )}
     </div>
   );
 };

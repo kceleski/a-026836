@@ -35,12 +35,12 @@ const StatsPage = () => {
     { id: 'unit', header: 'Unité', accessorKey: 'unit', isEditable: true },
   ];
   
-  // Gestionnaire de mise à jour du tableau
+  // Gestionnaire de mise à jour du tableau - correction du typage
   const handleTableUpdate = (rowIndex: number, columnId: string, value: any) => {
     const newData = [...performanceData];
     const updatedRow = { ...newData[rowIndex] } as PerformanceData;
     
-    // We need to handle different types properly
+    // Typages corrects et explicites pour chaque propriété
     if (columnId === 'current' || columnId === 'target') {
       updatedRow[columnId as 'current' | 'target'] = Number(value);
     } else if (columnId === 'name' || columnId === 'unit') {
@@ -69,6 +69,15 @@ const StatsPage = () => {
     setPerformanceData([...performanceData, typedRow]);
   };
 
+  // Handlers de titre avec correction de typage
+  const handleTitleChange = (value: string | number) => {
+    setPageTitle(String(value));
+  };
+
+  const handleDescriptionChange = (value: string | number) => {
+    setPageDescription(String(value));
+  };
+
   return (
     <div className="flex h-screen overflow-hidden bg-background">
       <Navbar />
@@ -79,14 +88,14 @@ const StatsPage = () => {
               <h1 className="text-2xl font-bold mb-1">
                 <EditableField
                   value={pageTitle}
-                  onSave={(value) => setPageTitle(value.toString())}
+                  onSave={handleTitleChange}
                   className="inline-block"
                 />
               </h1>
               <p className="text-muted-foreground">
                 <EditableField
                   value={pageDescription}
-                  onSave={(value) => setPageDescription(value.toString())}
+                  onSave={handleDescriptionChange}
                   className="inline-block"
                 />
               </p>
