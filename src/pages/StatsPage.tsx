@@ -38,7 +38,16 @@ const StatsPage = () => {
   // Gestionnaire de mise à jour du tableau
   const handleTableUpdate = (rowIndex: number, columnId: string, value: any) => {
     const newData = [...performanceData];
-    newData[rowIndex][columnId as keyof PerformanceData] = value;
+    const updatedRow = { ...newData[rowIndex] };
+    
+    // We need to handle different types properly
+    if (columnId === 'current' || columnId === 'target') {
+      updatedRow[columnId as keyof PerformanceData] = Number(value);
+    } else {
+      updatedRow[columnId as keyof PerformanceData] = value;
+    }
+    
+    newData[rowIndex] = updatedRow;
     setPerformanceData(newData);
   };
   
