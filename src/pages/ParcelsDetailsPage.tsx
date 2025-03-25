@@ -1,9 +1,8 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Toaster } from 'sonner';
 import Navbar from '../components/Navbar';
-import GuadeloupeParcelManagement from '../components/GuadeloupeParcelManagement';
-import { useState } from 'react';
+import GuadeloupeParcelDetail from '../components/GuadeloupeParcelDetail';
 import { EditableField } from '../components/ui/editable-field';
 
 const ParcelsDetailsPage = () => {
@@ -41,7 +40,7 @@ const ParcelsDetailsPage = () => {
             </p>
           </header>
 
-          <GuadeloupeParcelManagement />
+          <GuadeloupeParcelDetail />
         </div>
       </div>
       <Toaster position="top-right" />

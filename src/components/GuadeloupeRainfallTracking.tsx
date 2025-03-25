@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { 
   BarChart, 
@@ -83,9 +82,15 @@ const GuadeloupeRainfallTracking = () => {
     const record = { ...updatedRecords[rowIndex] };
     
     if (columnId === 'amount') {
-      record[columnId as keyof RainfallRecordData] = Number(value);
-    } else {
-      record[columnId as keyof RainfallRecordData] = String(value);
+      record.amount = Number(value);
+    } else if (columnId === 'date') {
+      record.date = String(value);
+    } else if (columnId === 'location') {
+      record.location = String(value);
+    } else if (columnId === 'crops') {
+      record.crops = String(value);
+    } else if (columnId === 'notes') {
+      record.notes = String(value);
     }
     
     updatedRecords[rowIndex] = record;
@@ -319,3 +324,4 @@ const GuadeloupeRainfallTracking = () => {
 };
 
 export default GuadeloupeRainfallTracking;
+
