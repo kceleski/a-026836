@@ -13,6 +13,18 @@ import FinancePage from "./pages/FinancePage";
 import StatsPage from "./pages/StatsPage";
 import NotFound from "./pages/NotFound";
 
+// Define routes configuration
+const routes = [
+  { path: "/", element: <Index /> },
+  { path: "/parcelles", element: <ParcelsPage /> },
+  { path: "/parcelles/:id", element: <ParcelsDetailsPage /> },
+  { path: "/cultures", element: <CropsPage /> },
+  { path: "/inventaire", element: <InventoryPage /> },
+  { path: "/finances", element: <FinancePage /> },
+  { path: "/statistiques", element: <StatsPage /> },
+  { path: "*", element: <NotFound /> }
+];
+
 const queryClient = new QueryClient();
 
 const App = () => (
@@ -22,14 +34,13 @@ const App = () => (
       <Sonner />
       <BrowserRouter>
         <Routes>
-          <Route path="/" element={<Index />} />
-          <Route path="/parcelles" element={<ParcelsPage />} />
-          <Route path="/parcelles/:id" element={<ParcelsDetailsPage />} />
-          <Route path="/cultures" element={<CropsPage />} />
-          <Route path="/inventaire" element={<InventoryPage />} />
-          <Route path="/finances" element={<FinancePage />} />
-          <Route path="/statistiques" element={<StatsPage />} />
-          <Route path="*" element={<NotFound />} />
+          {routes.map((route) => (
+            <Route 
+              key={route.path} 
+              path={route.path} 
+              element={route.element} 
+            />
+          ))}
         </Routes>
       </BrowserRouter>
     </TooltipProvider>

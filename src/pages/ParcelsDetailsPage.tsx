@@ -1,50 +1,34 @@
 
-import React, { useState } from 'react';
-import { Toaster } from 'sonner';
-import Navbar from '../components/Navbar';
+import React from 'react';
+import PageLayout from '../components/layout/PageLayout';
+import PageHeader from '../components/layout/PageHeader';
 import GuadeloupeParcelDetail from '../components/GuadeloupeParcelDetail';
-import { EditableField } from '../components/ui/editable-field';
+import usePageMetadata from '../hooks/use-page-metadata';
 
 const ParcelsDetailsPage = () => {
-  const [pageTitle, setPageTitle] = useState('Gestion des Parcelles en Guadeloupe');
-  const [pageDescription, setPageDescription] = useState('Gérez, surveillez et optimisez vos parcelles agricoles à travers tout l\'archipel');
-
-  // Handlers avec correction de typage
-  const handleTitleChange = (value: string | number) => {
-    setPageTitle(String(value));
-  };
-
-  const handleDescriptionChange = (value: string | number) => {
-    setPageDescription(String(value));
-  };
+  const { 
+    title, 
+    description, 
+    handleTitleChange, 
+    handleDescriptionChange 
+  } = usePageMetadata({
+    defaultTitle: 'Gestion des Parcelles en Guadeloupe',
+    defaultDescription: 'Gérez, surveillez et optimisez vos parcelles agricoles à travers tout l\'archipel'
+  });
 
   return (
-    <div className="flex h-screen overflow-hidden bg-background">
-      <Navbar />
-      <div className="flex-1 overflow-y-auto">
-        <div className="p-6 animate-enter">
-          <header className="mb-6">
-            <h1 className="text-2xl font-bold mb-1">
-              <EditableField
-                value={pageTitle}
-                onSave={handleTitleChange}
-                className="inline-block"
-              />
-            </h1>
-            <p className="text-muted-foreground">
-              <EditableField
-                value={pageDescription}
-                onSave={handleDescriptionChange}
-                className="inline-block"
-              />
-            </p>
-          </header>
+    <PageLayout>
+      <div className="p-6 animate-enter">
+        <PageHeader 
+          title={title}
+          description={description}
+          onTitleChange={handleTitleChange}
+          onDescriptionChange={handleDescriptionChange}
+        />
 
-          <GuadeloupeParcelDetail />
-        </div>
+        <GuadeloupeParcelDetail />
       </div>
-      <Toaster position="top-right" />
-    </div>
+    </PageLayout>
   );
 };
 

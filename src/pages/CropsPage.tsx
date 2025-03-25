@@ -1,76 +1,61 @@
 
 import React from 'react';
-import { Toaster } from 'sonner';
-import Navbar from '../components/Navbar';
+import PageLayout from '../components/layout/PageLayout';
+import PageHeader from '../components/layout/PageHeader';
+import TabContainer, { TabItem } from '../components/layout/TabContainer';
 import CropPlanning from '../components/CropPlanning';
 import GuadeloupeHarvestTracking from '../components/GuadeloupeHarvestTracking';
 import GuadeloupeSpecificCrops from '../components/GuadeloupeSpecificCrops';
 import GuadeloupeRainfallTracking from '../components/GuadeloupeRainfallTracking';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "../components/ui/tabs";
-import { EditableField } from '../components/ui/editable-field';
-import { useState } from 'react';
+import usePageMetadata from '../hooks/use-page-metadata';
 
 const CropsPage = () => {
-  const [pageTitle, setPageTitle] = useState('Gestion des Cultures Guadeloupéennes');
-  const [pageDescription, setPageDescription] = useState('Surveillez, planifiez et optimisez toutes vos cultures adaptées au climat tropical');
+  const { 
+    title, 
+    description, 
+    handleTitleChange, 
+    handleDescriptionChange 
+  } = usePageMetadata({
+    defaultTitle: 'Gestion des Cultures Guadeloupéennes',
+    defaultDescription: 'Surveillez, planifiez et optimisez toutes vos cultures adaptées au climat tropical'
+  });
 
-  // Handlers avec correction de typage
-  const handleTitleChange = (value: string | number) => {
-    setPageTitle(String(value));
-  };
-
-  const handleDescriptionChange = (value: string | number) => {
-    setPageDescription(String(value));
-  };
+  const tabs: TabItem[] = [
+    {
+      value: 'crops',
+      label: 'Cultures',
+      content: (
+        <div className="space-y-6">
+          <GuadeloupeSpecificCrops />
+          <CropPlanning />
+        </div>
+      )
+    },
+    {
+      value: 'harvest',
+      label: 'Récoltes',
+      content: <GuadeloupeHarvestTracking />
+    },
+    {
+      value: 'rainfall',
+      label: 'Précipitations',
+      content: <GuadeloupeRainfallTracking />
+    }
+  ];
 
   return (
-    <div className="flex h-screen overflow-hidden bg-background">
-      <Navbar />
-      <div className="flex-1 overflow-y-auto">
-        <div className="p-6 animate-enter">
-          <header className="flex flex-col md:flex-row md:justify-between md:items-center mb-6 gap-4">
-            <div>
-              <h1 className="text-2xl font-bold mb-1">
-                <EditableField
-                  value={pageTitle}
-                  onSave={handleTitleChange}
-                  className="inline-block"
-                />
-              </h1>
-              <p className="text-muted-foreground">
-                <EditableField
-                  value={pageDescription}
-                  onSave={handleDescriptionChange}
-                  className="inline-block"
-                />
-              </p>
-            </div>
-          </header>
+    <PageLayout>
+      <div className="p-6 animate-enter">
+        <PageHeader 
+          title={title}
+          description={description}
+          onTitleChange={handleTitleChange}
+          onDescriptionChange={handleDescriptionChange}
+        />
 
-          <Tabs defaultValue="crops" className="mb-6">
-            <TabsList className="w-full md:w-auto grid grid-cols-3 gap-2">
-              <TabsTrigger value="crops">Cultures</TabsTrigger>
-              <TabsTrigger value="harvest">Récoltes</TabsTrigger>
-              <TabsTrigger value="rainfall">Précipitations</TabsTrigger>
-            </TabsList>
-            
-            <TabsContent value="crops" className="mt-6 space-y-6">
-              <GuadeloupeSpecificCrops />
-              <CropPlanning />
-            </TabsContent>
-            
-            <TabsContent value="harvest" className="mt-6">
-              <GuadeloupeHarvestTracking />
-            </TabsContent>
-            
-            <TabsContent value="rainfall" className="mt-6">
-              <GuadeloupeRainfallTracking />
-            </TabsContent>
-          </Tabs>
-        </div>
+        <TabContainer tabs={tabs} defaultValue="crops" />
       </div>
-      <Toaster position="top-right" />
-    </div>
+    </PageLayout>
   );
 };
 
