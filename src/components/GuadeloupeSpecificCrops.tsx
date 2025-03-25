@@ -9,7 +9,7 @@ import {
   TableRow
 } from './ui/table';
 import { EditableField } from './ui/editable-field';
-import { Trash2, Plus, CirclePlus, Carrot, CloudRain, Thermometer, PlaneTakeoff } from 'lucide-react';
+import { Trash2, Plus, CirclePlus, Carrot, CloudRain, Thermometer, PlaneTakeoff, ChevronLeft } from 'lucide-react';
 import { toast } from 'sonner';
 
 interface CropData {
