@@ -69,11 +69,13 @@ const annualAverageData = [
   { name: 'La Désirade', value: 800 },
 ];
 
+type ChartType = 'monthly' | 'annual' | 'records';
+
 const GuadeloupeRainfallTracking = () => {
   const [title, setTitle] = useState('Suivi des Précipitations en Guadeloupe');
   const [description, setDescription] = useState('Analysez les tendances pluviométriques et leur impact sur vos cultures');
   const [records, setRecords] = useState<RainfallRecordData[]>(initialRainfallRecords);
-  const [chartType, setChartType] = useState<'monthly' | 'annual' | 'records'>('monthly');
+  const [chartType, setChartType] = useState<ChartType>('monthly');
   
   // Fonction pour mettre à jour les enregistrements de pluie
   const handleRecordUpdate = (rowIndex: number, columnId: string, value: any) => {
