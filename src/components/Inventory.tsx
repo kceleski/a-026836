@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { 
   Package, 
@@ -841,4 +842,194 @@ const Inventory = () => {
               </div>
             </div>
 
-            <Editable
+            <EditableTable
+              data={tableData}
+              columns={inventoryColumns}
+              onUpdate={handleTableUpdate}
+              onDelete={(rowIndex) => {
+                const item = filteredItems[rowIndex];
+                if (item) handleDeleteItem(item.id);
+              }}
+              sortable={true}
+              className="mb-6"
+            />
+          </>
+        )
+      ) : (
+        <div className="space-y-6">
+          <div className="bg-white rounded-xl border p-6">
+            <h3 className="text-lg font-medium mb-4">Répartition par catégorie</h3>
+            <div className="h-[300px]">
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart
+                  data={categoryStats}
+                  margin={{ top: 10, right: 30, left: 20, bottom: 40 }}
+                >
+                  <CartesianGrid strokeDasharray="3 3" vertical={false} />
+                  <XAxis 
+                    dataKey="name" 
+                    angle={-45} 
+                    textAnchor="end"
+                    tick={{ fontSize: 12 }}
+                    height={70}
+                  />
+                  <YAxis />
+                  <Tooltip />
+                  <Bar dataKey="value" fill={(entry) => entry.fill || '#4CAF50'} radius={[4, 4, 0, 0]} />
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+          </div>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            <div className="bg-white rounded-xl border p-6">
+              <h3 className="text-lg font-medium mb-4">Valeur totale de l'inventaire</h3>
+              <p className="text-3xl font-bold">
+                {inventoryData.reduce((sum, item) => sum + (item.quantity * item.price), 0).toFixed(2)} €
+              </p>
+            </div>
+            
+            <div className="bg-white rounded-xl border p-6">
+              <h3 className="text-lg font-medium mb-4">Nombre d'articles</h3>
+              <p className="text-3xl font-bold">{inventoryData.length}</p>
+            </div>
+            
+            <div className="bg-white rounded-xl border p-6">
+              <h3 className="text-lg font-medium mb-4">Articles à réapprovisionner</h3>
+              <p className="text-3xl font-bold">{alerts.length}</p>
+            </div>
+          </div>
+        </div>
+      )}
+      
+      {showAddForm && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+            <div className="p-6">
+              <div className="flex justify-between items-center mb-4">
+                <h2 className="text-xl font-semibold">Ajouter un nouvel article</h2>
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  onClick={() => setShowAddForm(false)}
+                >
+                  <X className="h-4 w-4" />
+                </Button>
+              </div>
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+                <div>
+                  <Label htmlFor="name" className="mb-1">Nom de l'article*</Label>
+                  <Input
+                    id="name"
+                    value={newItem.name}
+                    onChange={(e) => setNewItem({...newItem, name: e.target.value})}
+                    placeholder="Nom de l'article"
+                  />
+                </div>
+                
+                <div>
+                  <Label htmlFor="category" className="mb-1">Catégorie*</Label>
+                  <Input
+                    id="category"
+                    value={newItem.category}
+                    onChange={(e) => setNewItem({...newItem, category: e.target.value})}
+                    placeholder="Catégorie"
+                    list="categories"
+                  />
+                  <datalist id="categories">
+                    {[...new Set(inventoryData.map(item => item.category))].map((category) => (
+                      <option key={category} value={category} />
+                    ))}
+                  </datalist>
+                </div>
+                
+                <div>
+                  <Label htmlFor="quantity" className="mb-1">Quantité</Label>
+                  <Input
+                    id="quantity"
+                    type="number"
+                    value={newItem.quantity}
+                    onChange={(e) => setNewItem({...newItem, quantity: Number(e.target.value)})}
+                    min="0"
+                  />
+                </div>
+                
+                <div>
+                  <Label htmlFor="unit" className="mb-1">Unité*</Label>
+                  <Input
+                    id="unit"
+                    value={newItem.unit}
+                    onChange={(e) => setNewItem({...newItem, unit: e.target.value})}
+                    placeholder="kg, L, pièces..."
+                  />
+                </div>
+                
+                <div>
+                  <Label htmlFor="minQuantity" className="mb-1">Quantité minimale</Label>
+                  <Input
+                    id="minQuantity"
+                    type="number"
+                    value={newItem.minQuantity}
+                    onChange={(e) => setNewItem({...newItem, minQuantity: Number(e.target.value)})}
+                    min="0"
+                  />
+                </div>
+                
+                <div>
+                  <Label htmlFor="price" className="mb-1">Prix unitaire</Label>
+                  <Input
+                    id="price"
+                    type="number"
+                    value={newItem.price}
+                    onChange={(e) => setNewItem({...newItem, price: Number(e.target.value)})}
+                    min="0"
+                    step="0.01"
+                  />
+                </div>
+                
+                <div>
+                  <Label htmlFor="location" className="mb-1">Emplacement</Label>
+                  <Input
+                    id="location"
+                    value={newItem.location}
+                    onChange={(e) => setNewItem({...newItem, location: e.target.value})}
+                    placeholder="Emplacement de stockage"
+                  />
+                </div>
+              </div>
+              
+              <div className="mb-4">
+                <Label htmlFor="notes" className="mb-1">Notes</Label>
+                <Textarea
+                  id="notes"
+                  value={newItem.notes}
+                  onChange={(e) => setNewItem({...newItem, notes: e.target.value})}
+                  placeholder="Notes supplémentaires..."
+                  rows={3}
+                />
+              </div>
+              
+              <div className="flex justify-end gap-2">
+                <Button 
+                  variant="outline" 
+                  onClick={() => setShowAddForm(false)}
+                >
+                  Annuler
+                </Button>
+                <Button 
+                  onClick={handleAddItem}
+                >
+                  <Check className="mr-2" />
+                  Ajouter
+                </Button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
+
+export default Inventory;
