@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { 
   Calendar as CalendarIcon, 
@@ -19,6 +18,10 @@ import { EditableField } from './ui/editable-field';
 import { EditableTable, Column } from './ui/editable-table';
 import { toast } from 'sonner';
 
+// Define the string literal types first to ensure type safety
+type CropStatus = 'growing' | 'harvested' | 'planned';
+type TaskPriority = 'high' | 'medium' | 'low';
+
 // Mock data for crop planning - Adapté à l'agriculture en Guadeloupe
 const initialCropsData = [
   { 
@@ -28,7 +31,7 @@ const initialCropsData = [
     parcel: 'Grande-Terre Nord', 
     plantingDate: '2023-02-15', 
     harvestDate: '2024-02-15', 
-    status: 'growing',
+    status: 'growing' as CropStatus,
     area: 15.5 
   },
   { 
@@ -38,7 +41,7 @@ const initialCropsData = [
     parcel: 'Basse-Terre Sud', 
     plantingDate: '2023-04-10', 
     harvestDate: '2023-12-10', 
-    status: 'growing',
+    status: 'growing' as CropStatus,
     area: 8.3
   },
   { 
@@ -48,7 +51,7 @@ const initialCropsData = [
     parcel: 'Capesterre', 
     plantingDate: '2023-05-20', 
     harvestDate: '2024-01-20', 
-    status: 'growing',
+    status: 'growing' as CropStatus,
     area: 4.7 
   },
   { 
@@ -58,7 +61,7 @@ const initialCropsData = [
     parcel: 'Nord Grande-Terre', 
     plantingDate: '2023-09-15', 
     harvestDate: '2024-03-15', 
-    status: 'planned',
+    status: 'planned' as CropStatus,
     area: 5.2 
   },
   { 
@@ -68,18 +71,18 @@ const initialCropsData = [
     parcel: 'Marie-Galante', 
     plantingDate: '2023-04-01', 
     harvestDate: '2023-11-01', 
-    status: 'growing',
+    status: 'growing' as CropStatus,
     area: 3.8 
   }
 ];
 
 // Tasks related to crops - Adapté au contexte guadeloupéen
 const initialCropTasks = [
-  { id: 1, cropId: 1, title: 'Fertilisation de la canne', date: '2023-09-25', completed: false, priority: 'high' },
-  { id: 2, cropId: 2, title: 'Traitement contre la cercosporiose', date: '2023-09-28', completed: false, priority: 'medium' },
-  { id: 3, cropId: 3, title: 'Inspection croissance ananas', date: '2023-09-30', completed: false, priority: 'low' },
-  { id: 4, cropId: 5, title: 'Désherbage parcelle madère', date: '2023-10-05', completed: false, priority: 'medium' },
-  { id: 5, cropId: 1, title: 'Préparation coupe canne', date: '2024-01-10', completed: false, priority: 'high' }
+  { id: 1, cropId: 1, title: 'Fertilisation de la canne', date: '2023-09-25', completed: false, priority: 'high' as TaskPriority },
+  { id: 2, cropId: 2, title: 'Traitement contre la cercosporiose', date: '2023-09-28', completed: false, priority: 'medium' as TaskPriority },
+  { id: 3, cropId: 3, title: 'Inspection croissance ananas', date: '2023-09-30', completed: false, priority: 'low' as TaskPriority },
+  { id: 4, cropId: 5, title: 'Désherbage parcelle madère', date: '2023-10-05', completed: false, priority: 'medium' as TaskPriority },
+  { id: 5, cropId: 1, title: 'Préparation coupe canne', date: '2024-01-10', completed: false, priority: 'high' as TaskPriority }
 ];
 
 // Monthly calendar view mock data - Adapté à l'agriculture guadeloupéenne
@@ -102,7 +105,7 @@ interface CropData {
   parcel: string;
   plantingDate: string;
   harvestDate: string;
-  status: 'growing' | 'harvested' | 'planned';
+  status: CropStatus;
   area: number;
 }
 
@@ -112,7 +115,7 @@ interface CropTask {
   title: string;
   date: string;
   completed: boolean;
-  priority: 'high' | 'medium' | 'low';
+  priority: TaskPriority;
 }
 
 const CropCard = ({ 
@@ -236,14 +239,12 @@ const CropPlanning = () => {
     area: 0
   });
   
-  // Filter crops based on search term
   const filteredCrops = cropsData.filter(crop => 
     crop.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
     crop.variety.toLowerCase().includes(searchTerm.toLowerCase()) ||
     crop.parcel.toLowerCase().includes(searchTerm.toLowerCase())
   );
   
-  // Generate calendar days for the current month
   const generateCalendarDays = () => {
     const year = currentMonth.getFullYear();
     const month = currentMonth.getMonth();
@@ -252,12 +253,10 @@ const CropPlanning = () => {
     
     const days = [];
     
-    // Add empty cells for days before the first day of the month
     for (let i = 0; i < firstDayOfMonth; i++) {
       days.push({ day: '', date: null, events: [] });
     }
     
-    // Add days of the month
     for (let day = 1; day <= daysInMonth; day++) {
       const date = new Date(year, month, day).toISOString().split('T')[0];
       const dayEvents = monthlyEvents.find(event => event.date === date)?.events || [];
@@ -302,20 +301,17 @@ const CropPlanning = () => {
 
   const handleDeleteCrop = (id: number) => {
     setCropsData(cropsData.filter(crop => crop.id !== id));
-    // Also delete tasks related to this crop
     setCropTasks(cropTasks.filter(task => task.cropId !== id));
     toast.success('Culture supprimée avec succès');
   };
 
   const handleSaveCrop = () => {
     if (editingCrop) {
-      // Update existing crop
       setCropsData(cropsData.map(crop => 
         crop.id === editingCrop.id ? editingCrop : crop
       ));
       toast.success('Culture mise à jour avec succès');
     } else if (newCrop.name && newCrop.parcel) {
-      // Add new crop
       const newId = Math.max(0, ...cropsData.map(c => c.id)) + 1;
       setCropsData([...cropsData, { 
         id: newId,
@@ -324,7 +320,7 @@ const CropPlanning = () => {
         parcel: newCrop.parcel || '',
         plantingDate: newCrop.plantingDate || new Date().toISOString().split('T')[0],
         harvestDate: newCrop.harvestDate || new Date(new Date().setMonth(new Date().getMonth() + 6)).toISOString().split('T')[0],
-        status: newCrop.status || 'planned',
+        status: newCrop.status as CropStatus || 'planned',
         area: newCrop.area || 0
       } as CropData]);
       toast.success('Nouvelle culture ajoutée');
@@ -348,7 +344,7 @@ const CropPlanning = () => {
       title: newTask.title,
       date: newTask.date || new Date().toISOString().split('T')[0],
       completed: false,
-      priority: newTask.priority || 'medium'
+      priority: newTask.priority as TaskPriority || 'medium'
     } as CropTask;
 
     setCropTasks([...cropTasks, taskToAdd]);
@@ -376,7 +372,6 @@ const CropPlanning = () => {
       header: 'Culture', 
       accessorKey: 'cropId', 
       isEditable: false,
-      // Custom rendering for crop name
     },
     { id: 'date', header: 'Date', accessorKey: 'date', isEditable: true },
     { 
@@ -389,7 +384,6 @@ const CropPlanning = () => {
     },
   ];
 
-  // Transform task data for the table
   const tasksTableData = cropTasks.map(task => {
     const relatedCrop = cropsData.find(crop => crop.id === task.cropId);
     return {
@@ -613,7 +607,6 @@ const CropPlanning = () => {
         </div>
       )}
 
-      {/* Task Form Modal */}
       {showTaskForm && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
           <div className="bg-white rounded-xl p-6 max-w-md w-full">
@@ -708,7 +701,6 @@ const CropPlanning = () => {
         </div>
       )}
 
-      {/* Crop Form Modal */}
       {showCropForm && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
           <div className="bg-white rounded-xl p-6 max-w-md w-full">
@@ -877,3 +869,4 @@ const CropPlanning = () => {
 };
 
 export default CropPlanning;
+
