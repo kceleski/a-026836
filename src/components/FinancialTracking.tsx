@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   Wallet, 
   Plus, 
@@ -19,7 +19,8 @@ import {
   ChevronRight,
   X,
   Check,
-  FileText
+  FileText,
+  Euro
 } from 'lucide-react';
 import { 
   BarChart, 
@@ -36,9 +37,27 @@ import {
   Cell,
   Legend
 } from 'recharts';
+import { EditableField } from './ui/editable-field';
+import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from './ui/table';
+import { Button } from './ui/button';
+import { Input } from './ui/input';
+import { useToast } from "@/hooks/use-toast";
+
+// Transaction type definition
+export interface Transaction {
+  id: number;
+  date: string;
+  description: string;
+  amount: number;
+  type: 'income' | 'expense';
+  category: string;
+  paymentMethod: string;
+  reference: string;
+  notes?: string;
+}
 
 // Mock data for financial transactions
-const transactionsData = [
+const initialTransactionsData: Transaction[] = [
   { 
     id: 1, 
     date: '2023-08-20', 
@@ -151,7 +170,30 @@ const cashFlowProjection = [
   { month: 'Fév', income: 3200, expenses: 2800, balance: 400 }
 ];
 
+// Category options for dropdowns
+const categoryOptions = [
+  { value: 'Ventes', label: 'Ventes' },
+  { value: 'Subventions', label: 'Subventions' },
+  { value: 'Intrants', label: 'Intrants' },
+  { value: 'Carburant', label: 'Carburant' },
+  { value: 'Réparations', label: 'Réparations' },
+  { value: 'Assurances', label: 'Assurances' },
+  { value: 'Salaires', label: 'Salaires' },
+  { value: 'Autres revenus', label: 'Autres revenus' },
+  { value: 'Autres dépenses', label: 'Autres dépenses' }
+];
+
+// Payment method options
+const paymentMethodOptions = [
+  { value: 'Virement', label: 'Virement' },
+  { value: 'Carte bancaire', label: 'Carte bancaire' },
+  { value: 'Chèque', label: 'Chèque' },
+  { value: 'Espèces', label: 'Espèces' },
+  { value: 'Prélèvement', label: 'Prélèvement' }
+];
+
 const FinancialTracking = () => {
+  const { toast } = useToast();
   const [searchTerm, setSearchTerm] = useState('');
   const [dateFilter, setDateFilter] = useState('all');
   const [typeFilter, setTypeFilter] = useState('all');
@@ -159,12 +201,24 @@ const FinancialTracking = () => {
   const [sortOrder, setSortOrder] = useState('desc');
   const [showAddForm, setShowAddForm] = useState(false);
   const [view, setView] = useState<'transactions' | 'dashboard'>('transactions');
-  const [selectedTransaction, setSelectedTransaction] = useState<any>(null);
+  const [selectedTransaction, setSelectedTransaction] = useState<Transaction | null>(null);
+  const [transactionsData, setTransactionsData] = useState<Transaction[]>(initialTransactionsData);
+  const [isEditingTransaction, setIsEditingTransaction] = useState(false);
+  const [newTransaction, setNewTransaction] = useState<Partial<Transaction>>({
+    type: 'income',
+    date: new Date().toISOString().split('T')[0],
+    amount: 0,
+    description: '',
+    category: '',
+    paymentMethod: '',
+    reference: ''
+  });
+  const [transactionNotes, setTransactionNotes] = useState('');
   
   // Calculate summary statistics
   const totalIncome = transactionsData
     .filter(t => t.type === 'income')
-    .reduce((sum, t) => sum + t.amount, 0);
+    .reduce((sum, t) => sum + Math.abs(t.amount), 0);
     
   const totalExpenses = transactionsData
     .filter(t => t.type === 'expense')
@@ -175,9 +229,10 @@ const FinancialTracking = () => {
   // Filter transactions based on search and filters
   const filteredTransactions = transactionsData
     .filter(transaction => {
-      const matchesSearch = transaction.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                           transaction.category.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                           transaction.reference.toLowerCase().includes(searchTerm.toLowerCase());
+      const matchesSearch = 
+        transaction.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        transaction.category.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        transaction.reference.toLowerCase().includes(searchTerm.toLowerCase());
       
       let matchesDateFilter = true;
       if (dateFilter === 'thisMonth') {
@@ -230,7 +285,7 @@ const FinancialTracking = () => {
              transactionDate.getMonth() === currentDate.getMonth() &&
              transactionDate.getFullYear() === currentDate.getFullYear();
     })
-    .reduce((sum, t) => sum + t.amount, 0);
+    .reduce((sum, t) => sum + Math.abs(t.amount), 0);
     
   const currentMonthExpenses = transactionsData
     .filter(t => {
@@ -242,6 +297,201 @@ const FinancialTracking = () => {
     })
     .reduce((sum, t) => sum + Math.abs(t.amount), 0);
   
+  // Handle adding a new transaction
+  const handleAddTransaction = () => {
+    if (!newTransaction.description || !newTransaction.category) {
+      toast({
+        title: "Erreur",
+        description: "Veuillez remplir tous les champs obligatoires",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    const amount = newTransaction.type === 'expense' 
+      ? -Math.abs(Number(newTransaction.amount)) 
+      : Math.abs(Number(newTransaction.amount));
+
+    const newTransactionComplete: Transaction = {
+      id: Math.max(0, ...transactionsData.map(t => t.id)) + 1,
+      date: newTransaction.date || new Date().toISOString().split('T')[0],
+      description: newTransaction.description || '',
+      amount: amount,
+      type: newTransaction.type || 'income',
+      category: newTransaction.category || '',
+      paymentMethod: newTransaction.paymentMethod || '',
+      reference: newTransaction.reference || '',
+      notes: newTransaction.notes
+    };
+
+    setTransactionsData([newTransactionComplete, ...transactionsData]);
+    setShowAddForm(false);
+    
+    // Reset form
+    setNewTransaction({
+      type: 'income',
+      date: new Date().toISOString().split('T')[0],
+      amount: 0,
+      description: '',
+      category: '',
+      paymentMethod: '',
+      reference: ''
+    });
+
+    toast({
+      title: "Transaction ajoutée",
+      description: "La transaction a été ajoutée avec succès",
+      variant: "default"
+    });
+  };
+
+  // Handle updating a transaction
+  const handleUpdateTransaction = (field: keyof Transaction, value: any) => {
+    if (!selectedTransaction) return;
+
+    const updatedTransaction = { ...selectedTransaction, [field]: value };
+    
+    // If type changes, adjust the amount sign
+    if (field === 'type') {
+      updatedTransaction.amount = value === 'expense' 
+        ? -Math.abs(selectedTransaction.amount) 
+        : Math.abs(selectedTransaction.amount);
+    }
+    
+    // If we're directly updating the amount, ensure it has the correct sign
+    if (field === 'amount') {
+      updatedTransaction.amount = selectedTransaction.type === 'expense' 
+        ? -Math.abs(Number(value)) 
+        : Math.abs(Number(value));
+    }
+
+    setSelectedTransaction(updatedTransaction);
+
+    if (!isEditingTransaction) {
+      // Update the transaction in the main data
+      const updatedTransactions = transactionsData.map(t => 
+        t.id === selectedTransaction.id ? updatedTransaction : t
+      );
+      
+      setTransactionsData(updatedTransactions);
+      
+      // Show a toast notification
+      toast({
+        title: "Transaction mise à jour",
+        description: `${updatedTransaction.description} a été mise à jour`,
+        variant: "default"
+      });
+    }
+  };
+
+  // Handle saving all changes to a transaction
+  const handleSaveAllChanges = () => {
+    if (!selectedTransaction) return;
+    
+    const updatedTransactions = transactionsData.map(t => 
+      t.id === selectedTransaction.id ? selectedTransaction : t
+    );
+    
+    setTransactionsData(updatedTransactions);
+    setIsEditingTransaction(false);
+    
+    toast({
+      title: "Modifications enregistrées",
+      description: "Toutes les modifications ont été enregistrées",
+      variant: "default"
+    });
+  };
+
+  // Handle deleting a transaction
+  const handleDeleteTransaction = (id: number) => {
+    const transactionToDelete = transactionsData.find(t => t.id === id);
+    if (!transactionToDelete) return;
+
+    // Show confirmation dialog
+    if (window.confirm(`Êtes-vous sûr de vouloir supprimer la transaction "${transactionToDelete.description}" ?`)) {
+      const updatedTransactions = transactionsData.filter(t => t.id !== id);
+      setTransactionsData(updatedTransactions);
+      
+      if (selectedTransaction?.id === id) {
+        setSelectedTransaction(null);
+      }
+      
+      toast({
+        title: "Transaction supprimée",
+        description: `${transactionToDelete.description} a été supprimée`,
+        variant: "default"
+      });
+    }
+  };
+
+  // Handle saving notes
+  const handleSaveNotes = () => {
+    if (!selectedTransaction) return;
+    
+    const updatedTransaction = { ...selectedTransaction, notes: transactionNotes };
+    
+    // Update the transaction in the main data
+    const updatedTransactions = transactionsData.map(t => 
+      t.id === selectedTransaction.id ? updatedTransaction : t
+    );
+    
+    setTransactionsData(updatedTransactions);
+    setSelectedTransaction(updatedTransaction);
+    
+    toast({
+      title: "Notes enregistrées",
+      description: "Les notes ont été enregistrées",
+      variant: "default"
+    });
+  };
+
+  // Set transaction notes when selected transaction changes
+  useEffect(() => {
+    if (selectedTransaction?.notes) {
+      setTransactionNotes(selectedTransaction.notes);
+    } else {
+      setTransactionNotes('');
+    }
+  }, [selectedTransaction]);
+
+  // Handle exporting data
+  const handleExport = () => {
+    // Create a CSV string
+    const headers = ['Date', 'Description', 'Catégorie', 'Montant', 'Type', 'Méthode de paiement', 'Référence'];
+    const csvRows = [headers.join(',')];
+    
+    transactionsData.forEach(transaction => {
+      const row = [
+        transaction.date,
+        `"${transaction.description.replace(/"/g, '""')}"`,
+        transaction.category,
+        transaction.amount,
+        transaction.type === 'income' ? 'Revenu' : 'Dépense',
+        transaction.paymentMethod,
+        transaction.reference
+      ];
+      csvRows.push(row.join(','));
+    });
+    
+    const csvString = csvRows.join('\n');
+    
+    // Create a download link
+    const blob = new Blob([csvString], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.setAttribute('download', 'transactions_financieres.csv');
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    
+    toast({
+      title: "Export réussi",
+      description: "Les données ont été exportées avec succès",
+      variant: "default"
+    });
+  };
+
   return (
     <div className="p-6 animate-enter">
       <header className="flex flex-col md:flex-row md:justify-between md:items-center mb-6 gap-4">
@@ -250,33 +500,25 @@ const FinancialTracking = () => {
           <p className="text-muted-foreground">Suivez vos finances et analysez votre rentabilité</p>
         </div>
         <div className="flex space-x-2">
-          <button 
-            className={`px-4 py-2 rounded-lg transition-colors ${
-              view === 'transactions' 
-                ? 'bg-agri-primary text-white' 
-                : 'bg-muted text-foreground hover:bg-muted/80'
-            }`}
+          <Button 
+            variant={view === 'transactions' ? 'default' : 'outline'}
             onClick={() => setView('transactions')}
           >
             Transactions
-          </button>
-          <button 
-            className={`px-4 py-2 rounded-lg transition-colors ${
-              view === 'dashboard' 
-                ? 'bg-agri-primary text-white' 
-                : 'bg-muted text-foreground hover:bg-muted/80'
-            }`}
+          </Button>
+          <Button 
+            variant={view === 'dashboard' ? 'default' : 'outline'}
             onClick={() => setView('dashboard')}
           >
             Tableau de bord
-          </button>
-          <button 
-            className="inline-flex items-center justify-center px-4 py-2 bg-agri-primary text-white rounded-lg hover:bg-agri-primary-dark transition-colors whitespace-nowrap ml-2"
+          </Button>
+          <Button 
             onClick={() => setShowAddForm(true)}
+            className="ml-2"
           >
             <Plus className="h-4 w-4 mr-2" />
             Nouvelle transaction
-          </button>
+          </Button>
         </div>
       </header>
 
@@ -285,9 +527,22 @@ const FinancialTracking = () => {
           <div className="w-12 h-12 rounded-full bg-agri-success/10 flex items-center justify-center mr-4">
             <ArrowDownLeft className="h-6 w-6 text-agri-success" />
           </div>
-          <div>
+          <div className="flex-grow">
             <p className="text-sm text-muted-foreground">Revenus</p>
-            <p className="text-2xl font-semibold">{totalIncome.toLocaleString()} €</p>
+            <EditableField
+              value={totalIncome}
+              type="number"
+              onSave={(value) => {
+                toast({
+                  title: "Fonctionnalité limitée",
+                  description: "La modification directe du total des revenus n'est pas disponible.",
+                  variant: "default"
+                })
+              }}
+              className="text-2xl font-semibold"
+              inputClassName="text-xl font-semibold"
+              icon={<Euro className="h-4 w-4" />}
+            />
             <p className="text-xs text-muted-foreground">
               Ce mois-ci: {currentMonthIncome.toLocaleString()} €
             </p>
@@ -298,9 +553,22 @@ const FinancialTracking = () => {
           <div className="w-12 h-12 rounded-full bg-agri-danger/10 flex items-center justify-center mr-4">
             <ArrowUpRight className="h-6 w-6 text-agri-danger" />
           </div>
-          <div>
+          <div className="flex-grow">
             <p className="text-sm text-muted-foreground">Dépenses</p>
-            <p className="text-2xl font-semibold">{totalExpenses.toLocaleString()} €</p>
+            <EditableField
+              value={totalExpenses}
+              type="number"
+              onSave={(value) => {
+                toast({
+                  title: "Fonctionnalité limitée",
+                  description: "La modification directe du total des dépenses n'est pas disponible.",
+                  variant: "default"
+                })
+              }}
+              className="text-2xl font-semibold"
+              inputClassName="text-xl font-semibold"
+              icon={<Euro className="h-4 w-4" />}
+            />
             <p className="text-xs text-muted-foreground">
               Ce mois-ci: {currentMonthExpenses.toLocaleString()} €
             </p>
@@ -315,9 +583,22 @@ const FinancialTracking = () => {
               balance >= 0 ? 'text-agri-primary' : 'text-agri-danger'
             }`} />
           </div>
-          <div>
+          <div className="flex-grow">
             <p className="text-sm text-muted-foreground">Solde</p>
-            <p className="text-2xl font-semibold">{balance.toLocaleString()} €</p>
+            <EditableField
+              value={balance}
+              type="number"
+              onSave={(value) => {
+                toast({
+                  title: "Fonctionnalité limitée",
+                  description: "La modification directe du solde n'est pas disponible.",
+                  variant: "default"
+                })
+              }}
+              className="text-2xl font-semibold"
+              inputClassName="text-xl font-semibold"
+              icon={<Euro className="h-4 w-4" />}
+            />
             <p className="text-xs text-muted-foreground">
               Ce mois-ci: {(currentMonthIncome - currentMonthExpenses).toLocaleString()} €
             </p>
@@ -331,7 +612,16 @@ const FinancialTracking = () => {
             <div className="bg-agri-primary text-white p-4 flex justify-between items-center">
               <div className="flex items-center">
                 <button 
-                  onClick={() => setSelectedTransaction(null)}
+                  onClick={() => {
+                    if (isEditingTransaction) {
+                      if (window.confirm("Annuler les modifications ?")) {
+                        setIsEditingTransaction(false);
+                        setSelectedTransaction(transactionsData.find(t => t.id === selectedTransaction.id) || null);
+                      }
+                    } else {
+                      setSelectedTransaction(null);
+                    }
+                  }}
                   className="mr-3 hover:bg-white/10 p-1 rounded"
                 >
                   <ChevronRight className="h-5 w-5 transform rotate-180" />
@@ -339,12 +629,48 @@ const FinancialTracking = () => {
                 <h2 className="text-xl font-semibold">Détails de la transaction</h2>
               </div>
               <div className="flex space-x-2">
-                <button className="p-2 hover:bg-white/10 rounded">
-                  <Edit className="h-5 w-5" />
-                </button>
-                <button className="p-2 hover:bg-white/10 rounded">
-                  <Trash2 className="h-5 w-5" />
-                </button>
+                {isEditingTransaction ? (
+                  <>
+                    <Button
+                      onClick={handleSaveAllChanges}
+                      variant="outline"
+                      className="bg-white/10 hover:bg-white/20 text-white border-white/20"
+                    >
+                      <Check className="h-4 w-4 mr-2" />
+                      Enregistrer
+                    </Button>
+                    <Button
+                      onClick={() => {
+                        setIsEditingTransaction(false);
+                        setSelectedTransaction(transactionsData.find(t => t.id === selectedTransaction.id) || null);
+                      }}
+                      variant="outline"
+                      className="bg-white/10 hover:bg-white/20 text-white border-white/20"
+                    >
+                      <X className="h-4 w-4 mr-2" />
+                      Annuler
+                    </Button>
+                  </>
+                ) : (
+                  <>
+                    <Button
+                      onClick={() => setIsEditingTransaction(true)}
+                      variant="outline"
+                      className="bg-white/10 hover:bg-white/20 text-white border-white/20"
+                    >
+                      <Edit className="h-4 w-4 mr-2" />
+                      Modifier
+                    </Button>
+                    <Button
+                      onClick={() => handleDeleteTransaction(selectedTransaction.id)}
+                      variant="outline"
+                      className="bg-white/10 hover:bg-white/20 text-white border-white/20"
+                    >
+                      <Trash2 className="h-4 w-4 mr-2" />
+                      Supprimer
+                    </Button>
+                  </>
+                )}
               </div>
             </div>
             
@@ -356,38 +682,79 @@ const FinancialTracking = () => {
                     <div className="space-y-3">
                       <div className="flex justify-between border-b pb-2">
                         <span className="text-muted-foreground">Description:</span>
-                        <span className="font-medium">{selectedTransaction.description}</span>
+                        <EditableField
+                          value={selectedTransaction.description}
+                          onSave={(value) => handleUpdateTransaction('description', value)}
+                          className="font-medium text-right"
+                          showEditIcon={true}
+                        />
                       </div>
                       <div className="flex justify-between border-b pb-2">
                         <span className="text-muted-foreground">Date:</span>
-                        <span className="font-medium">{new Date(selectedTransaction.date).toLocaleDateString()}</span>
+                        <EditableField
+                          value={selectedTransaction.date}
+                          type="date"
+                          onSave={(value) => handleUpdateTransaction('date', value)}
+                          className="font-medium text-right"
+                          showEditIcon={true}
+                        />
                       </div>
                       <div className="flex justify-between border-b pb-2">
                         <span className="text-muted-foreground">Montant:</span>
-                        <span className={`font-medium ${
-                          selectedTransaction.type === 'income' ? 'text-agri-success' : 'text-agri-danger'
-                        }`}>
-                          {selectedTransaction.type === 'income' ? '+' : '-'}
-                          {Math.abs(selectedTransaction.amount).toLocaleString()} €
-                        </span>
+                        <EditableField
+                          value={Math.abs(selectedTransaction.amount)}
+                          type="number"
+                          onSave={(value) => handleUpdateTransaction('amount', value)}
+                          className={`font-medium text-right ${
+                            selectedTransaction.type === 'income' ? 'text-agri-success' : 'text-agri-danger'
+                          }`}
+                          showEditIcon={true}
+                        />
                       </div>
                       <div className="flex justify-between border-b pb-2">
                         <span className="text-muted-foreground">Type:</span>
-                        <span className="font-medium capitalize">{
-                          selectedTransaction.type === 'income' ? 'Revenu' : 'Dépense'
-                        }</span>
+                        <EditableField
+                          value={selectedTransaction.type}
+                          type="select"
+                          options={[
+                            { value: 'income', label: 'Revenu' },
+                            { value: 'expense', label: 'Dépense' }
+                          ]}
+                          onSave={(value) => handleUpdateTransaction('type', value)}
+                          className="font-medium text-right capitalize"
+                          showEditIcon={true}
+                        />
                       </div>
                       <div className="flex justify-between border-b pb-2">
                         <span className="text-muted-foreground">Catégorie:</span>
-                        <span className="font-medium">{selectedTransaction.category}</span>
+                        <EditableField
+                          value={selectedTransaction.category}
+                          type="select"
+                          options={categoryOptions}
+                          onSave={(value) => handleUpdateTransaction('category', value)}
+                          className="font-medium text-right"
+                          showEditIcon={true}
+                        />
                       </div>
                       <div className="flex justify-between border-b pb-2">
                         <span className="text-muted-foreground">Moyen de paiement:</span>
-                        <span className="font-medium">{selectedTransaction.paymentMethod}</span>
+                        <EditableField
+                          value={selectedTransaction.paymentMethod}
+                          type="select"
+                          options={paymentMethodOptions}
+                          onSave={(value) => handleUpdateTransaction('paymentMethod', value)}
+                          className="font-medium text-right"
+                          showEditIcon={true}
+                        />
                       </div>
                       <div className="flex justify-between border-b pb-2">
                         <span className="text-muted-foreground">Référence:</span>
-                        <span className="font-medium">{selectedTransaction.reference}</span>
+                        <EditableField
+                          value={selectedTransaction.reference}
+                          onSave={(value) => handleUpdateTransaction('reference', value)}
+                          className="font-medium text-right"
+                          showEditIcon={true}
+                        />
                       </div>
                     </div>
                   </div>
@@ -411,10 +778,16 @@ const FinancialTracking = () => {
                       className="w-full p-3 border border-input rounded-md bg-white"
                       placeholder="Ajouter des notes sur cette transaction..."
                       rows={4}
+                      value={transactionNotes}
+                      onChange={(e) => setTransactionNotes(e.target.value)}
                     />
-                    <button className="mt-2 px-3 py-1.5 bg-agri-primary text-white rounded-md text-sm">
+                    <Button 
+                      onClick={handleSaveNotes}
+                      size="sm"
+                      className="mt-2"
+                    >
                       Enregistrer
-                    </button>
+                    </Button>
                   </div>
                 </div>
               </div>
@@ -425,10 +798,10 @@ const FinancialTracking = () => {
             <div className="flex flex-col md:flex-row gap-3 mb-6">
               <div className="relative flex-grow">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                <input 
+                <Input
                   type="text" 
                   placeholder="Rechercher une transaction..." 
-                  className="pl-10 pr-4 py-2 w-full border border-input rounded-lg focus:outline-none focus:ring-2 focus:ring-ring"
+                  className="pl-10"
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                 />
@@ -436,7 +809,7 @@ const FinancialTracking = () => {
               <div className="flex gap-2">
                 <div className="relative">
                   <select 
-                    className="appearance-none pl-3 pr-8 py-2 border border-input rounded-lg focus:outline-none focus:ring-2 focus:ring-ring bg-white"
+                    className="appearance-none pl-3 pr-8 py-2 border border-input rounded-lg focus:outline-none focus:ring-2 focus:ring-ring bg-white h-10"
                     value={dateFilter}
                     onChange={(e) => setDateFilter(e.target.value)}
                   >
@@ -448,7 +821,7 @@ const FinancialTracking = () => {
                 </div>
                 <div className="relative">
                   <select 
-                    className="appearance-none pl-3 pr-8 py-2 border border-input rounded-lg focus:outline-none focus:ring-2 focus:ring-ring bg-white"
+                    className="appearance-none pl-3 pr-8 py-2 border border-input rounded-lg focus:outline-none focus:ring-2 focus:ring-ring bg-white h-10"
                     value={typeFilter}
                     onChange={(e) => setTypeFilter(e.target.value)}
                   >
@@ -463,10 +836,10 @@ const FinancialTracking = () => {
 
             <div className="bg-white rounded-xl border overflow-hidden mb-6">
               <div className="overflow-x-auto">
-                <table className="w-full text-sm">
-                  <thead className="bg-muted text-xs uppercase">
-                    <tr>
-                      <th className="px-4 py-3 text-left">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>
                         <button 
                           className="flex items-center"
                           onClick={() => toggleSort('date')}
@@ -478,10 +851,10 @@ const FinancialTracking = () => {
                               <ChevronDown className="h-4 w-4 ml-1 transform rotate-180" />
                           )}
                         </button>
-                      </th>
-                      <th className="px-4 py-3 text-left">Description</th>
-                      <th className="px-4 py-3 text-left">Catégorie</th>
-                      <th className="px-4 py-3 text-left">
+                      </TableHead>
+                      <TableHead>Description</TableHead>
+                      <TableHead>Catégorie</TableHead>
+                      <TableHead>
                         <button 
                           className="flex items-center"
                           onClick={() => toggleSort('amount')}
@@ -493,38 +866,39 @@ const FinancialTracking = () => {
                               <ChevronDown className="h-4 w-4 ml-1 transform rotate-180" />
                           )}
                         </button>
-                      </th>
-                      <th className="px-4 py-3 text-left">Référence</th>
-                      <th className="px-4 py-3 text-center">Actions</th>
-                    </tr>
-                  </thead>
-                  <tbody>
+                      </TableHead>
+                      <TableHead>Référence</TableHead>
+                      <TableHead className="text-center">Actions</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
                     {filteredTransactions.map(transaction => (
-                      <tr 
+                      <TableRow 
                         key={transaction.id} 
-                        className="border-t hover:bg-muted/30 cursor-pointer"
+                        className="cursor-pointer"
                         onClick={() => setSelectedTransaction(transaction)}
                       >
-                        <td className="px-4 py-3 font-medium">{new Date(transaction.date).toLocaleDateString()}</td>
-                        <td className="px-4 py-3">{transaction.description}</td>
-                        <td className="px-4 py-3">
+                        <TableCell className="font-medium">{new Date(transaction.date).toLocaleDateString()}</TableCell>
+                        <TableCell>{transaction.description}</TableCell>
+                        <TableCell>
                           <span className="inline-flex items-center px-2 py-1 rounded-full text-xs bg-gray-100">
                             {transaction.category}
                           </span>
-                        </td>
-                        <td className={`px-4 py-3 font-medium ${
+                        </TableCell>
+                        <TableCell className={`font-medium ${
                           transaction.type === 'income' ? 'text-agri-success' : 'text-agri-danger'
                         }`}>
                           {transaction.type === 'income' ? '+' : '-'}
                           {Math.abs(transaction.amount).toLocaleString()} €
-                        </td>
-                        <td className="px-4 py-3 text-muted-foreground">{transaction.reference}</td>
-                        <td className="px-4 py-3">
+                        </TableCell>
+                        <TableCell className="text-muted-foreground">{transaction.reference}</TableCell>
+                        <TableCell>
                           <div className="flex justify-center space-x-1">
                             <button 
                               onClick={(e) => {
                                 e.stopPropagation();
-                                // Handle edit
+                                setSelectedTransaction(transaction);
+                                setIsEditingTransaction(true);
                               }}
                               className="p-1.5 hover:bg-muted rounded"
                             >
@@ -533,37 +907,52 @@ const FinancialTracking = () => {
                             <button 
                               onClick={(e) => {
                                 e.stopPropagation();
-                                // Handle delete
+                                handleDeleteTransaction(transaction.id);
                               }}
                               className="p-1.5 hover:bg-muted rounded text-agri-danger"
                             >
                               <Trash2 className="h-4 w-4" />
                             </button>
                           </div>
-                        </td>
-                      </tr>
+                        </TableCell>
+                      </TableRow>
                     ))}
                     {filteredTransactions.length === 0 && (
-                      <tr>
-                        <td colSpan={6} className="px-4 py-8 text-center text-muted-foreground">
+                      <TableRow>
+                        <TableCell colSpan={6} className="text-center text-muted-foreground py-8">
                           Aucune transaction trouvée
-                        </td>
-                      </tr>
+                        </TableCell>
+                      </TableRow>
                     )}
-                  </tbody>
-                </table>
+                  </TableBody>
+                </Table>
               </div>
             </div>
 
             <div className="flex justify-end space-x-3">
-              <button className="inline-flex items-center px-4 py-2 border border-input bg-white rounded-lg hover:bg-muted/30 transition-colors">
-                <Download className="h-4 w-4 mr-2" />
+              <Button 
+                variant="outline" 
+                onClick={handleExport}
+                className="gap-2"
+              >
+                <Download className="h-4 w-4" />
                 Exporter
-              </button>
-              <button className="inline-flex items-center px-4 py-2 border border-input bg-white rounded-lg hover:bg-muted/30 transition-colors">
-                <Printer className="h-4 w-4 mr-2" />
+              </Button>
+              <Button
+                variant="outline"
+                className="gap-2"
+                onClick={() => {
+                  toast({
+                    title: "Impression",
+                    description: "Fonctionnalité d'impression lancée",
+                    variant: "default"
+                  });
+                  window.print();
+                }}
+              >
+                <Printer className="h-4 w-4" />
                 Imprimer
-              </button>
+              </Button>
             </div>
           </>
         )
@@ -751,17 +1140,34 @@ const FinancialTracking = () => {
               </button>
             </div>
             
-            <form className="space-y-4">
+            <form className="space-y-4" onSubmit={(e) => {
+              e.preventDefault();
+              handleAddTransaction();
+            }}>
               <div>
                 <label className="block text-sm font-medium mb-1">Type</label>
                 <div className="grid grid-cols-2 gap-3">
                   <label className="flex items-center border rounded-lg p-3 cursor-pointer hover:bg-muted/20">
-                    <input type="radio" name="transactionType" value="income" className="mr-2" />
+                    <input 
+                      type="radio" 
+                      name="transactionType" 
+                      value="income" 
+                      className="mr-2"
+                      checked={newTransaction.type === 'income'}
+                      onChange={() => setNewTransaction({...newTransaction, type: 'income'})}
+                    />
                     <ArrowDownLeft className="h-4 w-4 text-agri-success mr-2" />
                     <span>Revenu</span>
                   </label>
                   <label className="flex items-center border rounded-lg p-3 cursor-pointer hover:bg-muted/20">
-                    <input type="radio" name="transactionType" value="expense" className="mr-2" />
+                    <input 
+                      type="radio" 
+                      name="transactionType" 
+                      value="expense" 
+                      className="mr-2"
+                      checked={newTransaction.type === 'expense'}
+                      onChange={() => setNewTransaction({...newTransaction, type: 'expense'})}
+                    />
                     <ArrowUpRight className="h-4 w-4 text-agri-danger mr-2" />
                     <span>Dépense</span>
                   </label>
@@ -770,67 +1176,79 @@ const FinancialTracking = () => {
               
               <div>
                 <label className="block text-sm font-medium mb-1">Description</label>
-                <input 
+                <Input 
                   type="text" 
-                  className="w-full px-3 py-2 border border-input rounded-md"
                   placeholder="Description de la transaction"
+                  value={newTransaction.description}
+                  onChange={(e) => setNewTransaction({...newTransaction, description: e.target.value})}
+                  required
                 />
               </div>
               
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-medium mb-1">Montant (€)</label>
-                  <input 
+                  <Input 
                     type="number" 
-                    className="w-full px-3 py-2 border border-input rounded-md"
                     placeholder="0.00"
                     min="0"
                     step="0.01"
+                    value={newTransaction.amount || ''}
+                    onChange={(e) => setNewTransaction({...newTransaction, amount: parseFloat(e.target.value)})}
+                    required
                   />
                 </div>
                 <div>
                   <label className="block text-sm font-medium mb-1">Date</label>
-                  <input 
+                  <Input 
                     type="date" 
-                    className="w-full px-3 py-2 border border-input rounded-md"
+                    value={newTransaction.date}
+                    onChange={(e) => setNewTransaction({...newTransaction, date: e.target.value})}
+                    required
                   />
                 </div>
               </div>
               
               <div>
                 <label className="block text-sm font-medium mb-1">Catégorie</label>
-                <select className="w-full px-3 py-2 border border-input rounded-md">
+                <select 
+                  className="w-full px-3 py-2 border border-input rounded-md h-10"
+                  value={newTransaction.category}
+                  onChange={(e) => setNewTransaction({...newTransaction, category: e.target.value})}
+                  required
+                >
                   <option value="">Sélectionner une catégorie</option>
-                  <option value="ventes">Ventes</option>
-                  <option value="subventions">Subventions</option>
-                  <option value="autres_revenus">Autres revenus</option>
-                  <option value="intrants">Intrants</option>
-                  <option value="carburant">Carburant</option>
-                  <option value="reparations">Réparations</option>
-                  <option value="assurances">Assurances</option>
-                  <option value="salaires">Salaires</option>
-                  <option value="autres_depenses">Autres dépenses</option>
+                  {categoryOptions.map(option => (
+                    <option key={option.value} value={option.value}>
+                      {option.label}
+                    </option>
+                  ))}
                 </select>
               </div>
               
               <div>
                 <label className="block text-sm font-medium mb-1">Moyen de paiement</label>
-                <select className="w-full px-3 py-2 border border-input rounded-md">
+                <select 
+                  className="w-full px-3 py-2 border border-input rounded-md h-10"
+                  value={newTransaction.paymentMethod}
+                  onChange={(e) => setNewTransaction({...newTransaction, paymentMethod: e.target.value})}
+                >
                   <option value="">Sélectionner un moyen de paiement</option>
-                  <option value="virement">Virement</option>
-                  <option value="carte">Carte bancaire</option>
-                  <option value="cheque">Chèque</option>
-                  <option value="especes">Espèces</option>
-                  <option value="prelevement">Prélèvement</option>
+                  {paymentMethodOptions.map(option => (
+                    <option key={option.value} value={option.value}>
+                      {option.label}
+                    </option>
+                  ))}
                 </select>
               </div>
               
               <div>
                 <label className="block text-sm font-medium mb-1">Référence</label>
-                <input 
+                <Input 
                   type="text" 
-                  className="w-full px-3 py-2 border border-input rounded-md"
                   placeholder="Numéro de facture ou référence"
+                  value={newTransaction.reference || ''}
+                  onChange={(e) => setNewTransaction({...newTransaction, reference: e.target.value})}
                 />
               </div>
               
@@ -840,23 +1258,24 @@ const FinancialTracking = () => {
                   className="w-full px-3 py-2 border border-input rounded-md"
                   placeholder="Notes supplémentaires..."
                   rows={3}
+                  value={newTransaction.notes || ''}
+                  onChange={(e) => setNewTransaction({...newTransaction, notes: e.target.value})}
                 />
               </div>
               
               <div className="flex justify-end space-x-3 pt-2">
-                <button 
+                <Button 
                   type="button"
+                  variant="outline"
                   onClick={() => setShowAddForm(false)}
-                  className="px-4 py-2 text-sm text-foreground bg-muted rounded-md hover:bg-muted/80"
                 >
                   Annuler
-                </button>
-                <button 
-                  type="button"
-                  className="px-4 py-2 text-sm text-white bg-agri-primary rounded-md hover:bg-agri-primary-dark"
+                </Button>
+                <Button 
+                  type="submit"
                 >
                   Ajouter
-                </button>
+                </Button>
               </div>
             </form>
           </div>
