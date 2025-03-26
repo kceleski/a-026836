@@ -9,6 +9,7 @@ interface EditableFieldProps {
   className?: string;
   inputClassName?: string;
   placeholder?: string;
+  onClick?: (e: React.MouseEvent) => void;
 }
 
 export const EditableField = ({
@@ -17,7 +18,8 @@ export const EditableField = ({
   type = 'text',
   className = '',
   inputClassName = '',
-  placeholder = 'Entrer une valeur...'
+  placeholder = 'Entrer une valeur...',
+  onClick
 }: EditableFieldProps) => {
   const [isEditing, setIsEditing] = useState(false);
   const [inputValue, setInputValue] = useState(value);
@@ -28,6 +30,11 @@ export const EditableField = ({
       inputRef.current.focus();
     }
   }, [isEditing]);
+
+  // Update the input value when the passed value changes
+  useEffect(() => {
+    setInputValue(value);
+  }, [value]);
 
   const handleSave = () => {
     // For number type, convert string to number
@@ -52,6 +59,15 @@ export const EditableField = ({
     }
   };
 
+  const handleClick = (e: React.MouseEvent) => {
+    if (onClick) {
+      onClick(e);
+    }
+    if (!isEditing) {
+      setIsEditing(true);
+    }
+  };
+
   if (isEditing) {
     return (
       <div className={`flex items-center gap-1 ${className}`}>
@@ -61,7 +77,6 @@ export const EditableField = ({
           value={inputValue}
           onChange={(e) => setInputValue(e.target.value)}
           onKeyDown={handleKeyDown}
-          onBlur={handleSave}
           className={`px-2 py-1 border rounded-md focus:ring-1 focus:ring-primary focus:outline-none ${inputClassName}`}
           placeholder={placeholder}
         />
@@ -86,7 +101,7 @@ export const EditableField = ({
   return (
     <div 
       className={`cursor-pointer hover:bg-muted/30 px-2 py-1 rounded ${className}`}
-      onClick={() => setIsEditing(true)}
+      onClick={handleClick}
     >
       {value || <span className="text-muted-foreground italic">{placeholder}</span>}
     </div>

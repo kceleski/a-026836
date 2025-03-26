@@ -14,12 +14,20 @@ import {
   ChevronRight,
   X,
   Check,
-  BarChart2
+  BarChart2,
+  Save
 } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
+import { EditableField } from './ui/editable-field';
+import { EditableTable, Column } from './ui/editable-table';
+import { Button } from './ui/button';
+import { Input } from './ui/input';
+import { Label } from './ui/label';
+import { Textarea } from './ui/textarea';
+import { useToast } from "@/hooks/use-toast";
 
 // Mock data for inventory items
-const inventoryData = [
+const initialInventoryData = [
   { 
     id: 1, 
     name: 'Semences de blé', 
@@ -100,7 +108,7 @@ const inventoryData = [
 ];
 
 // Transaction history data
-const transactionHistory = [
+const initialTransactionHistory = [
   { id: 1, itemId: 1, type: 'out', quantity: 50, date: '2023-08-20', user: 'Jean Dupont', notes: 'Semis parcelle nord' },
   { id: 2, itemId: 2, type: 'out', quantity: 200, date: '2023-08-18', user: 'Jean Dupont', notes: 'Application parcelle est' },
   { id: 3, itemId: 4, type: 'in', quantity: 500, date: '2023-08-18', user: 'Marie Martin', notes: 'Livraison mensuelle' },
@@ -109,21 +117,8 @@ const transactionHistory = [
   { id: 6, itemId: 6, type: 'out', quantity: 5, date: '2023-08-05', user: 'Pierre Leroy', notes: 'Vidange tracteur' },
 ];
 
-// Alerts based on inventory levels
-const generateAlerts = () => {
-  return inventoryData
-    .filter(item => item.quantity <= item.minQuantity)
-    .map(item => ({
-      id: item.id,
-      name: item.name,
-      current: item.quantity,
-      min: item.minQuantity,
-      status: item.quantity < item.minQuantity * 0.5 ? 'critical' : 'warning'
-    }));
-};
-
 // Stock statistics for visualization
-const categoryStats = [
+const initialCategoryStats = [
   { name: 'Semences', value: 580, fill: '#4CAF50' },
   { name: 'Engrais', value: 800, fill: '#8D6E63' },
   { name: 'Phytosanitaires', value: 50, fill: '#F44336' },
@@ -133,13 +128,47 @@ const categoryStats = [
 ];
 
 const Inventory = () => {
+  const { toast } = useToast();
+  const [inventoryData, setInventoryData] = useState(initialInventoryData);
+  const [transactionHistory, setTransactionHistory] = useState(initialTransactionHistory);
+  const [categoryStats, setCategoryStats] = useState(initialCategoryStats);
+  
   const [searchTerm, setSearchTerm] = useState('');
   const [categoryFilter, setCategoryFilter] = useState('all');
   const [sortBy, setSortBy] = useState('name');
   const [sortOrder, setSortOrder] = useState('asc');
   const [showAddForm, setShowAddForm] = useState(false);
+  const [newItem, setNewItem] = useState({
+    name: '',
+    category: '',
+    quantity: 0,
+    unit: '',
+    minQuantity: 0,
+    price: 0,
+    location: '',
+    notes: ''
+  });
   const [selectedItem, setSelectedItem] = useState<any>(null);
   const [view, setView] = useState<'list' | 'detail' | 'stats'>('list');
+  const [showTransactionForm, setShowTransactionForm] = useState<'in' | 'out' | null>(null);
+  const [newTransaction, setNewTransaction] = useState({
+    quantity: 0,
+    notes: '',
+    date: new Date().toISOString().split('T')[0]
+  });
+  
+  // Alerts based on inventory levels
+  const generateAlerts = () => {
+    return inventoryData
+      .filter(item => item.quantity <= item.minQuantity)
+      .map(item => ({
+        id: item.id,
+        name: item.name,
+        current: item.quantity,
+        min: item.minQuantity,
+        status: item.quantity < item.minQuantity * 0.5 ? 'critical' : 'warning'
+      }));
+  };
   
   const alerts = generateAlerts();
   
@@ -174,6 +203,8 @@ const Inventory = () => {
   
   // Toggle sort order
   const toggleSort = (field: string) => {
+    if (!field) return;
+    
     if (sortBy === field) {
       setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc');
     } else {
@@ -182,9 +213,178 @@ const Inventory = () => {
     }
   };
   
+  // Add new inventory item
+  const handleAddItem = () => {
+    if (!newItem.name || !newItem.category || !newItem.unit) {
+      toast({
+        title: "Champs obligatoires",
+        description: "Veuillez remplir tous les champs obligatoires",
+        variant: "destructive"
+      });
+      return;
+    }
+    
+    const newId = Math.max(...inventoryData.map(item => item.id), 0) + 1;
+    const itemToAdd = {
+      ...newItem,
+      id: newId,
+      lastUpdated: new Date().toISOString().split('T')[0],
+      quantity: Number(newItem.quantity),
+      minQuantity: Number(newItem.minQuantity),
+      price: Number(newItem.price)
+    };
+    
+    setInventoryData([...inventoryData, itemToAdd]);
+    
+    // Update category stats if needed
+    const existingCategoryStat = categoryStats.find(stat => stat.name === newItem.category);
+    if (existingCategoryStat) {
+      setCategoryStats(categoryStats.map(stat => 
+        stat.name === newItem.category 
+          ? { ...stat, value: stat.value + Number(newItem.quantity) }
+          : stat
+      ));
+    } else {
+      setCategoryStats([...categoryStats, { 
+        name: newItem.category, 
+        value: Number(newItem.quantity),
+        fill: getRandomColor()
+      }]);
+    }
+    
+    setShowAddForm(false);
+    setNewItem({
+      name: '',
+      category: '',
+      quantity: 0,
+      unit: '',
+      minQuantity: 0,
+      price: 0,
+      location: '',
+      notes: ''
+    });
+    
+    toast({
+      title: "Article ajouté",
+      description: `${newItem.name} a été ajouté à l'inventaire`,
+    });
+  };
+  
+  // Generate a random color for new categories
+  const getRandomColor = () => {
+    const colors = ['#4CAF50', '#8D6E63', '#F44336', '#2196F3', '#FFC107', '#9C27B0', '#FF5722', '#3F51B5'];
+    return colors[Math.floor(Math.random() * colors.length)];
+  };
+  
+  // Delete inventory item
+  const handleDeleteItem = (id: number) => {
+    const itemToDelete = inventoryData.find(item => item.id === id);
+    if (!itemToDelete) return;
+    
+    setInventoryData(inventoryData.filter(item => item.id !== id));
+    
+    // Update category stats
+    setCategoryStats(categoryStats.map(stat => 
+      stat.name === itemToDelete.category 
+        ? { ...stat, value: Math.max(0, stat.value - itemToDelete.quantity) }
+        : stat
+    ));
+    
+    // If the deleted item is selected, clear selection
+    if (selectedItem && selectedItem.id === id) {
+      setSelectedItem(null);
+    }
+    
+    toast({
+      title: "Article supprimé",
+      description: `${itemToDelete.name} a été supprimé de l'inventaire`,
+    });
+  };
+  
+  // Update an inventory item
+  const handleUpdateItem = (id: number, field: string, value: any) => {
+    setInventoryData(inventoryData.map(item => {
+      if (item.id !== id) return item;
+      
+      const updatedItem = { 
+        ...item, 
+        [field]: value,
+        lastUpdated: new Date().toISOString().split('T')[0] 
+      };
+      
+      // If the updated item is selected, update selection
+      if (selectedItem && selectedItem.id === id) {
+        setSelectedItem(updatedItem);
+      }
+      
+      return updatedItem;
+    }));
+    
+    // If quantity field is updated, update category stats
+    if (field === 'quantity') {
+      const item = inventoryData.find(item => item.id === id);
+      if (item) {
+        const oldQuantity = item.quantity;
+        const newQuantity = value;
+        const diff = newQuantity - oldQuantity;
+        
+        setCategoryStats(categoryStats.map(stat => 
+          stat.name === item.category 
+            ? { ...stat, value: stat.value + diff }
+            : stat
+        ));
+      }
+    }
+  };
+  
+  // Add transaction
   const handleAddTransaction = (type: 'in' | 'out') => {
-    console.log(`Add ${type} transaction for item ${selectedItem?.id}`);
-    // In a real app, this would open a form to add a transaction
+    setShowTransactionForm(type);
+  };
+  
+  // Submit transaction
+  const handleSubmitTransaction = () => {
+    if (!selectedItem || !showTransactionForm || newTransaction.quantity <= 0) {
+      toast({
+        title: "Erreur",
+        description: "Veuillez spécifier une quantité valide",
+        variant: "destructive"
+      });
+      return;
+    }
+    
+    // Create new transaction
+    const newId = Math.max(...transactionHistory.map(t => t.id), 0) + 1;
+    const transaction = {
+      id: newId,
+      itemId: selectedItem.id,
+      type: showTransactionForm,
+      quantity: newTransaction.quantity,
+      date: newTransaction.date,
+      user: 'Utilisateur actuel', // In a real app, this would be the current user
+      notes: newTransaction.notes
+    };
+    
+    setTransactionHistory([transaction, ...transactionHistory]);
+    
+    // Update item quantity
+    const updatedQuantity = showTransactionForm === 'in' 
+      ? selectedItem.quantity + newTransaction.quantity 
+      : Math.max(0, selectedItem.quantity - newTransaction.quantity);
+    
+    handleUpdateItem(selectedItem.id, 'quantity', updatedQuantity);
+    
+    setShowTransactionForm(null);
+    setNewTransaction({
+      quantity: 0,
+      notes: '',
+      date: new Date().toISOString().split('T')[0]
+    });
+    
+    toast({
+      title: showTransactionForm === 'in' ? "Entrée enregistrée" : "Sortie enregistrée",
+      description: `${newTransaction.quantity} ${selectedItem.unit} ${showTransactionForm === 'in' ? 'ajoutés' : 'retirés'} de l'inventaire`,
+    });
   };
   
   // Get transactions for the selected item
@@ -193,42 +393,63 @@ const Inventory = () => {
         new Date(b.date).getTime() - new Date(a.date).getTime()
       )
     : [];
+
+  // Column definitions for the inventory table
+  const inventoryColumns: Column[] = [
+    { id: 'name', header: 'Article', accessorKey: 'name', isEditable: true },
+    { id: 'category', header: 'Catégorie', accessorKey: 'category', isEditable: true },
+    { id: 'quantity', header: 'Quantité', accessorKey: 'quantity', type: 'number', isEditable: true },
+    { id: 'price', header: 'Prix unitaire', accessorKey: 'price', type: 'number', isEditable: true },
+    { id: 'value', header: 'Valeur totale', accessorKey: 'value', type: 'text', isEditable: false },
+    { id: 'status', header: 'Statut', accessorKey: 'status', type: 'text', isEditable: false },
+  ];
+
+  // Prepare data for EditableTable
+  const tableData = filteredItems.map(item => ({
+    ...item,
+    value: `${(item.quantity * item.price).toFixed(2)} €`,
+    status: item.quantity <= item.minQuantity 
+      ? item.quantity < item.minQuantity * 0.5 ? 'critical' : 'warning'
+      : 'normal'
+  }));
+
+  // Handle row updates in the EditableTable
+  const handleTableUpdate = (rowIndex: number, columnId: string, value: any) => {
+    const item = filteredItems[rowIndex];
+    if (!item) return;
+    
+    handleUpdateItem(item.id, columnId, value);
+  };
   
   return (
-    <div className="p-6 animate-enter">
+    <div className="animate-enter">
       <header className="flex flex-col md:flex-row md:justify-between md:items-center mb-6 gap-4">
         <div>
           <h1 className="text-2xl font-bold mb-1">Gestion des Stocks</h1>
           <p className="text-muted-foreground">Gérez votre inventaire et suivez les niveaux de stock</p>
         </div>
         <div className="flex space-x-2">
-          <button 
-            className={`px-4 py-2 rounded-lg transition-colors ${
-              view === 'list' 
-                ? 'bg-agri-primary text-white' 
-                : 'bg-muted text-foreground hover:bg-muted/80'
-            }`}
+          <Button 
+            variant={view === 'list' ? 'default' : 'outline'}
             onClick={() => setView('list')}
+            className="px-4 py-2"
           >
             Liste
-          </button>
-          <button 
-            className={`px-4 py-2 rounded-lg transition-colors ${
-              view === 'stats' 
-                ? 'bg-agri-primary text-white' 
-                : 'bg-muted text-foreground hover:bg-muted/80'
-            }`}
+          </Button>
+          <Button 
+            variant={view === 'stats' ? 'default' : 'outline'}
             onClick={() => setView('stats')}
+            className="px-4 py-2"
           >
             Statistiques
-          </button>
-          <button 
-            className="inline-flex items-center justify-center px-4 py-2 bg-agri-primary text-white rounded-lg hover:bg-agri-primary-dark transition-colors whitespace-nowrap ml-2"
+          </Button>
+          <Button 
             onClick={() => setShowAddForm(true)}
+            className="ml-2"
           >
-            <Plus className="h-4 w-4 mr-2" />
+            <Plus className="mr-2" />
             Ajouter un article
-          </button>
+          </Button>
         </div>
       </header>
 
@@ -262,10 +483,20 @@ const Inventory = () => {
                 </div>
                 <div className="mt-2 text-sm">
                   <span>Stock actuel: </span>
-                  <span className="font-medium">{alert.current}</span>
+                  <EditableField
+                    value={alert.current}
+                    type="number"
+                    onSave={(value) => handleUpdateItem(alert.id, 'quantity', Number(value))}
+                    className="inline-block"
+                  />
                   <span className="mx-1">|</span>
                   <span>Minimum: </span>
-                  <span className="font-medium">{alert.min}</span>
+                  <EditableField
+                    value={alert.min}
+                    type="number"
+                    onSave={(value) => handleUpdateItem(alert.id, 'minQuantity', Number(value))}
+                    className="inline-block"
+                  />
                 </div>
               </div>
             ))}
@@ -284,23 +515,37 @@ const Inventory = () => {
                 >
                   <ChevronRight className="h-5 w-5 transform rotate-180" />
                 </button>
-                <h2 className="text-xl font-semibold">{selectedItem.name}</h2>
+                <EditableField 
+                  value={selectedItem.name}
+                  onSave={(value) => handleUpdateItem(selectedItem.id, 'name', value)}
+                  className="text-xl font-semibold"
+                />
               </div>
               <div className="flex space-x-2">
-                <button 
+                <Button 
                   onClick={() => handleAddTransaction('in')}
-                  className="px-3 py-1.5 bg-white/10 hover:bg-white/20 rounded-lg text-sm flex items-center"
+                  variant="outline"
+                  className="bg-white/10 hover:bg-white/20 text-white border-none"
                 >
-                  <ArrowDown className="h-4 w-4 mr-1.5" />
+                  <ArrowDown className="mr-1.5" />
                   Entrée
-                </button>
-                <button 
+                </Button>
+                <Button 
                   onClick={() => handleAddTransaction('out')}
-                  className="px-3 py-1.5 bg-white/10 hover:bg-white/20 rounded-lg text-sm flex items-center"
+                  variant="outline"
+                  className="bg-white/10 hover:bg-white/20 text-white border-none"
                 >
-                  <ArrowUp className="h-4 w-4 mr-1.5" />
+                  <ArrowUp className="mr-1.5" />
                   Sortie
-                </button>
+                </Button>
+                <Button 
+                  onClick={() => handleDeleteItem(selectedItem.id)}
+                  variant="outline"
+                  className="bg-white/10 hover:bg-white/20 text-white border-none"
+                >
+                  <Trash2 className="mr-1.5" />
+                  Supprimer
+                </Button>
               </div>
             </div>
             
@@ -311,19 +556,48 @@ const Inventory = () => {
                   <div className="space-y-2">
                     <div className="flex justify-between items-center">
                       <span className="text-muted-foreground">Catégorie:</span>
-                      <span>{selectedItem.category}</span>
+                      <EditableField
+                        value={selectedItem.category}
+                        onSave={(value) => handleUpdateItem(selectedItem.id, 'category', value)}
+                      />
                     </div>
                     <div className="flex justify-between items-center">
                       <span className="text-muted-foreground">Quantité:</span>
-                      <span className="font-medium">{selectedItem.quantity} {selectedItem.unit}</span>
+                      <div className="flex items-center">
+                        <EditableField
+                          value={selectedItem.quantity}
+                          type="number"
+                          onSave={(value) => handleUpdateItem(selectedItem.id, 'quantity', Number(value))}
+                          className="font-medium"
+                        />
+                        <EditableField
+                          value={selectedItem.unit}
+                          onSave={(value) => handleUpdateItem(selectedItem.id, 'unit', value)}
+                          className="ml-1"
+                        />
+                      </div>
                     </div>
                     <div className="flex justify-between items-center">
                       <span className="text-muted-foreground">Seuil minimal:</span>
-                      <span>{selectedItem.minQuantity} {selectedItem.unit}</span>
+                      <div className="flex items-center">
+                        <EditableField
+                          value={selectedItem.minQuantity}
+                          type="number"
+                          onSave={(value) => handleUpdateItem(selectedItem.id, 'minQuantity', Number(value))}
+                        />
+                        <span className="ml-1">{selectedItem.unit}</span>
+                      </div>
                     </div>
                     <div className="flex justify-between items-center">
                       <span className="text-muted-foreground">Prix unitaire:</span>
-                      <span>{selectedItem.price} €/{selectedItem.unit}</span>
+                      <div className="flex items-center">
+                        <EditableField
+                          value={selectedItem.price}
+                          type="number"
+                          onSave={(value) => handleUpdateItem(selectedItem.id, 'price', Number(value))}
+                        />
+                        <span className="ml-1">€/{selectedItem.unit}</span>
+                      </div>
                     </div>
                     <div className="flex justify-between items-center">
                       <span className="text-muted-foreground">Valeur totale:</span>
@@ -331,7 +605,10 @@ const Inventory = () => {
                     </div>
                     <div className="flex justify-between items-center">
                       <span className="text-muted-foreground">Emplacement:</span>
-                      <span>{selectedItem.location}</span>
+                      <EditableField
+                        value={selectedItem.location}
+                        onSave={(value) => handleUpdateItem(selectedItem.id, 'location', value)}
+                      />
                     </div>
                     <div className="flex justify-between items-center">
                       <span className="text-muted-foreground">Dernière mise à jour:</span>
@@ -366,8 +643,84 @@ const Inventory = () => {
                 </div>
               </div>
               
+              {showTransactionForm && (
+                <div className="mb-6 p-4 border rounded-lg bg-muted/10">
+                  <div className="flex justify-between items-center mb-3">
+                    <h3 className="font-medium">
+                      {showTransactionForm === 'in' ? 'Nouvelle entrée' : 'Nouvelle sortie'}
+                    </h3>
+                    <Button 
+                      variant="ghost" 
+                      onClick={() => setShowTransactionForm(null)}
+                      size="sm"
+                    >
+                      <X className="h-4 w-4" />
+                    </Button>
+                  </div>
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div>
+                      <Label htmlFor="quantity">Quantité</Label>
+                      <div className="flex items-center mt-1">
+                        <Input
+                          id="quantity"
+                          type="number"
+                          value={newTransaction.quantity}
+                          onChange={(e) => setNewTransaction({
+                            ...newTransaction,
+                            quantity: parseInt(e.target.value) || 0
+                          })}
+                          min={0}
+                        />
+                        <span className="ml-2">{selectedItem.unit}</span>
+                      </div>
+                    </div>
+                    <div>
+                      <Label htmlFor="date">Date</Label>
+                      <Input
+                        id="date"
+                        type="date"
+                        value={newTransaction.date}
+                        onChange={(e) => setNewTransaction({
+                          ...newTransaction,
+                          date: e.target.value
+                        })}
+                        className="mt-1"
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="notes">Notes</Label>
+                      <Input
+                        id="notes"
+                        value={newTransaction.notes}
+                        onChange={(e) => setNewTransaction({
+                          ...newTransaction,
+                          notes: e.target.value
+                        })}
+                        placeholder="Commentaire..."
+                        className="mt-1"
+                      />
+                    </div>
+                  </div>
+                  <div className="flex justify-end mt-4">
+                    <Button 
+                      variant="outline" 
+                      onClick={() => setShowTransactionForm(null)}
+                      className="mr-2"
+                    >
+                      Annuler
+                    </Button>
+                    <Button onClick={handleSubmitTransaction}>
+                      <Save className="mr-2" />
+                      Enregistrer
+                    </Button>
+                  </div>
+                </div>
+              )}
+              
               <div className="mt-6">
-                <h3 className="font-medium mb-3">Historique des transactions</h3>
+                <div className="flex justify-between items-center mb-3">
+                  <h3 className="font-medium">Historique des transactions</h3>
+                </div>
                 <div className="overflow-x-auto">
                   <table className="w-full text-sm">
                     <thead className="text-xs uppercase bg-muted">
@@ -377,10 +730,11 @@ const Inventory = () => {
                         <th className="px-4 py-2 text-left">Quantité</th>
                         <th className="px-4 py-2 text-left">Utilisateur</th>
                         <th className="px-4 py-2 text-left">Notes</th>
+                        <th className="px-4 py-2 text-left">Actions</th>
                       </tr>
                     </thead>
                     <tbody>
-                      {itemTransactions.map(transaction => (
+                      {itemTransactions.map((transaction, index) => (
                         <tr key={transaction.id} className="border-t">
                           <td className="px-4 py-3">{new Date(transaction.date).toLocaleDateString()}</td>
                           <td className="px-4 py-3">
@@ -404,12 +758,50 @@ const Inventory = () => {
                           </td>
                           <td className="px-4 py-3">{transaction.quantity} {selectedItem.unit}</td>
                           <td className="px-4 py-3">{transaction.user}</td>
-                          <td className="px-4 py-3">{transaction.notes}</td>
+                          <td className="px-4 py-3">
+                            <EditableField
+                              value={transaction.notes}
+                              onSave={(value) => {
+                                const updatedTransactions = [...transactionHistory];
+                                updatedTransactions[index].notes = value.toString();
+                                setTransactionHistory(updatedTransactions);
+                              }}
+                            />
+                          </td>
+                          <td className="px-4 py-3">
+                            <Button 
+                              variant="ghost" 
+                              size="sm"
+                              onClick={() => {
+                                // Delete transaction
+                                const updatedTransactions = transactionHistory.filter(t => t.id !== transaction.id);
+                                setTransactionHistory(updatedTransactions);
+                                
+                                // Adjust item quantity
+                                const quantityChange = transaction.type === 'in' 
+                                  ? -transaction.quantity 
+                                  : transaction.quantity;
+                                handleUpdateItem(
+                                  selectedItem.id, 
+                                  'quantity', 
+                                  Math.max(0, selectedItem.quantity + quantityChange)
+                                );
+                                
+                                toast({
+                                  title: "Transaction supprimée",
+                                  description: "La transaction a été supprimée et le stock a été ajusté",
+                                });
+                              }}
+                              className="text-agri-danger"
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </td>
                         </tr>
                       ))}
                       {itemTransactions.length === 0 && (
                         <tr>
-                          <td colSpan={5} className="px-4 py-4 text-center text-muted-foreground">
+                          <td colSpan={6} className="px-4 py-4 text-center text-muted-foreground">
                             Aucune transaction pour cet article
                           </td>
                         </tr>
@@ -422,20 +814,20 @@ const Inventory = () => {
           </div>
         ) : (
           <>
-            <div className="flex gap-3 mb-6">
+            <div className="flex flex-col md:flex-row gap-3 mb-6">
               <div className="relative flex-grow">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                <input 
+                <Input 
                   type="text" 
                   placeholder="Rechercher un article..." 
-                  className="pl-10 pr-4 py-2 w-full border border-input rounded-lg focus:outline-none focus:ring-2 focus:ring-ring"
+                  className="pl-10"
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                 />
               </div>
               <div className="relative">
                 <select 
-                  className="appearance-none pl-3 pr-8 py-2 border border-input rounded-lg focus:outline-none focus:ring-2 focus:ring-ring bg-white"
+                  className="h-10 appearance-none pl-3 pr-8 py-2 border border-input rounded-md focus:outline-none focus:ring-2 focus:ring-ring bg-white"
                   value={categoryFilter}
                   onChange={(e) => setCategoryFilter(e.target.value)}
                 >
@@ -449,338 +841,4 @@ const Inventory = () => {
               </div>
             </div>
 
-            <div className="bg-white rounded-xl border overflow-hidden">
-              <div className="overflow-x-auto">
-                <table className="w-full text-sm">
-                  <thead className="bg-muted text-xs uppercase">
-                    <tr>
-                      <th className="px-4 py-3 text-left">
-                        <button 
-                          className="flex items-center"
-                          onClick={() => toggleSort('name')}
-                        >
-                          Article
-                          {sortBy === 'name' && (
-                            sortOrder === 'asc' ? 
-                              <ChevronDown className="h-4 w-4 ml-1" /> : 
-                              <ChevronDown className="h-4 w-4 ml-1 transform rotate-180" />
-                          )}
-                        </button>
-                      </th>
-                      <th className="px-4 py-3 text-left">Catégorie</th>
-                      <th className="px-4 py-3 text-left">
-                        <button 
-                          className="flex items-center"
-                          onClick={() => toggleSort('quantity')}
-                        >
-                          Quantité
-                          {sortBy === 'quantity' && (
-                            sortOrder === 'asc' ? 
-                              <ChevronDown className="h-4 w-4 ml-1" /> : 
-                              <ChevronDown className="h-4 w-4 ml-1 transform rotate-180" />
-                          )}
-                        </button>
-                      </th>
-                      <th className="px-4 py-3 text-left">
-                        <button 
-                          className="flex items-center"
-                          onClick={() => toggleSort('price')}
-                        >
-                          Prix unitaire
-                          {sortBy === 'price' && (
-                            sortOrder === 'asc' ? 
-                              <ChevronDown className="h-4 w-4 ml-1" /> : 
-                              <ChevronDown className="h-4 w-4 ml-1 transform rotate-180" />
-                          )}
-                        </button>
-                      </th>
-                      <th className="px-4 py-3 text-left">Valeur totale</th>
-                      <th className="px-4 py-3 text-left">Statut</th>
-                      <th className="px-4 py-3 text-left">Actions</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {filteredItems.map(item => (
-                      <tr 
-                        key={item.id} 
-                        className="border-t hover:bg-muted/30 cursor-pointer"
-                        onClick={() => setSelectedItem(item)}
-                      >
-                        <td className="px-4 py-3 font-medium">{item.name}</td>
-                        <td className="px-4 py-3">{item.category}</td>
-                        <td className="px-4 py-3">{item.quantity} {item.unit}</td>
-                        <td className="px-4 py-3">{item.price} €/{item.unit}</td>
-                        <td className="px-4 py-3">{(item.quantity * item.price).toFixed(2)} €</td>
-                        <td className="px-4 py-3">
-                          {item.quantity <= item.minQuantity ? (
-                            <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs ${
-                              item.quantity < item.minQuantity * 0.5 
-                                ? 'bg-agri-danger/10 text-agri-danger' 
-                                : 'bg-agri-warning/10 text-agri-warning'
-                            }`}>
-                              <AlertCircle className="h-3 w-3 mr-1" />
-                              {item.quantity < item.minQuantity * 0.5 ? 'Critique' : 'Bas'}
-                            </span>
-                          ) : (
-                            <span className="inline-flex items-center px-2 py-1 rounded-full text-xs bg-agri-success/10 text-agri-success">
-                              <Check className="h-3 w-3 mr-1" />
-                              Normal
-                            </span>
-                          )}
-                        </td>
-                        <td className="px-4 py-3">
-                          <div className="flex space-x-1">
-                            <button 
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                handleAddTransaction('in');
-                              }}
-                              className="p-1.5 hover:bg-agri-success/10 text-agri-success rounded"
-                            >
-                              <ArrowDown className="h-4 w-4" />
-                            </button>
-                            <button 
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                handleAddTransaction('out');
-                              }}
-                              className="p-1.5 hover:bg-agri-warning/10 text-agri-warning rounded"
-                            >
-                              <ArrowUp className="h-4 w-4" />
-                            </button>
-                            <button 
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                // Handle edit
-                              }}
-                              className="p-1.5 hover:bg-muted rounded"
-                            >
-                              <Edit className="h-4 w-4 text-muted-foreground" />
-                            </button>
-                          </div>
-                        </td>
-                      </tr>
-                    ))}
-                    {filteredItems.length === 0 && (
-                      <tr>
-                        <td colSpan={7} className="px-4 py-4 text-center text-muted-foreground">
-                          Aucun article trouvé
-                        </td>
-                      </tr>
-                    )}
-                  </tbody>
-                </table>
-              </div>
-            </div>
-          </>
-        )
-      ) : (
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <div className="bg-white rounded-xl border p-6">
-            <h3 className="text-lg font-medium mb-4">Répartition par catégorie</h3>
-            <div className="h-[300px]">
-              <ResponsiveContainer width="100%" height="100%">
-                <BarChart
-                  data={categoryStats}
-                  margin={{ top: 20, right: 30, left: 20, bottom: 5 }}
-                >
-                  <CartesianGrid strokeDasharray="3 3" vertical={false} />
-                  <XAxis dataKey="name" />
-                  <YAxis />
-                  <Tooltip formatter={(value) => [`${value} unités`, 'Quantité']} />
-                  <Bar 
-                    dataKey="value" 
-                    radius={[4, 4, 0, 0]} 
-                    fill="#4CAF50" 
-                  />
-                </BarChart>
-              </ResponsiveContainer>
-            </div>
-          </div>
-          
-          <div className="bg-white rounded-xl border p-6">
-            <h3 className="text-lg font-medium mb-4">Valeur du stock par catégorie</h3>
-            <div className="h-[300px]">
-              <ResponsiveContainer width="100%" height="100%">
-                <BarChart
-                  data={categoryStats.map(cat => {
-                    // Find all items in this category
-                    const items = inventoryData.filter(item => item.category === cat.name);
-                    // Calculate total value
-                    const value = items.reduce((sum, item) => sum + (item.quantity * item.price), 0);
-                    return { ...cat, value };
-                  })}
-                  margin={{ top: 20, right: 30, left: 20, bottom: 5 }}
-                >
-                  <CartesianGrid strokeDasharray="3 3" vertical={false} />
-                  <XAxis dataKey="name" />
-                  <YAxis />
-                  <Tooltip formatter={(value) => {
-                    // Check if value is a number before using toFixed
-                    return [typeof value === 'number' ? `${value.toFixed(2)} €` : `${value} €`, 'Valeur'];
-                  }} />
-                  <Bar 
-                    dataKey="value" 
-                    radius={[4, 4, 0, 0]} 
-                    fill="#4CAF50"
-                  />
-                </BarChart>
-              </ResponsiveContainer>
-            </div>
-          </div>
-          
-          <div className="bg-white rounded-xl border p-6 lg:col-span-2">
-            <h3 className="text-lg font-medium mb-4">Articles les plus coûteux</h3>
-            <div className="overflow-x-auto">
-              <table className="w-full text-sm">
-                <thead className="bg-muted text-xs uppercase">
-                  <tr>
-                    <th className="px-4 py-2 text-left">Article</th>
-                    <th className="px-4 py-2 text-left">Catégorie</th>
-                    <th className="px-4 py-2 text-left">Prix unitaire</th>
-                    <th className="px-4 py-2 text-left">Quantité</th>
-                    <th className="px-4 py-2 text-left">Valeur totale</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {inventoryData
-                    .sort((a, b) => (b.quantity * b.price) - (a.quantity * a.price))
-                    .slice(0, 5)
-                    .map(item => (
-                      <tr key={item.id} className="border-t">
-                        <td className="px-4 py-2 font-medium">{item.name}</td>
-                        <td className="px-4 py-2">{item.category}</td>
-                        <td className="px-4 py-2">{item.price} €/{item.unit}</td>
-                        <td className="px-4 py-2">{item.quantity} {item.unit}</td>
-                        <td className="px-4 py-2 font-medium">{(item.quantity * item.price).toFixed(2)} €</td>
-                      </tr>
-                    ))
-                  }
-                </tbody>
-              </table>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {showAddForm && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-xl p-6 max-w-md w-full">
-            <div className="flex justify-between items-center mb-4">
-              <h2 className="text-xl font-semibold">Ajouter un article</h2>
-              <button 
-                onClick={() => setShowAddForm(false)}
-                className="p-1 hover:bg-muted rounded-full"
-              >
-                <X className="h-5 w-5" />
-              </button>
-            </div>
-            
-            <form className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium mb-1">Nom de l'article</label>
-                <input 
-                  type="text" 
-                  className="w-full px-3 py-2 border border-input rounded-md"
-                  placeholder="Nom de l'article"
-                />
-              </div>
-              
-              <div>
-                <label className="block text-sm font-medium mb-1">Catégorie</label>
-                <select className="w-full px-3 py-2 border border-input rounded-md">
-                  <option value="">Sélectionner une catégorie</option>
-                  {categories
-                    .filter(c => c !== 'all')
-                    .map(category => (
-                      <option key={category} value={category}>{category}</option>
-                    ))
-                  }
-                  <option value="new">+ Nouvelle catégorie</option>
-                </select>
-              </div>
-              
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium mb-1">Quantité</label>
-                  <input 
-                    type="number" 
-                    className="w-full px-3 py-2 border border-input rounded-md"
-                    placeholder="0"
-                    min="0"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium mb-1">Unité</label>
-                  <input 
-                    type="text" 
-                    className="w-full px-3 py-2 border border-input rounded-md"
-                    placeholder="kg, L, unités..."
-                  />
-                </div>
-              </div>
-              
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium mb-1">Prix unitaire (€)</label>
-                  <input 
-                    type="number" 
-                    className="w-full px-3 py-2 border border-input rounded-md"
-                    placeholder="0.00"
-                    min="0"
-                    step="0.01"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium mb-1">Seuil minimal</label>
-                  <input 
-                    type="number" 
-                    className="w-full px-3 py-2 border border-input rounded-md"
-                    placeholder="0"
-                    min="0"
-                  />
-                </div>
-              </div>
-              
-              <div>
-                <label className="block text-sm font-medium mb-1">Emplacement</label>
-                <input 
-                  type="text" 
-                  className="w-full px-3 py-2 border border-input rounded-md"
-                  placeholder="Emplacement de stockage"
-                />
-              </div>
-              
-              <div>
-                <label className="block text-sm font-medium mb-1">Notes</label>
-                <textarea 
-                  className="w-full px-3 py-2 border border-input rounded-md"
-                  placeholder="Notes supplémentaires..."
-                  rows={3}
-                />
-              </div>
-              
-              <div className="flex justify-end space-x-3 pt-2">
-                <button 
-                  type="button"
-                  onClick={() => setShowAddForm(false)}
-                  className="px-4 py-2 text-sm text-foreground bg-muted rounded-md hover:bg-muted/80"
-                >
-                  Annuler
-                </button>
-                <button 
-                  type="button"
-                  className="px-4 py-2 text-sm text-white bg-agri-primary rounded-md hover:bg-agri-primary-dark"
-                >
-                  Ajouter
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
-    </div>
-  );
-};
-
-export default Inventory;
+            <Editable

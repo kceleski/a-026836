@@ -1,322 +1,319 @@
 
 import React, { useState } from 'react';
-import { EditableField } from './ui/editable-field';
-import { Plus, Edit, Trash2, CirclePlus, Info } from 'lucide-react';
-import { toast } from 'sonner';
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow
-} from './ui/table';
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
+import { EditableTable, Column } from './ui/editable-table';
+import { Trash2, X, Save, Plus } from 'lucide-react';
+import { Button } from './ui/button';
+import { Input } from './ui/input';
+import { Label } from './ui/label';
+import { Textarea } from './ui/textarea';
+import { useToast } from "@/hooks/use-toast";
 
-interface Culture {
-  id: number;
-  name: string;
-  variety: string;
-  region: string;
-  harvestPeriod: string;
-  specificNotes: string;
-  yieldPerHectare?: string;
-  soilType?: string;
-  waterNeeds?: string;
-  plantingDepth?: string;
-  rowSpacing?: string;
-  marketValue?: string;
-  plantingTime?: string;
-  growthDuration?: string;
-  pestResistance?: string;
-  diseaseResistance?: string;
-  fertilizationNeeds?: string;
-  storageConditions?: string;
-}
+// Initial mock data for the culture details
+const initialCultureData = [
+  {
+    id: 1,
+    name: 'Igname',
+    scientificName: 'Dioscorea alata',
+    family: 'Dioscoreaceae',
+    origin: 'Asie du Sud-Est',
+    growingSeason: 'Mai-Décembre',
+    soilType: 'Argileux, bien drainé',
+    waterNeeds: 'Modérés',
+    fertilization: 'NPK 10-10-20',
+    pests: 'Charançons, cochenilles',
+    diseases: 'Anthracnose',
+    notes: 'Culture importante en Guadeloupe, plusieurs variétés locales'
+  },
+  {
+    id: 2,
+    name: 'Madère',
+    scientificName: 'Colocasia esculenta',
+    family: 'Araceae',
+    origin: 'Asie du Sud-Est',
+    growingSeason: 'Toute l\'année',
+    soilType: 'Humide, riche en matière organique',
+    waterNeeds: 'Élevés',
+    fertilization: 'NPK 14-14-14',
+    pests: 'Pucerons',
+    diseases: 'Pourriture des racines',
+    notes: 'Cultivé dans les zones humides'
+  },
+  {
+    id: 3,
+    name: 'Christophine',
+    scientificName: 'Sechium edule',
+    family: 'Cucurbitaceae',
+    origin: 'Amérique centrale',
+    growingSeason: 'Toute l\'année',
+    soilType: 'Bien drainé, riche',
+    waterNeeds: 'Modérés à élevés',
+    fertilization: 'NPK 12-12-17',
+    pests: 'Mouches blanches, acariens',
+    diseases: 'Mildiou',
+    notes: 'Culture sur treillage'
+  }
+];
 
-export const CultureDetailTable = () => {
-  const [cultures, setCultures] = useState<Culture[]>([
-    {
-      id: 1,
-      name: "Canne à Sucre",
-      variety: "R579",
-      region: "Grande-Terre",
-      harvestPeriod: "Février-Juin",
-      specificNotes: "Résistante à la sécheresse et à fort rendement",
-      yieldPerHectare: "80-100 tonnes/ha",
-      soilType: "Sols argileux profonds",
-      waterNeeds: "1500-2000mm/an",
-      plantingDepth: "20-25cm",
-      rowSpacing: "1.5m",
-      marketValue: "45-50€/tonne",
-      plantingTime: "Juin-Août",
-      growthDuration: "12-14 mois",
-      pestResistance: "Moyenne",
-      diseaseResistance: "Bonne",
-      fertilizationNeeds: "NPK 15-15-15, 800kg/ha",
-      storageConditions: "Transformation rapide après récolte"
-    },
-    {
-      id: 2,
-      name: "Banane",
-      variety: "Poyo",
-      region: "Basse-Terre",
-      harvestPeriod: "Toute l'année",
-      specificNotes: "Adaptée aux sols volcaniques, sensible aux cyclones",
-      yieldPerHectare: "30-40 tonnes/ha",
-      soilType: "Sols volcaniques riches",
-      waterNeeds: "2000-2500mm/an",
-      plantingDepth: "30-40cm",
-      rowSpacing: "2m",
-      marketValue: "0.90-1.20€/kg",
-      plantingTime: "Toute l'année",
-      growthDuration: "9-12 mois",
-      pestResistance: "Faible",
-      diseaseResistance: "Moyenne",
-      fertilizationNeeds: "Riche en potassium, 600kg/ha",
-      storageConditions: "10-12°C, 85-90% d'humidité"
-    }
-  ]);
+export const CultureDetailTable = ({ showAddForm, setShowAddForm }: { showAddForm?: boolean, setShowAddForm?: (show: boolean) => void }) => {
+  const { toast } = useToast();
+  const [cultureData, setCultureData] = useState(initialCultureData);
+  const [isAddFormVisible, setIsAddFormVisible] = useState(false);
+  const [newCulture, setNewCulture] = useState({
+    name: '',
+    scientificName: '',
+    family: '',
+    origin: '',
+    growingSeason: '',
+    soilType: '',
+    waterNeeds: '',
+    fertilization: '',
+    pests: '',
+    diseases: '',
+    notes: ''
+  });
 
-  const [selectedCulture, setSelectedCulture] = useState<Culture | null>(null);
+  // If showAddForm is provided (from parent), use it, otherwise use local state
+  const localShowAddForm = showAddForm !== undefined ? showAddForm : isAddFormVisible;
+  const localSetShowAddForm = setShowAddForm || setIsAddFormVisible;
 
-  const handleUpdate = (id: number, field: keyof Culture, value: string) => {
-    setCultures(cultures.map(culture => 
-      culture.id === id ? { ...culture, [field]: value } : culture
-    ));
-    toast.success("Information mise à jour");
-  };
-
-  const handleDelete = (id: number) => {
-    setCultures(cultures.filter(culture => culture.id !== id));
-    toast.success("Culture supprimée");
-  };
-
-  const handleAdd = () => {
-    const newCulture: Culture = {
-      id: cultures.length > 0 ? Math.max(...cultures.map(c => c.id)) + 1 : 1,
-      name: "Nouvelle Culture",
-      variety: "Variété",
-      region: "Région",
-      harvestPeriod: "Période",
-      specificNotes: "Notes spécifiques",
+  const handleUpdateCulture = (rowIndex: number, columnId: string, value: any) => {
+    const updatedData = [...cultureData];
+    updatedData[rowIndex] = {
+      ...updatedData[rowIndex],
+      [columnId]: value
     };
-    setCultures([...cultures, newCulture]);
-    toast.success("Nouvelle culture ajoutée");
+    setCultureData(updatedData);
+    
+    toast({
+      title: "Mise à jour réussie",
+      description: `Information mise à jour pour ${updatedData[rowIndex].name}`,
+    });
   };
+
+  const handleAddCulture = () => {
+    if (!newCulture.name) {
+      toast({
+        title: "Erreur",
+        description: "Le nom de la culture est obligatoire",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    const newId = Math.max(...cultureData.map(c => c.id), 0) + 1;
+    setCultureData([...cultureData, { ...newCulture, id: newId }]);
+    localSetShowAddForm(false);
+    
+    // Reset form
+    setNewCulture({
+      name: '',
+      scientificName: '',
+      family: '',
+      origin: '',
+      growingSeason: '',
+      soilType: '',
+      waterNeeds: '',
+      fertilization: '',
+      pests: '',
+      diseases: '',
+      notes: ''
+    });
+    
+    toast({
+      title: "Culture ajoutée",
+      description: `${newCulture.name} a été ajoutée à la liste des cultures`
+    });
+  };
+
+  const handleDeleteCulture = (rowIndex: number) => {
+    const cultureToDelete = cultureData[rowIndex];
+    const updatedData = cultureData.filter((_, index) => index !== rowIndex);
+    setCultureData(updatedData);
+    
+    toast({
+      title: "Culture supprimée",
+      description: `${cultureToDelete.name} a été supprimée de la liste`
+    });
+  };
+
+  const columns: Column[] = [
+    { id: 'name', header: 'Nom', accessorKey: 'name', isEditable: true },
+    { id: 'scientificName', header: 'Nom scientifique', accessorKey: 'scientificName', isEditable: true },
+    { id: 'growingSeason', header: 'Saison de culture', accessorKey: 'growingSeason', isEditable: true },
+    { id: 'soilType', header: 'Type de sol', accessorKey: 'soilType', isEditable: true },
+    { id: 'waterNeeds', header: 'Besoin en eau', accessorKey: 'waterNeeds', isEditable: true }
+  ];
 
   return (
-    <div className="space-y-6">
-      <div className="flex justify-between items-center mb-4">
-        <h2 className="text-xl font-semibold">Cultures Spécifiques de la Guadeloupe</h2>
-        <button 
-          onClick={handleAdd}
-          className="flex items-center px-4 py-2 bg-agri-primary text-white rounded-lg hover:bg-agri-primary-dark"
-        >
-          <Plus className="h-4 w-4 mr-2" />
-          Ajouter une culture
-        </button>
-      </div>
-
-      <div className="overflow-x-auto border rounded-lg">
-        <Table>
-          <TableHeader className="bg-muted">
-            <TableRow>
-              <TableHead>Nom</TableHead>
-              <TableHead>Variété</TableHead>
-              <TableHead>Région</TableHead>
-              <TableHead>Période de Récolte</TableHead>
-              <TableHead>Notes Spécifiques</TableHead>
-              <TableHead>Rendement/ha</TableHead>
-              <TableHead>Type de Sol</TableHead>
-              <TableHead>Besoins en Eau</TableHead>
-              <TableHead>Détails</TableHead>
-              <TableHead>Actions</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {cultures.map((culture) => (
-              <TableRow key={culture.id} className="border-t hover:bg-muted/30">
-                <TableCell>
-                  <EditableField
-                    value={culture.name}
-                    onSave={(value) => handleUpdate(culture.id, 'name', String(value))}
+    <div>
+      <EditableTable
+        data={cultureData}
+        columns={columns}
+        onUpdate={handleUpdateCulture}
+        onDelete={handleDeleteCulture}
+        onAdd={localShowAddForm ? undefined : () => localSetShowAddForm(true)}
+        sortable={true}
+      />
+      
+      {localShowAddForm && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-xl p-6 max-w-3xl w-full">
+            <div className="flex justify-between items-center mb-4">
+              <h2 className="text-xl font-semibold">Ajouter une nouvelle culture</h2>
+              <Button 
+                variant="ghost"
+                size="sm"
+                onClick={() => localSetShowAddForm(false)}
+              >
+                <X className="h-5 w-5" />
+              </Button>
+            </div>
+            
+            <form className="space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <Label htmlFor="name">Nom de la culture *</Label>
+                  <Input 
+                    id="name"
+                    type="text" 
+                    className="mt-1"
+                    value={newCulture.name}
+                    onChange={(e) => setNewCulture({...newCulture, name: e.target.value})}
+                    required
                   />
-                </TableCell>
-                <TableCell>
-                  <EditableField
-                    value={culture.variety}
-                    onSave={(value) => handleUpdate(culture.id, 'variety', String(value))}
+                </div>
+                
+                <div>
+                  <Label htmlFor="scientificName">Nom scientifique</Label>
+                  <Input 
+                    id="scientificName"
+                    type="text" 
+                    className="mt-1"
+                    value={newCulture.scientificName}
+                    onChange={(e) => setNewCulture({...newCulture, scientificName: e.target.value})}
                   />
-                </TableCell>
-                <TableCell>
-                  <EditableField
-                    value={culture.region}
-                    onSave={(value) => handleUpdate(culture.id, 'region', String(value))}
+                </div>
+                
+                <div>
+                  <Label htmlFor="family">Famille</Label>
+                  <Input 
+                    id="family"
+                    type="text" 
+                    className="mt-1"
+                    value={newCulture.family}
+                    onChange={(e) => setNewCulture({...newCulture, family: e.target.value})}
                   />
-                </TableCell>
-                <TableCell>
-                  <EditableField
-                    value={culture.harvestPeriod}
-                    onSave={(value) => handleUpdate(culture.id, 'harvestPeriod', String(value))}
+                </div>
+                
+                <div>
+                  <Label htmlFor="origin">Origine</Label>
+                  <Input 
+                    id="origin"
+                    type="text" 
+                    className="mt-1"
+                    value={newCulture.origin}
+                    onChange={(e) => setNewCulture({...newCulture, origin: e.target.value})}
                   />
-                </TableCell>
-                <TableCell>
-                  <EditableField
-                    value={culture.specificNotes}
-                    onSave={(value) => handleUpdate(culture.id, 'specificNotes', String(value))}
+                </div>
+                
+                <div>
+                  <Label htmlFor="growingSeason">Saison de culture</Label>
+                  <Input 
+                    id="growingSeason"
+                    type="text" 
+                    className="mt-1"
+                    value={newCulture.growingSeason}
+                    onChange={(e) => setNewCulture({...newCulture, growingSeason: e.target.value})}
                   />
-                </TableCell>
-                <TableCell>
-                  <EditableField
-                    value={culture.yieldPerHectare || ''}
-                    onSave={(value) => handleUpdate(culture.id, 'yieldPerHectare', String(value))}
-                    placeholder="Rendement/ha"
+                </div>
+                
+                <div>
+                  <Label htmlFor="soilType">Type de sol</Label>
+                  <Input 
+                    id="soilType"
+                    type="text" 
+                    className="mt-1"
+                    value={newCulture.soilType}
+                    onChange={(e) => setNewCulture({...newCulture, soilType: e.target.value})}
                   />
-                </TableCell>
-                <TableCell>
-                  <EditableField
-                    value={culture.soilType || ''}
-                    onSave={(value) => handleUpdate(culture.id, 'soilType', String(value))}
-                    placeholder="Type de sol"
+                </div>
+                
+                <div>
+                  <Label htmlFor="waterNeeds">Besoin en eau</Label>
+                  <Input 
+                    id="waterNeeds"
+                    type="text" 
+                    className="mt-1"
+                    value={newCulture.waterNeeds}
+                    onChange={(e) => setNewCulture({...newCulture, waterNeeds: e.target.value})}
                   />
-                </TableCell>
-                <TableCell>
-                  <EditableField
-                    value={culture.waterNeeds || ''}
-                    onSave={(value) => handleUpdate(culture.id, 'waterNeeds', String(value))}
-                    placeholder="Besoins en eau"
+                </div>
+                
+                <div>
+                  <Label htmlFor="fertilization">Fertilisation</Label>
+                  <Input 
+                    id="fertilization"
+                    type="text" 
+                    className="mt-1"
+                    value={newCulture.fertilization}
+                    onChange={(e) => setNewCulture({...newCulture, fertilization: e.target.value})}
                   />
-                </TableCell>
-                <TableCell>
-                  <Dialog>
-                    <DialogTrigger>
-                      <button 
-                        className="p-1.5 hover:bg-agri-primary/10 text-agri-primary rounded flex items-center"
-                      >
-                        <Info className="h-4 w-4 mr-1" />
-                        Détails
-                      </button>
-                    </DialogTrigger>
-                    <DialogContent className="max-w-4xl">
-                      <DialogHeader>
-                        <DialogTitle>Détails complets de la culture: {culture.name}</DialogTitle>
-                        <DialogDescription>
-                          Toutes les informations techniques de la culture.
-                        </DialogDescription>
-                      </DialogHeader>
-                      <div className="grid grid-cols-2 gap-4 mt-4">
-                        <div className="space-y-4">
-                          <div>
-                            <h3 className="text-sm font-medium text-gray-500">Profondeur de plantation</h3>
-                            <EditableField
-                              value={culture.plantingDepth || ''}
-                              onSave={(value) => handleUpdate(culture.id, 'plantingDepth', String(value))}
-                              placeholder="Profondeur de plantation"
-                              className="text-base"
-                            />
-                          </div>
-                          <div>
-                            <h3 className="text-sm font-medium text-gray-500">Espacement des rangs</h3>
-                            <EditableField
-                              value={culture.rowSpacing || ''}
-                              onSave={(value) => handleUpdate(culture.id, 'rowSpacing', String(value))}
-                              placeholder="Espacement des rangs"
-                              className="text-base"
-                            />
-                          </div>
-                          <div>
-                            <h3 className="text-sm font-medium text-gray-500">Valeur marchande</h3>
-                            <EditableField
-                              value={culture.marketValue || ''}
-                              onSave={(value) => handleUpdate(culture.id, 'marketValue', String(value))}
-                              placeholder="Valeur marchande"
-                              className="text-base"
-                            />
-                          </div>
-                          <div>
-                            <h3 className="text-sm font-medium text-gray-500">Période de plantation</h3>
-                            <EditableField
-                              value={culture.plantingTime || ''}
-                              onSave={(value) => handleUpdate(culture.id, 'plantingTime', String(value))}
-                              placeholder="Période de plantation"
-                              className="text-base"
-                            />
-                          </div>
-                        </div>
-                        <div className="space-y-4">
-                          <div>
-                            <h3 className="text-sm font-medium text-gray-500">Durée de croissance</h3>
-                            <EditableField
-                              value={culture.growthDuration || ''}
-                              onSave={(value) => handleUpdate(culture.id, 'growthDuration', String(value))}
-                              placeholder="Durée de croissance"
-                              className="text-base"
-                            />
-                          </div>
-                          <div>
-                            <h3 className="text-sm font-medium text-gray-500">Résistance aux ravageurs</h3>
-                            <EditableField
-                              value={culture.pestResistance || ''}
-                              onSave={(value) => handleUpdate(culture.id, 'pestResistance', String(value))}
-                              placeholder="Résistance aux ravageurs"
-                              className="text-base"
-                            />
-                          </div>
-                          <div>
-                            <h3 className="text-sm font-medium text-gray-500">Résistance aux maladies</h3>
-                            <EditableField
-                              value={culture.diseaseResistance || ''}
-                              onSave={(value) => handleUpdate(culture.id, 'diseaseResistance', String(value))}
-                              placeholder="Résistance aux maladies"
-                              className="text-base"
-                            />
-                          </div>
-                          <div>
-                            <h3 className="text-sm font-medium text-gray-500">Besoins en fertilisation</h3>
-                            <EditableField
-                              value={culture.fertilizationNeeds || ''}
-                              onSave={(value) => handleUpdate(culture.id, 'fertilizationNeeds', String(value))}
-                              placeholder="Besoins en fertilisation"
-                              className="text-base"
-                            />
-                          </div>
-                          <div>
-                            <h3 className="text-sm font-medium text-gray-500">Conditions de stockage</h3>
-                            <EditableField
-                              value={culture.storageConditions || ''}
-                              onSave={(value) => handleUpdate(culture.id, 'storageConditions', String(value))}
-                              placeholder="Conditions de stockage"
-                              className="text-base"
-                            />
-                          </div>
-                        </div>
-                      </div>
-                    </DialogContent>
-                  </Dialog>
-                </TableCell>
-                <TableCell>
-                  <div className="flex space-x-2">
-                    <button 
-                      onClick={() => handleDelete(culture.id)}
-                      className="p-1.5 hover:bg-agri-danger/10 text-agri-danger rounded"
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </button>
-                  </div>
-                </TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
-      </div>
+                </div>
+                
+                <div>
+                  <Label htmlFor="pests">Ravageurs</Label>
+                  <Input 
+                    id="pests"
+                    type="text" 
+                    className="mt-1"
+                    value={newCulture.pests}
+                    onChange={(e) => setNewCulture({...newCulture, pests: e.target.value})}
+                  />
+                </div>
+                
+                <div>
+                  <Label htmlFor="diseases">Maladies</Label>
+                  <Input 
+                    id="diseases"
+                    type="text" 
+                    className="mt-1"
+                    value={newCulture.diseases}
+                    onChange={(e) => setNewCulture({...newCulture, diseases: e.target.value})}
+                  />
+                </div>
+              </div>
+              
+              <div>
+                <Label htmlFor="notes">Notes</Label>
+                <Textarea 
+                  id="notes"
+                  className="mt-1"
+                  rows={3}
+                  value={newCulture.notes}
+                  onChange={(e) => setNewCulture({...newCulture, notes: e.target.value})}
+                />
+              </div>
+              
+              <div className="flex justify-end space-x-3 pt-2">
+                <Button 
+                  type="button"
+                  variant="outline"
+                  onClick={() => localSetShowAddForm(false)}
+                >
+                  Annuler
+                </Button>
+                <Button 
+                  type="button"
+                  onClick={handleAddCulture}
+                >
+                  <Save className="mr-2" />
+                  Enregistrer
+                </Button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
