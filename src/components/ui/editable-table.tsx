@@ -21,6 +21,7 @@ interface EditableTableProps {
   onAdd?: (newRow: Record<string, any>) => void;
   className?: string;
   sortable?: boolean;
+  actions?: { icon: React.ReactNode, label: string, onClick: (rowIndex: number) => void }[];
 }
 
 export const EditableTable = ({
@@ -30,7 +31,8 @@ export const EditableTable = ({
   onDelete,
   onAdd,
   className = '',
-  sortable = true
+  sortable = true,
+  actions = []
 }: EditableTableProps) => {
   const [sortBy, setSortBy] = useState('');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
@@ -74,6 +76,13 @@ export const EditableTable = ({
     }
   };
 
+  // Generate class name for status-based styling
+  const getRowClass = (row: Record<string, any>) => {
+    if (row.status === 'critical') return 'bg-red-50';
+    if (row.status === 'warning') return 'bg-yellow-50';
+    return '';
+  };
+
   return (
     <div className={`bg-white rounded-xl border overflow-hidden ${className}`}>
       <div className="overflow-x-auto">
@@ -103,18 +112,21 @@ export const EditableTable = ({
                   )}
                 </th>
               ))}
-              {onDelete && <th className="px-4 py-3 text-left w-24">Actions</th>}
+              {(onDelete || actions.length > 0) && (
+                <th className="px-4 py-3 text-left w-24">Actions</th>
+              )}
             </tr>
           </thead>
           <tbody>
             {sortedData.map((row, rowIndex) => (
-              <tr key={rowIndex} className="border-t hover:bg-muted/30">
+              <tr key={rowIndex} className={`border-t hover:bg-muted/30 ${getRowClass(row)}`}>
                 {columns.map((column) => (
                   <td key={`${rowIndex}-${column.id}`} className="px-4 py-3">
                     {column.isEditable ? (
                       <EditableField
                         value={row[column.accessorKey]}
-                        type={column.type as 'text' | 'number'}
+                        type={column.type as 'text' | 'number' | 'date' | 'select'}
+                        options={column.options?.map(opt => ({ value: opt, label: opt }))}
                         onSave={(value) => onUpdate(rowIndex, column.accessorKey, value)}
                       />
                     ) : (
@@ -122,15 +134,28 @@ export const EditableTable = ({
                     )}
                   </td>
                 ))}
-                {onDelete && (
+                {(onDelete || actions.length > 0) && (
                   <td className="px-4 py-3">
                     <div className="flex space-x-1">
-                      <button 
-                        onClick={() => onDelete(rowIndex)}
-                        className="p-1.5 hover:bg-agri-danger/10 text-agri-danger rounded"
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </button>
+                      {actions.map((action, index) => (
+                        <button 
+                          key={index}
+                          onClick={() => action.onClick(rowIndex)}
+                          className="p-1.5 hover:bg-muted rounded"
+                          title={action.label}
+                        >
+                          {action.icon}
+                        </button>
+                      ))}
+                      {onDelete && (
+                        <button 
+                          onClick={() => onDelete(rowIndex)}
+                          className="p-1.5 hover:bg-agri-danger/10 text-agri-danger rounded"
+                          title="Supprimer"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </button>
+                      )}
                     </div>
                   </td>
                 )}
@@ -138,7 +163,7 @@ export const EditableTable = ({
             ))}
             {data.length === 0 && (
               <tr>
-                <td colSpan={columns.length + (onDelete ? 1 : 0)} className="px-4 py-4 text-center text-muted-foreground">
+                <td colSpan={columns.length + ((onDelete || actions.length > 0) ? 1 : 0)} className="px-4 py-4 text-center text-muted-foreground">
                   Aucune donnée disponible
                 </td>
               </tr>

@@ -1,7 +1,7 @@
 
 import React, { useState } from 'react';
 import { EditableTable, Column } from './ui/editable-table';
-import { Trash2, X, Save, Plus } from 'lucide-react';
+import { Trash2, X, Save, Plus, ExternalLink, Download, FileText } from 'lucide-react';
 import { Button } from './ui/button';
 import { Input } from './ui/input';
 import { Label } from './ui/label';
@@ -22,7 +22,10 @@ const initialCultureData = [
     fertilization: 'NPK 10-10-20',
     pests: 'Charançons, cochenilles',
     diseases: 'Anthracnose',
-    notes: 'Culture importante en Guadeloupe, plusieurs variétés locales'
+    notes: 'Culture importante en Guadeloupe, plusieurs variétés locales',
+    type: 'tubers',
+    harvestPeriod: '7-9 mois',
+    yieldPerHectare: '15-25 tonnes'
   },
   {
     id: 2,
@@ -36,7 +39,10 @@ const initialCultureData = [
     fertilization: 'NPK 14-14-14',
     pests: 'Pucerons',
     diseases: 'Pourriture des racines',
-    notes: 'Cultivé dans les zones humides'
+    notes: 'Cultivé dans les zones humides',
+    type: 'tubers',
+    harvestPeriod: '9-12 mois',
+    yieldPerHectare: '10-15 tonnes'
   },
   {
     id: 3,
@@ -50,14 +56,64 @@ const initialCultureData = [
     fertilization: 'NPK 12-12-17',
     pests: 'Mouches blanches, acariens',
     diseases: 'Mildiou',
-    notes: 'Culture sur treillage'
+    notes: 'Culture sur treillage',
+    type: 'vegetables',
+    harvestPeriod: '2-3 mois',
+    yieldPerHectare: '30-40 tonnes'
+  },
+  {
+    id: 4,
+    name: 'Canne à Sucre',
+    scientificName: 'Saccharum officinarum',
+    family: 'Poaceae',
+    origin: 'Nouvelle-Guinée',
+    growingSeason: 'Toute l\'année',
+    soilType: 'Argileux, profond',
+    waterNeeds: 'Élevés',
+    fertilization: 'NPK 16-4-16',
+    pests: 'Foreur des tiges, pucerons',
+    diseases: 'Charbon, rouille',
+    notes: 'Culture principale économique de Guadeloupe',
+    type: 'cash',
+    harvestPeriod: '11-13 mois',
+    yieldPerHectare: '70-100 tonnes'
+  },
+  {
+    id: 5,
+    name: 'Banane',
+    scientificName: 'Musa paradisiaca',
+    family: 'Musaceae',
+    origin: 'Asie du Sud-Est',
+    growingSeason: 'Toute l\'année',
+    soilType: 'Limoneux, profond',
+    waterNeeds: 'Élevés',
+    fertilization: 'NPK 14-4-28',
+    pests: 'Charançon, thrips',
+    diseases: 'Cercosporiose, fusariose',
+    notes: 'Principalement pour l\'exportation',
+    type: 'fruits',
+    harvestPeriod: '10-14 mois',
+    yieldPerHectare: '30-60 tonnes'
   }
 ];
 
-export const CultureDetailTable = ({ showAddForm, setShowAddForm }: { showAddForm?: boolean, setShowAddForm?: (show: boolean) => void }) => {
+interface CultureDetailTableProps {
+  showAddForm?: boolean;
+  setShowAddForm?: (show: boolean) => void;
+  searchTerm?: string;
+  filterType?: string;
+}
+
+export const CultureDetailTable = ({ 
+  showAddForm, 
+  setShowAddForm, 
+  searchTerm = '',
+  filterType = 'all'
+}: CultureDetailTableProps) => {
   const { toast } = useToast();
   const [cultureData, setCultureData] = useState(initialCultureData);
   const [isAddFormVisible, setIsAddFormVisible] = useState(false);
+  const [selectedCulture, setSelectedCulture] = useState<null | any>(null);
   const [newCulture, setNewCulture] = useState({
     name: '',
     scientificName: '',
@@ -69,25 +125,43 @@ export const CultureDetailTable = ({ showAddForm, setShowAddForm }: { showAddFor
     fertilization: '',
     pests: '',
     diseases: '',
-    notes: ''
+    notes: '',
+    type: 'vegetables',
+    harvestPeriod: '',
+    yieldPerHectare: ''
   });
 
   // If showAddForm is provided (from parent), use it, otherwise use local state
   const localShowAddForm = showAddForm !== undefined ? showAddForm : isAddFormVisible;
   const localSetShowAddForm = setShowAddForm || setIsAddFormVisible;
 
+  // Filter cultures based on search term and type filter
+  const filteredCultures = cultureData.filter(culture => {
+    const matchesSearch = 
+      culture.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      culture.scientificName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      culture.family.toLowerCase().includes(searchTerm.toLowerCase());
+    
+    if (filterType === 'all') return matchesSearch;
+    return matchesSearch && culture.type === filterType;
+  });
+
   const handleUpdateCulture = (rowIndex: number, columnId: string, value: any) => {
     const updatedData = [...cultureData];
-    updatedData[rowIndex] = {
-      ...updatedData[rowIndex],
-      [columnId]: value
-    };
-    setCultureData(updatedData);
+    const targetIndex = cultureData.findIndex(c => c.id === filteredCultures[rowIndex].id);
     
-    toast({
-      title: "Mise à jour réussie",
-      description: `Information mise à jour pour ${updatedData[rowIndex].name}`,
-    });
+    if (targetIndex !== -1) {
+      updatedData[targetIndex] = {
+        ...updatedData[targetIndex],
+        [columnId]: value
+      };
+      setCultureData(updatedData);
+      
+      toast({
+        title: "Mise à jour réussie",
+        description: `Information mise à jour pour ${updatedData[targetIndex].name}`,
+      });
+    }
   };
 
   const handleAddCulture = () => {
@@ -116,7 +190,10 @@ export const CultureDetailTable = ({ showAddForm, setShowAddForm }: { showAddFor
       fertilization: '',
       pests: '',
       diseases: '',
-      notes: ''
+      notes: '',
+      type: 'vegetables',
+      harvestPeriod: '',
+      yieldPerHectare: ''
     });
     
     toast({
@@ -126,14 +203,18 @@ export const CultureDetailTable = ({ showAddForm, setShowAddForm }: { showAddFor
   };
 
   const handleDeleteCulture = (rowIndex: number) => {
-    const cultureToDelete = cultureData[rowIndex];
-    const updatedData = cultureData.filter((_, index) => index !== rowIndex);
+    const cultureToDelete = filteredCultures[rowIndex];
+    const updatedData = cultureData.filter(culture => culture.id !== cultureToDelete.id);
     setCultureData(updatedData);
     
     toast({
       title: "Culture supprimée",
       description: `${cultureToDelete.name} a été supprimée de la liste`
     });
+  };
+
+  const handleViewDetails = (rowIndex: number) => {
+    setSelectedCulture(filteredCultures[rowIndex]);
   };
 
   const columns: Column[] = [
@@ -144,15 +225,360 @@ export const CultureDetailTable = ({ showAddForm, setShowAddForm }: { showAddFor
     { id: 'waterNeeds', header: 'Besoin en eau', accessorKey: 'waterNeeds', isEditable: true }
   ];
 
+  const renderDetailView = () => {
+    if (!selectedCulture) return null;
+    
+    return (
+      <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+        <div className="bg-white rounded-xl p-6 max-w-3xl w-full">
+          <div className="flex justify-between items-center mb-4">
+            <h2 className="text-xl font-semibold">Détails de la culture: {selectedCulture.name}</h2>
+            <Button 
+              variant="ghost"
+              size="sm"
+              onClick={() => setSelectedCulture(null)}
+            >
+              <X className="h-5 w-5" />
+            </Button>
+          </div>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+            <div>
+              <Label>Nom</Label>
+              <Input 
+                value={selectedCulture.name}
+                onChange={(e) => {
+                  const newName = e.target.value;
+                  setSelectedCulture({...selectedCulture, name: newName});
+                  
+                  // Also update in main data
+                  const updatedData = [...cultureData];
+                  const index = updatedData.findIndex(c => c.id === selectedCulture.id);
+                  if (index !== -1) {
+                    updatedData[index].name = newName;
+                    setCultureData(updatedData);
+                  }
+                }}
+                className="mt-1"
+              />
+            </div>
+            
+            <div>
+              <Label>Nom scientifique</Label>
+              <Input 
+                value={selectedCulture.scientificName}
+                onChange={(e) => {
+                  const newValue = e.target.value;
+                  setSelectedCulture({...selectedCulture, scientificName: newValue});
+                  
+                  // Also update in main data
+                  const updatedData = [...cultureData];
+                  const index = updatedData.findIndex(c => c.id === selectedCulture.id);
+                  if (index !== -1) {
+                    updatedData[index].scientificName = newValue;
+                    setCultureData(updatedData);
+                  }
+                }}
+                className="mt-1"
+              />
+            </div>
+            
+            <div>
+              <Label>Type de culture</Label>
+              <select 
+                value={selectedCulture.type}
+                onChange={(e) => {
+                  const newValue = e.target.value;
+                  setSelectedCulture({...selectedCulture, type: newValue});
+                  
+                  // Also update in main data
+                  const updatedData = [...cultureData];
+                  const index = updatedData.findIndex(c => c.id === selectedCulture.id);
+                  if (index !== -1) {
+                    updatedData[index].type = newValue;
+                    setCultureData(updatedData);
+                  }
+                }}
+                className="w-full h-10 border border-input rounded-md px-3 mt-1"
+              >
+                <option value="vegetables">Légumes</option>
+                <option value="fruits">Fruits</option>
+                <option value="tubers">Tubercules</option>
+                <option value="cash">Cultures de rente</option>
+              </select>
+            </div>
+            
+            <div>
+              <Label>Famille</Label>
+              <Input 
+                value={selectedCulture.family}
+                onChange={(e) => {
+                  const newValue = e.target.value;
+                  setSelectedCulture({...selectedCulture, family: newValue});
+                  
+                  // Also update in main data
+                  const updatedData = [...cultureData];
+                  const index = updatedData.findIndex(c => c.id === selectedCulture.id);
+                  if (index !== -1) {
+                    updatedData[index].family = newValue;
+                    setCultureData(updatedData);
+                  }
+                }}
+                className="mt-1"
+              />
+            </div>
+            
+            <div>
+              <Label>Origine</Label>
+              <Input 
+                value={selectedCulture.origin}
+                onChange={(e) => {
+                  const newValue = e.target.value;
+                  setSelectedCulture({...selectedCulture, origin: newValue});
+                  
+                  // Also update in main data
+                  const updatedData = [...cultureData];
+                  const index = updatedData.findIndex(c => c.id === selectedCulture.id);
+                  if (index !== -1) {
+                    updatedData[index].origin = newValue;
+                    setCultureData(updatedData);
+                  }
+                }}
+                className="mt-1"
+              />
+            </div>
+            
+            <div>
+              <Label>Saison de culture</Label>
+              <Input 
+                value={selectedCulture.growingSeason}
+                onChange={(e) => {
+                  const newValue = e.target.value;
+                  setSelectedCulture({...selectedCulture, growingSeason: newValue});
+                  
+                  // Also update in main data
+                  const updatedData = [...cultureData];
+                  const index = updatedData.findIndex(c => c.id === selectedCulture.id);
+                  if (index !== -1) {
+                    updatedData[index].growingSeason = newValue;
+                    setCultureData(updatedData);
+                  }
+                }}
+                className="mt-1"
+              />
+            </div>
+            
+            <div>
+              <Label>Période de récolte</Label>
+              <Input 
+                value={selectedCulture.harvestPeriod}
+                onChange={(e) => {
+                  const newValue = e.target.value;
+                  setSelectedCulture({...selectedCulture, harvestPeriod: newValue});
+                  
+                  // Also update in main data
+                  const updatedData = [...cultureData];
+                  const index = updatedData.findIndex(c => c.id === selectedCulture.id);
+                  if (index !== -1) {
+                    updatedData[index].harvestPeriod = newValue;
+                    setCultureData(updatedData);
+                  }
+                }}
+                className="mt-1"
+              />
+            </div>
+            
+            <div>
+              <Label>Rendement par hectare</Label>
+              <Input 
+                value={selectedCulture.yieldPerHectare}
+                onChange={(e) => {
+                  const newValue = e.target.value;
+                  setSelectedCulture({...selectedCulture, yieldPerHectare: newValue});
+                  
+                  // Also update in main data
+                  const updatedData = [...cultureData];
+                  const index = updatedData.findIndex(c => c.id === selectedCulture.id);
+                  if (index !== -1) {
+                    updatedData[index].yieldPerHectare = newValue;
+                    setCultureData(updatedData);
+                  }
+                }}
+                className="mt-1"
+              />
+            </div>
+            
+            <div>
+              <Label>Type de sol</Label>
+              <Input 
+                value={selectedCulture.soilType}
+                onChange={(e) => {
+                  const newValue = e.target.value;
+                  setSelectedCulture({...selectedCulture, soilType: newValue});
+                  
+                  // Also update in main data
+                  const updatedData = [...cultureData];
+                  const index = updatedData.findIndex(c => c.id === selectedCulture.id);
+                  if (index !== -1) {
+                    updatedData[index].soilType = newValue;
+                    setCultureData(updatedData);
+                  }
+                }}
+                className="mt-1"
+              />
+            </div>
+            
+            <div>
+              <Label>Besoin en eau</Label>
+              <Input 
+                value={selectedCulture.waterNeeds}
+                onChange={(e) => {
+                  const newValue = e.target.value;
+                  setSelectedCulture({...selectedCulture, waterNeeds: newValue});
+                  
+                  // Also update in main data
+                  const updatedData = [...cultureData];
+                  const index = updatedData.findIndex(c => c.id === selectedCulture.id);
+                  if (index !== -1) {
+                    updatedData[index].waterNeeds = newValue;
+                    setCultureData(updatedData);
+                  }
+                }}
+                className="mt-1"
+              />
+            </div>
+            
+            <div>
+              <Label>Fertilisation</Label>
+              <Input 
+                value={selectedCulture.fertilization}
+                onChange={(e) => {
+                  const newValue = e.target.value;
+                  setSelectedCulture({...selectedCulture, fertilization: newValue});
+                  
+                  // Also update in main data
+                  const updatedData = [...cultureData];
+                  const index = updatedData.findIndex(c => c.id === selectedCulture.id);
+                  if (index !== -1) {
+                    updatedData[index].fertilization = newValue;
+                    setCultureData(updatedData);
+                  }
+                }}
+                className="mt-1"
+              />
+            </div>
+          </div>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+            <div>
+              <Label>Ravageurs</Label>
+              <Input 
+                value={selectedCulture.pests}
+                onChange={(e) => {
+                  const newValue = e.target.value;
+                  setSelectedCulture({...selectedCulture, pests: newValue});
+                  
+                  // Also update in main data
+                  const updatedData = [...cultureData];
+                  const index = updatedData.findIndex(c => c.id === selectedCulture.id);
+                  if (index !== -1) {
+                    updatedData[index].pests = newValue;
+                    setCultureData(updatedData);
+                  }
+                }}
+                className="mt-1"
+              />
+            </div>
+            
+            <div>
+              <Label>Maladies</Label>
+              <Input 
+                value={selectedCulture.diseases}
+                onChange={(e) => {
+                  const newValue = e.target.value;
+                  setSelectedCulture({...selectedCulture, diseases: newValue});
+                  
+                  // Also update in main data
+                  const updatedData = [...cultureData];
+                  const index = updatedData.findIndex(c => c.id === selectedCulture.id);
+                  if (index !== -1) {
+                    updatedData[index].diseases = newValue;
+                    setCultureData(updatedData);
+                  }
+                }}
+                className="mt-1"
+              />
+            </div>
+          </div>
+          
+          <div>
+            <Label>Notes</Label>
+            <Textarea 
+              value={selectedCulture.notes}
+              onChange={(e) => {
+                const newValue = e.target.value;
+                setSelectedCulture({...selectedCulture, notes: newValue});
+                
+                // Also update in main data
+                const updatedData = [...cultureData];
+                const index = updatedData.findIndex(c => c.id === selectedCulture.id);
+                if (index !== -1) {
+                  updatedData[index].notes = newValue;
+                  setCultureData(updatedData);
+                }
+              }}
+              className="mt-1"
+              rows={3}
+            />
+          </div>
+          
+          <div className="flex justify-end space-x-3 mt-5">
+            <Button 
+              variant="outline"
+              onClick={() => setSelectedCulture(null)}
+            >
+              Fermer
+            </Button>
+            <Button>
+              <FileText className="mr-2 h-4 w-4" />
+              Télécharger fiche technique
+            </Button>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
   return (
     <div>
+      <div className="mb-4 flex justify-end">
+        <Button 
+          variant="outline" 
+          size="sm" 
+          onClick={() => toast({
+            title: "Guide PDF disponible",
+            description: "Téléchargement du guide des cultures tropicales démarré"
+          })}
+        >
+          <Download className="mr-2 h-4 w-4" />
+          Guide des cultures
+        </Button>
+      </div>
+      
       <EditableTable
-        data={cultureData}
+        data={filteredCultures}
         columns={columns}
         onUpdate={handleUpdateCulture}
         onDelete={handleDeleteCulture}
         onAdd={localShowAddForm ? undefined : () => localSetShowAddForm(true)}
         sortable={true}
+        actions={[
+          {
+            icon: <ExternalLink className="h-4 w-4" />,
+            label: "Voir détails",
+            onClick: handleViewDetails
+          }
+        ]}
       />
       
       {localShowAddForm && (
@@ -195,6 +621,21 @@ export const CultureDetailTable = ({ showAddForm, setShowAddForm }: { showAddFor
                 </div>
                 
                 <div>
+                  <Label htmlFor="type">Type de culture</Label>
+                  <select 
+                    id="type"
+                    className="w-full h-10 border border-input rounded-md px-3 mt-1"
+                    value={newCulture.type}
+                    onChange={(e) => setNewCulture({...newCulture, type: e.target.value})}
+                  >
+                    <option value="vegetables">Légumes</option>
+                    <option value="fruits">Fruits</option>
+                    <option value="tubers">Tubercules</option>
+                    <option value="cash">Cultures de rente</option>
+                  </select>
+                </div>
+                
+                <div>
                   <Label htmlFor="family">Famille</Label>
                   <Input 
                     id="family"
@@ -224,6 +665,28 @@ export const CultureDetailTable = ({ showAddForm, setShowAddForm }: { showAddFor
                     className="mt-1"
                     value={newCulture.growingSeason}
                     onChange={(e) => setNewCulture({...newCulture, growingSeason: e.target.value})}
+                  />
+                </div>
+                
+                <div>
+                  <Label htmlFor="harvestPeriod">Période de récolte</Label>
+                  <Input 
+                    id="harvestPeriod"
+                    type="text" 
+                    className="mt-1"
+                    value={newCulture.harvestPeriod}
+                    onChange={(e) => setNewCulture({...newCulture, harvestPeriod: e.target.value})}
+                  />
+                </div>
+                
+                <div>
+                  <Label htmlFor="yieldPerHectare">Rendement par hectare</Label>
+                  <Input 
+                    id="yieldPerHectare"
+                    type="text" 
+                    className="mt-1"
+                    value={newCulture.yieldPerHectare}
+                    onChange={(e) => setNewCulture({...newCulture, yieldPerHectare: e.target.value})}
                   />
                 </div>
                 
@@ -314,6 +777,8 @@ export const CultureDetailTable = ({ showAddForm, setShowAddForm }: { showAddFor
           </div>
         </div>
       )}
+      
+      {selectedCulture && renderDetailView()}
     </div>
   );
 };
