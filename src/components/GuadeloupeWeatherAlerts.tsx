@@ -1,116 +1,235 @@
 
 import React, { useState } from 'react';
-import { Cloud, CloudRain, Umbrella, AlertTriangle, Wind, Thermometer, Edit, Plus, Trash2 } from 'lucide-react';
-import { 
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow
-} from './ui/table';
+import { CloudRain, AlertTriangle, Sun, Wind, Calendar, ArrowUpRight, Trash2, Plus, X, Save, CloudLightning } from 'lucide-react';
+import { useToast } from "@/hooks/use-toast";
+import { Button } from './ui/button';
+import { Input } from './ui/input';
+import { Textarea } from './ui/textarea';
 import { EditableField } from './ui/editable-field';
-import { toast } from 'sonner';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 interface WeatherAlert {
   id: number;
-  type: 'cyclone' | 'pluie' | 'secheresse' | 'canicule' | 'vent';
-  region: string;
-  startDate: string;
-  endDate: string;
+  type: 'storm' | 'hurricane' | 'drought' | 'flood' | 'heatwave';
+  title: string;
   description: string;
-  severity: 'faible' | 'modérée' | 'élevée' | 'critique';
+  startDate: string;
+  endDate?: string;
+  severity: 'low' | 'medium' | 'high' | 'extreme';
+  areas: string[];
+  recommendations: string;
+  status: 'active' | 'resolved' | 'monitoring';
 }
 
-const alertTypeIcons = {
-  cyclone: <AlertTriangle className="h-5 w-5 text-red-500" />,
-  pluie: <CloudRain className="h-5 w-5 text-blue-500" />,
-  secheresse: <Thermometer className="h-5 w-5 text-orange-500" />,
-  canicule: <Thermometer className="h-5 w-5 text-red-500" />,
-  vent: <Wind className="h-5 w-5 text-teal-500" />
-};
-
-const alertSeverityColors = {
-  faible: 'bg-emerald-100 text-emerald-800',
-  modérée: 'bg-amber-100 text-amber-800',
-  élevée: 'bg-orange-100 text-orange-800',
-  critique: 'bg-red-100 text-red-800'
-};
-
 const GuadeloupeWeatherAlerts = () => {
+  const { toast } = useToast();
+  const [title, setTitle] = useState('Alertes Météo en Guadeloupe');
+  const [description, setDescription] = useState('Système de surveillance et gestion des alertes météorologiques');
   const [alerts, setAlerts] = useState<WeatherAlert[]>([
     {
       id: 1,
-      type: 'cyclone',
-      region: 'Toute la Guadeloupe',
-      startDate: '2023-09-10',
-      endDate: '2023-09-12',
-      description: 'Cyclone tropical de catégorie 2 en approche',
-      severity: 'critique'
+      type: 'hurricane',
+      title: 'Alerte Cyclone - Vigilance Orange',
+      description: 'Un cyclone tropical de catégorie 2 approche des côtes de la Guadeloupe.',
+      startDate: '2023-09-15',
+      endDate: '2023-09-18',
+      severity: 'high',
+      areas: ['Basse-Terre', 'Grande-Terre', 'Marie-Galante'],
+      recommendations: 'Sécurisez vos équipements agricoles. Renforcez les structures. Mettez le bétail à l\'abri.',
+      status: 'resolved'
     },
     {
       id: 2,
-      type: 'pluie',
-      region: 'Basse-Terre',
-      startDate: '2023-09-20',
-      endDate: '2023-09-23',
-      description: 'Fortes précipitations attendues',
-      severity: 'modérée'
+      type: 'drought',
+      title: 'Alerte Sécheresse - Nord Grande-Terre',
+      description: 'Période de sécheresse prolongée affectant les cultures dans le nord de Grande-Terre.',
+      startDate: '2023-06-01',
+      endDate: '2023-08-30',
+      severity: 'medium',
+      areas: ['Nord Grande-Terre'],
+      recommendations: 'Rationnez l\'eau d\'irrigation. Priorisez les cultures essentielles. Utilisez du paillage pour maintenir l\'humidité du sol.',
+      status: 'resolved'
     },
     {
       id: 3,
-      type: 'secheresse',
-      region: 'Grande-Terre',
-      startDate: '2023-10-01',
-      endDate: '2023-10-15',
-      description: 'Risque de sécheresse agricole',
-      severity: 'élevée'
+      type: 'flood',
+      title: 'Risque d\'Inondation - Sud Basse-Terre',
+      description: 'Fortes pluies attendues pouvant causer des inondations dans les régions basses.',
+      startDate: '2024-05-10',
+      severity: 'medium',
+      areas: ['Sud Basse-Terre', 'Capesterre'],
+      recommendations: 'Dégagez les canaux d\'irrigation. Surveillez les niveaux d\'eau. Surélevez les équipements électriques.',
+      status: 'active'
+    },
+    {
+      id: 4,
+      type: 'heatwave',
+      title: 'Vague de Chaleur - Est Grande-Terre',
+      description: 'Températures anormalement élevées prévues pendant plusieurs jours.',
+      startDate: '2024-04-20',
+      endDate: '2024-04-25',
+      severity: 'low',
+      areas: ['Est Grande-Terre', 'La Désirade'],
+      recommendations: 'Arrosez les cultures tôt le matin ou tard le soir. Installez des ombrages temporaires. Augmentez la fréquence d\'irrigation.',
+      status: 'monitoring'
     }
   ]);
-
-  const [title, setTitle] = useState('Alertes Météorologiques');
-  const [description, setDescription] = useState('Suivez les alertes météorologiques impactant l\'agriculture en Guadeloupe');
-  const [showAddForm, setShowAddForm] = useState(false);
-  const [newAlert, setNewAlert] = useState<Omit<WeatherAlert, 'id'>>({
-    type: 'pluie',
-    region: '',
-    startDate: '',
-    endDate: '',
-    description: '',
-    severity: 'modérée'
-  });
-
-  const handleDelete = (id: number) => {
-    setAlerts(alerts.filter(alert => alert.id !== id));
-    toast.success('Alerte supprimée avec succès');
-  };
-
-  const handleAddSubmit = () => {
-    if (!newAlert.region || !newAlert.startDate || !newAlert.endDate || !newAlert.description) {
-      toast.error('Veuillez remplir tous les champs');
-      return;
-    }
-
-    const newId = Math.max(0, ...alerts.map(a => a.id)) + 1;
-    setAlerts([...alerts, { ...newAlert, id: newId }]);
-    setShowAddForm(false);
-    toast.success('Nouvelle alerte météo ajoutée');
-  };
-
-  // Conversion des handlers pour corriger les erreurs de typage
+  
+  const [selectedAlert, setSelectedAlert] = useState<WeatherAlert | null>(null);
+  const [isEditing, setIsEditing] = useState(false);
+  const [editedAlert, setEditedAlert] = useState<WeatherAlert | null>(null);
+  const [filterStatus, setFilterStatus] = useState<string>('all');
+  
+  // Handlers
   const handleTitleChange = (value: string | number) => {
     setTitle(String(value));
   };
-
+  
   const handleDescriptionChange = (value: string | number) => {
     setDescription(String(value));
   };
-
+  
+  const handleSelectAlert = (alert: WeatherAlert) => {
+    setSelectedAlert(alert);
+    setIsEditing(false);
+  };
+  
+  const handleStartEdit = (alert: WeatherAlert | null = null) => {
+    if (alert) {
+      setEditedAlert({...alert});
+      setSelectedAlert(alert);
+    } else {
+      // Créer une nouvelle alerte
+      const newAlert: WeatherAlert = {
+        id: Math.max(0, ...alerts.map(a => a.id)) + 1,
+        type: 'storm',
+        title: 'Nouvelle alerte',
+        description: '',
+        startDate: new Date().toISOString().split('T')[0],
+        severity: 'medium',
+        areas: ['Guadeloupe'],
+        recommendations: '',
+        status: 'active'
+      };
+      setEditedAlert(newAlert);
+      setSelectedAlert(null);
+    }
+    setIsEditing(true);
+  };
+  
+  const handleEditChange = (field: keyof WeatherAlert, value: any) => {
+    if (!editedAlert) return;
+    
+    if (field === 'areas') {
+      // Convertir la chaîne en tableau
+      const areasArray = String(value).split(',').map(area => area.trim());
+      setEditedAlert({...editedAlert, areas: areasArray});
+    } else {
+      setEditedAlert({...editedAlert, [field]: value});
+    }
+  };
+  
+  const handleSaveAlert = () => {
+    if (!editedAlert) return;
+    
+    if (alerts.some(a => a.id === editedAlert.id)) {
+      // Mise à jour
+      setAlerts(alerts.map(a => a.id === editedAlert.id ? editedAlert : a));
+      setSelectedAlert(editedAlert);
+      toast({
+        title: "Alerte mise à jour",
+        description: "Les modifications ont été enregistrées avec succès"
+      });
+    } else {
+      // Nouvelle alerte
+      setAlerts([...alerts, editedAlert]);
+      setSelectedAlert(editedAlert);
+      toast({
+        title: "Nouvelle alerte créée",
+        description: "L'alerte a été ajoutée au système"
+      });
+    }
+    
+    setIsEditing(false);
+    setEditedAlert(null);
+  };
+  
+  const handleCancelEdit = () => {
+    setIsEditing(false);
+    setEditedAlert(null);
+  };
+  
+  const handleDeleteAlert = (alertId: number) => {
+    setAlerts(alerts.filter(a => a.id !== alertId));
+    if (selectedAlert && selectedAlert.id === alertId) {
+      setSelectedAlert(null);
+    }
+    toast({
+      title: "Alerte supprimée",
+      description: "L'alerte a été supprimée du système"
+    });
+  };
+  
+  // Filtrer les alertes
+  const filteredAlerts = alerts.filter(alert => {
+    if (filterStatus === 'all') return true;
+    return alert.status === filterStatus;
+  });
+  
+  // Obtenir l'icône du type d'alerte
+  const getAlertIcon = (type: string) => {
+    switch (type) {
+      case 'hurricane':
+        return <Wind className="h-5 w-5 text-red-500" />;
+      case 'drought':
+        return <Sun className="h-5 w-5 text-amber-500" />;
+      case 'flood':
+        return <CloudRain className="h-5 w-5 text-blue-500" />;
+      case 'storm':
+        return <CloudLightning className="h-5 w-5 text-purple-500" />;
+      case 'heatwave':
+        return <Sun className="h-5 w-5 text-orange-500" />;
+      default:
+        return <AlertTriangle className="h-5 w-5 text-gray-500" />;
+    }
+  };
+  
+  // Obtenir la classe pour la sévérité
+  const getSeverityClass = (severity: string) => {
+    switch (severity) {
+      case 'low':
+        return 'bg-blue-100 text-blue-800';
+      case 'medium':
+        return 'bg-amber-100 text-amber-800';
+      case 'high':
+        return 'bg-orange-100 text-orange-800';
+      case 'extreme':
+        return 'bg-red-100 text-red-800';
+      default:
+        return 'bg-gray-100 text-gray-800';
+    }
+  };
+  
+  // Obtenir la classe pour le statut
+  const getStatusClass = (status: string) => {
+    switch (status) {
+      case 'active':
+        return 'bg-red-100 text-red-800';
+      case 'monitoring':
+        return 'bg-amber-100 text-amber-800';
+      case 'resolved':
+        return 'bg-green-100 text-green-800';
+      default:
+        return 'bg-gray-100 text-gray-800';
+    }
+  };
+  
   return (
-    <div className="bg-white rounded-xl border p-6">
-      <div className="flex justify-between items-center mb-4">
-        <div>
-          <h2 className="text-xl font-bold">
+    <div className="space-y-6">
+      <div className="bg-white rounded-xl border">
+        <div className="p-6 border-b">
+          <h2 className="text-xl font-bold flex items-center">
+            <CloudLightning className="h-6 w-6 mr-2 text-amber-500" />
             <EditableField
               value={title}
               onSave={handleTitleChange}
@@ -125,197 +244,277 @@ const GuadeloupeWeatherAlerts = () => {
             />
           </p>
         </div>
-        <button 
-          className="flex items-center px-4 py-2 text-sm bg-agri-primary text-white rounded-lg hover:bg-agri-primary-dark"
-          onClick={() => setShowAddForm(true)}
-        >
-          <Plus className="h-4 w-4 mr-2" />
-          Ajouter une alerte
-        </button>
-      </div>
-
-      <Table>
-        <TableHeader>
-          <TableRow>
-            <TableHead>Type</TableHead>
-            <TableHead>Région</TableHead>
-            <TableHead>Période</TableHead>
-            <TableHead>Sévérité</TableHead>
-            <TableHead>Description</TableHead>
-            <TableHead className="w-16">Actions</TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {alerts.map((alert) => (
-            <TableRow key={alert.id}>
-              <TableCell className="font-medium">
-                <div className="flex items-center">
-                  {alertTypeIcons[alert.type]}
-                  <span className="ml-2">{alert.type.charAt(0).toUpperCase() + alert.type.slice(1)}</span>
-                </div>
-              </TableCell>
-              <TableCell>
-                <EditableField
-                  value={alert.region}
-                  onSave={(value) => {
-                    setAlerts(alerts.map(a => 
-                      a.id === alert.id ? { ...a, region: String(value) } : a
-                    ));
-                  }}
-                />
-              </TableCell>
-              <TableCell>
-                <div className="space-y-1">
-                  <div>
-                    <span className="text-xs text-muted-foreground">Début: </span>
-                    <EditableField
-                      value={alert.startDate}
-                      onSave={(value) => {
-                        setAlerts(alerts.map(a => 
-                          a.id === alert.id ? { ...a, startDate: String(value) } : a
-                        ));
-                      }}
-                      type="text"
-                    />
-                  </div>
-                  <div>
-                    <span className="text-xs text-muted-foreground">Fin: </span>
-                    <EditableField
-                      value={alert.endDate}
-                      onSave={(value) => {
-                        setAlerts(alerts.map(a => 
-                          a.id === alert.id ? { ...a, endDate: String(value) } : a
-                        ));
-                      }}
-                      type="text"
-                    />
-                  </div>
-                </div>
-              </TableCell>
-              <TableCell>
-                <span className={`px-2 py-1 rounded-full text-xs ${alertSeverityColors[alert.severity]}`}>
-                  {alert.severity}
-                </span>
-              </TableCell>
-              <TableCell>
-                <EditableField
-                  value={alert.description}
-                  onSave={(value) => {
-                    setAlerts(alerts.map(a => 
-                      a.id === alert.id ? { ...a, description: String(value) } : a
-                    ));
-                  }}
-                />
-              </TableCell>
-              <TableCell>
-                <button 
-                  onClick={() => handleDelete(alert.id)}
-                  className="p-1.5 hover:bg-agri-danger/10 text-agri-danger rounded"
-                >
-                  <Trash2 className="h-4 w-4" />
-                </button>
-              </TableCell>
-            </TableRow>
-          ))}
-        </TableBody>
-      </Table>
-
-      {showAddForm && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-xl p-6 max-w-md w-full">
-            <h3 className="text-lg font-medium mb-4">Ajouter une alerte météorologique</h3>
-            
-            <div className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium mb-1">Type d'alerte</label>
-                <select 
-                  className="w-full px-3 py-2 border rounded-md"
-                  value={newAlert.type}
-                  onChange={(e) => setNewAlert({...newAlert, type: e.target.value as WeatherAlert['type']})}
-                >
-                  <option value="cyclone">Cyclone</option>
-                  <option value="pluie">Pluie</option>
-                  <option value="secheresse">Sécheresse</option>
-                  <option value="canicule">Canicule</option>
-                  <option value="vent">Vent fort</option>
-                </select>
-              </div>
-              
-              <div>
-                <label className="block text-sm font-medium mb-1">Région</label>
-                <input 
-                  type="text" 
-                  className="w-full px-3 py-2 border rounded-md"
-                  value={newAlert.region}
-                  onChange={(e) => setNewAlert({...newAlert, region: e.target.value})}
-                  placeholder="Ex: Toute la Guadeloupe, Basse-Terre..."
-                />
-              </div>
-              
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium mb-1">Date de début</label>
-                  <input 
-                    type="date" 
-                    className="w-full px-3 py-2 border rounded-md"
-                    value={newAlert.startDate}
-                    onChange={(e) => setNewAlert({...newAlert, startDate: e.target.value})}
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium mb-1">Date de fin</label>
-                  <input 
-                    type="date" 
-                    className="w-full px-3 py-2 border rounded-md"
-                    value={newAlert.endDate}
-                    onChange={(e) => setNewAlert({...newAlert, endDate: e.target.value})}
-                  />
-                </div>
-              </div>
-              
-              <div>
-                <label className="block text-sm font-medium mb-1">Sévérité</label>
-                <select 
-                  className="w-full px-3 py-2 border rounded-md"
-                  value={newAlert.severity}
-                  onChange={(e) => setNewAlert({...newAlert, severity: e.target.value as WeatherAlert['severity']})}
-                >
-                  <option value="faible">Faible</option>
-                  <option value="modérée">Modérée</option>
-                  <option value="élevée">Élevée</option>
-                  <option value="critique">Critique</option>
-                </select>
-              </div>
-              
-              <div>
-                <label className="block text-sm font-medium mb-1">Description</label>
-                <textarea 
-                  className="w-full px-3 py-2 border rounded-md"
-                  rows={3}
-                  value={newAlert.description}
-                  onChange={(e) => setNewAlert({...newAlert, description: e.target.value})}
-                  placeholder="Décrivez l'alerte météorologique..."
-                />
-              </div>
+        
+        <div className="flex flex-col md:flex-row">
+          {/* Liste des alertes */}
+          <div className="w-full md:w-2/5 p-4 border-r md:max-h-[600px] overflow-y-auto">
+            <div className="flex justify-between items-center mb-4">
+              <Tabs value={filterStatus} onValueChange={setFilterStatus} className="w-full">
+                <TabsList className="w-full">
+                  <TabsTrigger value="all" className="flex-1">Toutes</TabsTrigger>
+                  <TabsTrigger value="active" className="flex-1">Actives</TabsTrigger>
+                  <TabsTrigger value="monitoring" className="flex-1">Surveillance</TabsTrigger>
+                  <TabsTrigger value="resolved" className="flex-1">Résolues</TabsTrigger>
+                </TabsList>
+              </Tabs>
             </div>
             
-            <div className="flex justify-end space-x-3 mt-6">
-              <button 
-                className="px-4 py-2 border rounded-md hover:bg-muted/50"
-                onClick={() => setShowAddForm(false)}
-              >
-                Annuler
-              </button>
-              <button 
-                className="px-4 py-2 bg-agri-primary text-white rounded-md hover:bg-agri-primary-dark"
-                onClick={handleAddSubmit}
-              >
-                Ajouter
-              </button>
+            <Button 
+              onClick={() => handleStartEdit()} 
+              className="w-full mb-4"
+            >
+              <Plus className="h-4 w-4 mr-2" />
+              Nouvelle alerte
+            </Button>
+            
+            <div className="space-y-3">
+              {filteredAlerts.length > 0 ? (
+                filteredAlerts.map(alert => (
+                  <div 
+                    key={alert.id}
+                    className={`p-3 border rounded-lg cursor-pointer transition hover:bg-muted/50 ${selectedAlert?.id === alert.id ? 'border-primary bg-muted/30' : ''}`}
+                    onClick={() => handleSelectAlert(alert)}
+                  >
+                    <div className="flex justify-between">
+                      <div className="flex items-center">
+                        {getAlertIcon(alert.type)}
+                        <span className="font-medium ml-2">{alert.title}</span>
+                      </div>
+                      <span className={`text-xs px-2 py-1 rounded-full ${getStatusClass(alert.status)}`}>
+                        {alert.status === 'active' ? 'Active' : 
+                          alert.status === 'monitoring' ? 'Surveillance' : 'Résolue'}
+                      </span>
+                    </div>
+                    <div className="mt-2 text-sm text-muted-foreground line-clamp-2">
+                      {alert.description}
+                    </div>
+                    <div className="mt-2 flex justify-between items-center">
+                      <div className="flex items-center text-xs text-muted-foreground">
+                        <Calendar className="h-3 w-3 mr-1" />
+                        <span>{new Date(alert.startDate).toLocaleDateString()}</span>
+                      </div>
+                      <span className={`text-xs px-2 py-0.5 rounded-full ${getSeverityClass(alert.severity)}`}>
+                        {alert.severity === 'low' ? 'Faible' : 
+                          alert.severity === 'medium' ? 'Moyenne' : 
+                          alert.severity === 'high' ? 'Élevée' : 'Extrême'}
+                      </span>
+                    </div>
+                  </div>
+                ))
+              ) : (
+                <div className="p-6 text-center text-muted-foreground">
+                  <AlertTriangle className="h-12 w-12 mx-auto mb-2 opacity-30" />
+                  <p>Aucune alerte trouvée</p>
+                </div>
+              )}
             </div>
           </div>
+          
+          {/* Détails de l'alerte */}
+          <div className="w-full md:w-3/5 p-6">
+            {isEditing ? (
+              // Formulaire d'édition
+              <div className="space-y-4">
+                <div className="flex justify-between items-center mb-4">
+                  <h3 className="text-lg font-medium">
+                    {editedAlert?.id && alerts.some(a => a.id === editedAlert.id) ? 
+                      'Modifier l\'alerte' : 'Nouvelle alerte'}
+                  </h3>
+                  <div className="flex space-x-2">
+                    <Button variant="outline" size="sm" onClick={handleCancelEdit}>
+                      <X className="h-4 w-4 mr-2" />
+                      Annuler
+                    </Button>
+                    <Button size="sm" onClick={handleSaveAlert}>
+                      <Save className="h-4 w-4 mr-2" />
+                      Enregistrer
+                    </Button>
+                  </div>
+                </div>
+                
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium">Titre</label>
+                    <Input 
+                      value={editedAlert?.title || ''}
+                      onChange={(e) => handleEditChange('title', e.target.value)}
+                    />
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium">Type</label>
+                    <select 
+                      className="w-full h-10 px-3 py-2 border rounded-md"
+                      value={editedAlert?.type || 'storm'}
+                      onChange={(e) => handleEditChange('type', e.target.value)}
+                    >
+                      <option value="storm">Tempête</option>
+                      <option value="hurricane">Cyclone</option>
+                      <option value="drought">Sécheresse</option>
+                      <option value="flood">Inondation</option>
+                      <option value="heatwave">Vague de chaleur</option>
+                    </select>
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium">Date de début</label>
+                    <Input 
+                      type="date"
+                      value={editedAlert?.startDate || ''}
+                      onChange={(e) => handleEditChange('startDate', e.target.value)}
+                    />
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium">Date de fin (optionnelle)</label>
+                    <Input 
+                      type="date"
+                      value={editedAlert?.endDate || ''}
+                      onChange={(e) => handleEditChange('endDate', e.target.value)}
+                    />
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium">Sévérité</label>
+                    <select 
+                      className="w-full h-10 px-3 py-2 border rounded-md"
+                      value={editedAlert?.severity || 'medium'}
+                      onChange={(e) => handleEditChange('severity', e.target.value)}
+                    >
+                      <option value="low">Faible</option>
+                      <option value="medium">Moyenne</option>
+                      <option value="high">Élevée</option>
+                      <option value="extreme">Extrême</option>
+                    </select>
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium">Statut</label>
+                    <select 
+                      className="w-full h-10 px-3 py-2 border rounded-md"
+                      value={editedAlert?.status || 'active'}
+                      onChange={(e) => handleEditChange('status', e.target.value)}
+                    >
+                      <option value="active">Active</option>
+                      <option value="monitoring">Surveillance</option>
+                      <option value="resolved">Résolue</option>
+                    </select>
+                  </div>
+                  
+                  <div className="space-y-2 md:col-span-2">
+                    <label className="text-sm font-medium">Zones concernées (séparées par des virgules)</label>
+                    <Input 
+                      value={editedAlert?.areas?.join(', ') || ''}
+                      onChange={(e) => handleEditChange('areas', e.target.value)}
+                      placeholder="Basse-Terre, Grande-Terre, Marie-Galante"
+                    />
+                  </div>
+                  
+                  <div className="space-y-2 md:col-span-2">
+                    <label className="text-sm font-medium">Description</label>
+                    <Textarea 
+                      rows={3}
+                      value={editedAlert?.description || ''}
+                      onChange={(e) => handleEditChange('description', e.target.value)}
+                    />
+                  </div>
+                  
+                  <div className="space-y-2 md:col-span-2">
+                    <label className="text-sm font-medium">Recommandations</label>
+                    <Textarea 
+                      rows={3}
+                      value={editedAlert?.recommendations || ''}
+                      onChange={(e) => handleEditChange('recommendations', e.target.value)}
+                    />
+                  </div>
+                </div>
+              </div>
+            ) : selectedAlert ? (
+              // Affichage des détails
+              <div>
+                <div className="flex justify-between items-start mb-4">
+                  <div className="flex items-center">
+                    {getAlertIcon(selectedAlert.type)}
+                    <h3 className="text-xl font-semibold ml-2">{selectedAlert.title}</h3>
+                  </div>
+                  <div className="flex space-x-2">
+                    <Button variant="outline" size="sm" onClick={() => handleStartEdit(selectedAlert)}>
+                      Modifier
+                    </Button>
+                    <Button 
+                      variant="destructive" 
+                      size="sm" 
+                      onClick={() => handleDeleteAlert(selectedAlert.id)}
+                    >
+                      <Trash2 className="h-4 w-4 mr-2" />
+                      Supprimer
+                    </Button>
+                  </div>
+                </div>
+                
+                <div className="mb-4">
+                  <span className={`inline-block px-3 py-1 rounded-full text-sm ${getStatusClass(selectedAlert.status)} mr-2`}>
+                    {selectedAlert.status === 'active' ? 'Active' : 
+                      selectedAlert.status === 'monitoring' ? 'Surveillance' : 'Résolue'}
+                  </span>
+                  
+                  <span className={`inline-block px-3 py-1 rounded-full text-sm ${getSeverityClass(selectedAlert.severity)}`}>
+                    Sévérité: {selectedAlert.severity === 'low' ? 'Faible' : 
+                      selectedAlert.severity === 'medium' ? 'Moyenne' : 
+                      selectedAlert.severity === 'high' ? 'Élevée' : 'Extrême'}
+                  </span>
+                </div>
+                
+                <div className="bg-muted/30 rounded-lg p-4 mb-4">
+                  <p className="text-muted-foreground">{selectedAlert.description}</p>
+                </div>
+                
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                  <div>
+                    <h4 className="text-sm font-medium mb-1">Période</h4>
+                    <div className="flex items-center">
+                      <Calendar className="h-4 w-4 mr-2 text-muted-foreground" />
+                      <span>
+                        Du {new Date(selectedAlert.startDate).toLocaleDateString()}
+                        {selectedAlert.endDate && ` au ${new Date(selectedAlert.endDate).toLocaleDateString()}`}
+                      </span>
+                    </div>
+                  </div>
+                  
+                  <div>
+                    <h4 className="text-sm font-medium mb-1">Zones concernées</h4>
+                    <div className="flex flex-wrap gap-1">
+                      {selectedAlert.areas.map((area, index) => (
+                        <span key={index} className="inline-block bg-muted px-2 py-1 rounded text-xs">
+                          {area}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+                
+                <div className="bg-amber-50 border border-amber-200 rounded-lg p-4">
+                  <h4 className="text-sm font-medium mb-2 text-amber-800">Recommandations</h4>
+                  <p className="text-amber-700">{selectedAlert.recommendations}</p>
+                </div>
+              </div>
+            ) : (
+              // Aucune alerte sélectionnée
+              <div className="h-full flex flex-col items-center justify-center text-center p-6">
+                <AlertTriangle className="h-16 w-16 text-muted-foreground opacity-30 mb-4" />
+                <h3 className="text-lg font-medium mb-2">Aucune alerte sélectionnée</h3>
+                <p className="text-muted-foreground mb-6">
+                  Sélectionnez une alerte dans la liste ou créez-en une nouvelle
+                </p>
+                <Button onClick={() => handleStartEdit()}>
+                  <Plus className="h-4 w-4 mr-2" />
+                  Créer une alerte
+                </Button>
+              </div>
+            )}
+          </div>
         </div>
-      )}
+      </div>
     </div>
   );
 };

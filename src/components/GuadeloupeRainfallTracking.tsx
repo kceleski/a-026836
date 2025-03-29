@@ -7,383 +7,419 @@ import {
   YAxis, 
   CartesianGrid, 
   Tooltip, 
-  Legend, 
-  ResponsiveContainer 
+  ResponsiveContainer, 
+  Legend,
+  LineChart,
+  Line,
+  AreaChart,
+  Area
 } from 'recharts';
-import { Edit, Save, Download, UploadCloud, AlertTriangle, CloudRain } from 'lucide-react';
 import { EditableField } from './ui/editable-field';
+import { EditableTable, Column } from './ui/editable-table';
+import { CloudRain, Droplets, Filter, Calendar, Download, PlusCircle, LineChart as LineChartIcon } from 'lucide-react';
+import { useToast } from "@/hooks/use-toast";
 import { Button } from './ui/button';
 import { Input } from './ui/input';
-import { useToast } from "@/hooks/use-toast";
+import { 
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
-// Initial data for rainfall by region
-const initialRainfallData = [
-  { region: 'Basse-Terre (Côte sous le vent)', rainfallMm: 1800, expectedMm: 1950, status: 'normal' },
-  { region: 'Basse-Terre (Côte au vent)', rainfallMm: 2500, expectedMm: 2400, status: 'excess' },
-  { region: 'Grande-Terre (Nord)', rainfallMm: 1100, expectedMm: 1350, status: 'deficit' },
-  { region: 'Grande-Terre (Sud)', rainfallMm: 1250, expectedMm: 1300, status: 'normal' },
-  { region: 'Marie-Galante', rainfallMm: 1200, expectedMm: 1250, status: 'normal' },
-  { region: 'Les Saintes', rainfallMm: 950, expectedMm: 1100, status: 'deficit' }
-];
-
-// Monthly data for selected region
-const initialMonthlyData = [
-  { month: 'Jan', current: 95, average: 110, min: 80, max: 150 },
-  { month: 'Fév', current: 85, average: 90, min: 70, max: 120 },
-  { month: 'Mar', current: 90, average: 100, min: 75, max: 130 },
-  { month: 'Avr', current: 110, average: 120, min: 90, max: 160 },
-  { month: 'Mai', current: 150, average: 140, min: 100, max: 180 },
-  { month: 'Juin', current: 180, average: 170, min: 130, max: 220 },
-  { month: 'Juil', current: 190, average: 180, min: 140, max: 230 },
-  { month: 'Aoû', current: 210, average: 190, min: 150, max: 240 },
-  { month: 'Sep', current: 220, average: 200, min: 160, max: 250 },
-  { month: 'Oct', current: 180, average: 170, min: 130, max: 210 },
-  { month: 'Nov', current: 150, average: 140, min: 100, max: 190 },
-  { month: 'Déc', current: 120, average: 130, min: 90, max: 170 }
-];
+interface RainfallData {
+  id: number;
+  month: string;
+  year: number;
+  amount: number;
+  location: string;
+  impact: 'Positive' | 'Neutral' | 'Negative';
+  notes?: string;
+}
 
 const GuadeloupeRainfallTracking = () => {
   const { toast } = useToast();
-  const [rainfallData, setRainfallData] = useState(initialRainfallData);
-  const [monthlyData, setMonthlyData] = useState(initialMonthlyData);
-  const [selectedRegion, setSelectedRegion] = useState<string | null>(null);
-  const [isEditMode, setIsEditMode] = useState(false);
-  const [year, setYear] = useState('2023');
-
-  // Function to update rainfall data for a region
-  const handleUpdateRainfall = (region: string, value: number) => {
-    const updatedData = rainfallData.map(item => {
-      if (item.region === region) {
-        const newStatus = 
-          value < item.expectedMm * 0.9 ? 'deficit' :
-          value > item.expectedMm * 1.1 ? 'excess' : 'normal';
-        
-        return { ...item, rainfallMm: value, status: newStatus };
-      }
-      return item;
+  const [title, setTitle] = useState('Suivi des Précipitations en Guadeloupe');
+  const [description, setDescription] = useState('Visualisation des données pluviométriques pour optimiser la gestion des cultures');
+  const [searchTerm, setSearchTerm] = useState('');
+  const [filterYear, setFilterYear] = useState('all');
+  const [filterLocation, setFilterLocation] = useState('all');
+  const [chartType, setChartType] = useState('bar');
+  
+  const [rainfallData, setRainfallData] = useState<RainfallData[]>([
+    { id: 1, month: 'Janvier', year: 2023, amount: 210, location: 'Basse-Terre', impact: 'Positive', notes: 'Bon démarrage pour les cultures' },
+    { id: 2, month: 'Février', year: 2023, amount: 180, location: 'Basse-Terre', impact: 'Positive' },
+    { id: 3, month: 'Mars', year: 2023, amount: 150, location: 'Basse-Terre', impact: 'Neutral' },
+    { id: 4, month: 'Avril', year: 2023, amount: 120, location: 'Basse-Terre', impact: 'Neutral' },
+    { id: 5, month: 'Mai', year: 2023, amount: 90, location: 'Basse-Terre', impact: 'Negative', notes: 'Début de sécheresse' },
+    { id: 6, month: 'Juin', year: 2023, amount: 60, location: 'Basse-Terre', impact: 'Negative' },
+    { id: 7, month: 'Juillet', year: 2023, amount: 45, location: 'Basse-Terre', impact: 'Negative' },
+    { id: 8, month: 'Août', year: 2023, amount: 70, location: 'Basse-Terre', impact: 'Neutral' },
+    { id: 9, month: 'Septembre', year: 2023, amount: 90, location: 'Basse-Terre', impact: 'Neutral' },
+    { id: 10, month: 'Octobre', year: 2023, amount: 140, location: 'Basse-Terre', impact: 'Positive' },
+    { id: 11, month: 'Novembre', year: 2023, amount: 190, location: 'Basse-Terre', impact: 'Positive' },
+    { id: 12, month: 'Décembre', year: 2023, amount: 230, location: 'Basse-Terre', impact: 'Positive' },
+    { id: 13, month: 'Janvier', year: 2023, amount: 90, location: 'Grande-Terre', impact: 'Neutral' },
+    { id: 14, month: 'Février', year: 2023, amount: 85, location: 'Grande-Terre', impact: 'Neutral' },
+    { id: 15, month: 'Mars', year: 2023, amount: 75, location: 'Grande-Terre', impact: 'Neutral' },
+    { id: 16, month: 'Avril', year: 2023, amount: 65, location: 'Grande-Terre', impact: 'Negative' },
+    { id: 17, month: 'Mai', year: 2023, amount: 50, location: 'Grande-Terre', impact: 'Negative' },
+    { id: 18, month: 'Juin', year: 2023, amount: 40, location: 'Grande-Terre', impact: 'Negative' },
+    { id: 19, month: 'Juillet', year: 2023, amount: 30, location: 'Grande-Terre', impact: 'Negative', notes: 'Sécheresse sévère' },
+    { id: 20, month: 'Août', year: 2023, amount: 45, location: 'Grande-Terre', impact: 'Negative' },
+    { id: 21, month: 'Septembre', year: 2023, amount: 60, location: 'Grande-Terre', impact: 'Neutral' },
+    { id: 22, month: 'Octobre', year: 2023, amount: 80, location: 'Grande-Terre', impact: 'Neutral' },
+    { id: 23, month: 'Novembre', year: 2023, amount: 95, location: 'Grande-Terre', impact: 'Positive' },
+    { id: 24, month: 'Décembre', year: 2023, amount: 110, location: 'Grande-Terre', impact: 'Positive' },
+    { id: 25, month: 'Janvier', year: 2024, amount: 215, location: 'Basse-Terre', impact: 'Positive' },
+    { id: 26, month: 'Février', year: 2024, amount: 185, location: 'Basse-Terre', impact: 'Positive' },
+    { id: 27, month: 'Mars', year: 2024, amount: 160, location: 'Basse-Terre', impact: 'Positive' },
+    { id: 28, month: 'Janvier', year: 2024, amount: 95, location: 'Grande-Terre', impact: 'Neutral' },
+    { id: 29, month: 'Février', year: 2024, amount: 90, location: 'Grande-Terre', impact: 'Neutral' },
+    { id: 30, month: 'Mars', year: 2024, amount: 80, location: 'Grande-Terre', impact: 'Neutral' },
+  ]);
+  
+  // Colonnes pour le tableau éditable
+  const columns: Column[] = [
+    { id: 'month', header: 'Mois', accessorKey: 'month', isEditable: true },
+    { id: 'year', header: 'Année', accessorKey: 'year', type: 'number', isEditable: true },
+    { id: 'amount', header: 'Précipitations (mm)', accessorKey: 'amount', type: 'number', isEditable: true },
+    { id: 'location', header: 'Région', accessorKey: 'location', isEditable: true },
+    { id: 'impact', header: 'Impact', accessorKey: 'impact', isEditable: true },
+    { id: 'notes', header: 'Notes', accessorKey: 'notes', isEditable: true }
+  ];
+  
+  // Handlers
+  const handleTitleChange = (value: string | number) => {
+    setTitle(String(value));
+  };
+  
+  const handleDescriptionChange = (value: string | number) => {
+    setDescription(String(value));
+  };
+  
+  // Filtrer les données
+  const filteredData = rainfallData.filter(item => {
+    const matchesSearch = 
+      item.month.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      item.location.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (item.notes?.toLowerCase().includes(searchTerm.toLowerCase()) || false);
+    
+    const matchesYear = filterYear === 'all' || item.year === Number(filterYear);
+    const matchesLocation = filterLocation === 'all' || item.location === filterLocation;
+    
+    return matchesSearch && matchesYear && matchesLocation;
+  });
+  
+  // Préparer les données pour le graphique
+  const uniqueMonths = Array.from(new Set(filteredData.map(item => item.month)));
+  const uniqueLocations = Array.from(new Set(filteredData.map(item => item.location)));
+  
+  // Créer les données agrégées par mois pour le graphique
+  const chartData = uniqueMonths.map(month => {
+    const dataPoint: any = { month };
+    
+    uniqueLocations.forEach(location => {
+      const matchingData = filteredData.find(item => item.month === month && item.location === location);
+      dataPoint[location] = matchingData ? matchingData.amount : 0;
     });
     
-    setRainfallData(updatedData);
+    return dataPoint;
+  });
+  
+  // Gérer les mises à jour du tableau
+  const handleTableUpdate = (rowIndex: number, columnId: string, value: any) => {
+    const newData = [...rainfallData];
+    const itemId = filteredData[rowIndex].id;
+    const dataIndex = newData.findIndex(item => item.id === itemId);
+    
+    if (dataIndex !== -1) {
+      const updatedItem = { ...newData[dataIndex] };
+      
+      if (columnId === 'year' || columnId === 'amount') {
+        updatedItem[columnId] = Number(value);
+      } else {
+        updatedItem[columnId] = value;
+      }
+      
+      newData[dataIndex] = updatedItem;
+      setRainfallData(newData);
+      
+      toast({
+        title: "Données mises à jour",
+        description: `Enregistrement des précipitations pour ${updatedItem.month} ${updatedItem.year} mis à jour`
+      });
+    }
+  };
+  
+  // Gestion de suppression
+  const handleDeleteRow = (rowIndex: number) => {
+    const itemId = filteredData[rowIndex].id;
+    const newData = rainfallData.filter(item => item.id !== itemId);
+    setRainfallData(newData);
     
     toast({
-      title: "Précipitations mises à jour",
-      description: `Les données pour ${region} ont été mises à jour`
+      title: "Données supprimées",
+      description: "Enregistrement supprimé avec succès"
     });
   };
-
-  // Function to update monthly data
-  const handleUpdateMonthlyData = (month: string, value: number) => {
-    if (!selectedRegion) return;
+  
+  // Ajouter une nouvelle ligne
+  const handleAddRow = (newRow: Record<string, any>) => {
+    const newId = Math.max(0, ...rainfallData.map(item => item.id)) + 1;
     
-    const updatedData = monthlyData.map(item => {
-      if (item.month === month) {
-        return { ...item, current: value };
-      }
-      return item;
-    });
+    const typedRow: RainfallData = {
+      id: newId,
+      month: String(newRow.month || 'Janvier'),
+      year: Number(newRow.year || new Date().getFullYear()),
+      amount: Number(newRow.amount || 0),
+      location: String(newRow.location || 'Basse-Terre'),
+      impact: (newRow.impact as RainfallData['impact']) || 'Neutral',
+      notes: newRow.notes
+    };
     
-    setMonthlyData(updatedData);
+    setRainfallData([...rainfallData, typedRow]);
     
     toast({
-      title: "Données mensuelles mises à jour",
-      description: `Les précipitations de ${month} ont été mises à jour`
+      title: "Données ajoutées",
+      description: `Nouvel enregistrement ajouté pour ${typedRow.month} ${typedRow.year}`
     });
   };
-
-  // Function to get color based on status
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'deficit': return '#f87171';
-      case 'excess': return '#60a5fa';
-      case 'normal': return '#4ade80';
-      default: return '#4ade80';
+  
+  // Télécharger les données
+  const handleDownloadData = () => {
+    toast({
+      title: "Téléchargement démarré",
+      description: "Exportation des données de précipitations au format CSV"
+    });
+  };
+  
+  // Calculer les statistiques
+  const calculateStatistics = () => {
+    if (filteredData.length === 0) return { avg: 0, max: 0, min: 0, total: 0 };
+    
+    const amounts = filteredData.map(item => item.amount);
+    const sum = amounts.reduce((acc, val) => acc + val, 0);
+    
+    return {
+      avg: Math.round(sum / amounts.length),
+      max: Math.max(...amounts),
+      min: Math.min(...amounts),
+      total: sum
+    };
+  };
+  
+  const stats = calculateStatistics();
+  
+  // Années uniques pour le filtre
+  const uniqueYears = Array.from(new Set(rainfallData.map(item => item.year))).sort((a, b) => b - a);
+  
+  // Obtenir la classe CSS pour l'impact
+  const getImpactClass = (impact: string) => {
+    switch (impact) {
+      case 'Positive': return 'text-agri-success';
+      case 'Negative': return 'text-agri-danger';
+      default: return 'text-muted-foreground';
     }
   };
 
-  // Function to get status label
-  const getStatusLabel = (status: string) => {
-    switch (status) {
-      case 'deficit': return 'Déficit';
-      case 'excess': return 'Excès';
-      case 'normal': return 'Normal';
-      default: return 'Normal';
-    }
+  // Couleurs pour le graphique
+  const locationColors: {[key: string]: string} = {
+    'Basse-Terre': '#4CAF50',
+    'Grande-Terre': '#2196F3',
+    'Marie-Galante': '#FFC107',
+    'Les Saintes': '#9C27B0'
   };
-
-  // Handler for selecting a region
-  const handleSelectRegion = (region: string) => {
-    setSelectedRegion(region);
-    
-    // In a real app, this would fetch data specific to the region
-    // For now we'll just update the title in the chart
-  };
-
-  // Handler for saving edited data
-  const handleSaveData = () => {
-    setIsEditMode(false);
-    toast({
-      title: "Données enregistrées",
-      description: "Toutes les modifications ont été sauvegardées avec succès"
-    });
-  };
-
-  // Chart data for region comparison
-  const regionComparisonData = rainfallData.map(item => ({
-    name: item.region.split('(')[0].trim(),
-    actuel: item.rainfallMm,
-    attendu: item.expectedMm,
-  }));
-
-  // Check for regions with significant deficit
-  const deficitRegions = rainfallData.filter(item => item.status === 'deficit');
-  const hasDeficit = deficitRegions.length > 0;
-
+  
   return (
-    <div className="space-y-6 animate-enter">
-      <div className="flex justify-between items-center">
-        <div>
-          <h2 className="text-xl font-bold">Suivi des Précipitations en Guadeloupe</h2>
-          <p className="text-muted-foreground">Analysez les tendances pluviométriques pour optimiser vos cultures</p>
-        </div>
-        <div className="flex space-x-2">
-          <div className="relative">
-            <Input 
-              type="number" 
-              value={year}
-              onChange={(e) => setYear(e.target.value)}
-              className="w-24"
-              min="2000"
-              max="2050"
+    <div className="space-y-6">
+      <div className="bg-white rounded-xl border p-6">
+        <div className="mb-6">
+          <h2 className="text-xl font-bold flex items-center">
+            <CloudRain className="h-6 w-6 mr-2 text-blue-500" />
+            <EditableField
+              value={title}
+              onSave={handleTitleChange}
+              className="inline-block"
             />
-          </div>
-          {isEditMode ? (
-            <Button onClick={handleSaveData}>
-              <Save className="mr-2 h-4 w-4" />
-              Enregistrer
-            </Button>
-          ) : (
-            <Button variant="outline" onClick={() => setIsEditMode(true)}>
-              <Edit className="mr-2 h-4 w-4" />
-              Modifier
-            </Button>
-          )}
-          <Button variant="outline">
-            <Download className="mr-2 h-4 w-4" />
-            Exporter
-          </Button>
-        </div>
-      </div>
-
-      {hasDeficit && (
-        <div className="bg-orange-50 border border-orange-200 rounded-xl p-4">
-          <div className="flex items-center">
-            <AlertTriangle className="h-5 w-5 text-orange-500 mr-2" />
-            <h3 className="font-medium text-orange-700">Alert de déficit pluviométrique</h3>
-          </div>
-          <p className="mt-2 text-orange-600">
-            Les régions suivantes présentent un déficit de précipitations significatif:
+          </h2>
+          <p className="text-muted-foreground">
+            <EditableField
+              value={description}
+              onSave={handleDescriptionChange}
+              className="inline-block"
+            />
           </p>
-          <ul className="mt-1 pl-6 list-disc text-orange-600">
-            {deficitRegions.map(region => (
-              <li key={region.region}>
-                {region.region}: {region.rainfallMm}mm (déficit de {Math.round((region.expectedMm - region.rainfallMm) / region.expectedMm * 100)}%)
-              </li>
-            ))}
-          </ul>
         </div>
-      )}
-
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Left column - Regional data */}
-        <div className="lg:col-span-1 space-y-4">
-          <div className="bg-white rounded-xl border p-4">
-            <h3 className="font-medium mb-3">Précipitations par région</h3>
-            <div className="space-y-4">
-              {rainfallData.map(item => (
-                <div 
-                  key={item.region} 
-                  className={`p-3 border rounded-lg cursor-pointer ${
-                    selectedRegion === item.region ? 'border-agri-primary bg-agri-primary/5' : ''
-                  }`}
-                  onClick={() => handleSelectRegion(item.region)}
-                >
-                  <div className="flex justify-between items-center mb-1">
-                    <span className="font-medium text-sm">{item.region}</span>
-                    <span 
-                      className={`text-xs px-2 py-0.5 rounded-full ${
-                        item.status === 'deficit' 
-                          ? 'bg-red-100 text-red-600' 
-                          : item.status === 'excess'
-                            ? 'bg-blue-100 text-blue-600'
-                            : 'bg-green-100 text-green-600'
-                      }`}
-                    >
-                      {getStatusLabel(item.status)}
-                    </span>
-                  </div>
-                  <div className="flex items-center justify-between text-sm">
-                    <span className="text-muted-foreground">Actuel:</span>
-                    {isEditMode ? (
-                      <EditableField
-                        value={item.rainfallMm}
-                        type="number"
-                        onSave={(value) => handleUpdateRainfall(item.region, Number(value))}
-                        className="font-semibold"
-                        inputClassName="w-20"
-                      />
-                    ) : (
-                      <span className="font-semibold">{item.rainfallMm} mm</span>
-                    )}
-                  </div>
-                  <div className="flex items-center justify-between text-sm">
-                    <span className="text-muted-foreground">Attendu:</span>
-                    <span>{item.expectedMm} mm</span>
-                  </div>
-                  <div className="mt-2 h-2 bg-gray-100 rounded-full overflow-hidden">
-                    <div 
-                      className="h-full rounded-full" 
-                      style={{ 
-                        width: `${Math.min(100, (item.rainfallMm / item.expectedMm) * 100)}%`,
-                        backgroundColor: getStatusColor(item.status)
-                      }}
-                    ></div>
-                  </div>
-                </div>
-              ))}
+        
+        {/* Statistiques */}
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+          <div className="bg-muted/30 rounded-lg p-4 border flex items-center space-x-3">
+            <Droplets className="h-8 w-8 text-blue-500" />
+            <div>
+              <div className="text-sm text-muted-foreground">Moyenne</div>
+              <div className="text-2xl font-bold">{stats.avg} mm</div>
             </div>
           </div>
-          
-          <div className="bg-white rounded-xl border p-4">
-            <h3 className="font-medium mb-3">Ajouter des données</h3>
-            <div className="space-y-3">
-              <div>
-                <label className="text-sm text-muted-foreground block mb-1">Type</label>
-                <select className="w-full h-10 border border-input rounded-md px-3">
-                  <option>Relevé mensuel</option>
-                  <option>Relevé journalier</option>
-                  <option>Prévision météo</option>
-                </select>
-              </div>
-              <div>
-                <label className="text-sm text-muted-foreground block mb-1">Fichier</label>
-                <div className="border border-dashed border-input rounded-md p-4 text-center">
-                  <UploadCloud className="h-8 w-8 text-muted-foreground mx-auto mb-2" />
-                  <p className="text-sm text-muted-foreground">
-                    Glissez un fichier CSV ou cliquez pour parcourir
-                  </p>
-                  <Button variant="outline" size="sm" className="mt-2">
-                    Parcourir
-                  </Button>
-                </div>
-              </div>
-              <Button className="w-full mt-2">
-                <CloudRain className="mr-2 h-4 w-4" />
-                Importer les données
-              </Button>
+          <div className="bg-muted/30 rounded-lg p-4 border flex items-center space-x-3">
+            <Droplets className="h-8 w-8 text-green-500" />
+            <div>
+              <div className="text-sm text-muted-foreground">Maximum</div>
+              <div className="text-2xl font-bold">{stats.max} mm</div>
+            </div>
+          </div>
+          <div className="bg-muted/30 rounded-lg p-4 border flex items-center space-x-3">
+            <Droplets className="h-8 w-8 text-red-500" />
+            <div>
+              <div className="text-sm text-muted-foreground">Minimum</div>
+              <div className="text-2xl font-bold">{stats.min} mm</div>
+            </div>
+          </div>
+          <div className="bg-muted/30 rounded-lg p-4 border flex items-center space-x-3">
+            <Droplets className="h-8 w-8 text-purple-500" />
+            <div>
+              <div className="text-sm text-muted-foreground">Total</div>
+              <div className="text-2xl font-bold">{stats.total} mm</div>
             </div>
           </div>
         </div>
         
-        {/* Right column - Charts */}
-        <div className="lg:col-span-2 space-y-5">
-          <div className="bg-white rounded-xl border p-4">
-            <h3 className="font-medium mb-3">Comparaison par région - {year}</h3>
-            <div className="h-80">
-              <ResponsiveContainer width="100%" height="100%">
-                <BarChart
-                  data={regionComparisonData}
-                  margin={{ top: 5, right: 30, left: 20, bottom: 70 }}
-                  barGap={0}
-                  barCategoryGap="20%"
-                >
-                  <CartesianGrid strokeDasharray="3 3" vertical={false} />
-                  <XAxis 
-                    dataKey="name" 
-                    angle={-45} 
-                    textAnchor="end" 
-                    height={70} 
-                    tickMargin={20}
-                  />
-                  <YAxis 
-                    label={{ 
-                      value: 'Précipitations (mm)', 
-                      angle: -90, 
-                      position: 'insideLeft',
-                      style: { textAnchor: 'middle' } 
-                    }} 
-                  />
-                  <Tooltip 
-                    formatter={(value) => [`${value} mm`, '']}
-                    labelFormatter={(label) => `Région: ${label}`}
-                  />
-                  <Legend />
-                  <Bar dataKey="actuel" name="Précipitations actuelles" fill="#4ade80" radius={[4, 4, 0, 0]} />
-                  <Bar dataKey="attendu" name="Précipitations attendues" fill="#60a5fa" radius={[4, 4, 0, 0]} />
-                </BarChart>
-              </ResponsiveContainer>
-            </div>
+        {/* Filtres et recherche */}
+        <div className="flex flex-wrap gap-4 mb-6 items-center">
+          <div className="relative flex-grow max-w-sm">
+            <Input
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              placeholder="Rechercher..."
+              className="pl-10"
+            />
+            <Filter className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           </div>
           
-          <div className="bg-white rounded-xl border p-4">
-            <h3 className="font-medium mb-3">
-              Précipitations Mensuelles {selectedRegion ? `- ${selectedRegion}` : ''} ({year})
-            </h3>
-            <div className="h-80">
-              <ResponsiveContainer width="100%" height="100%">
-                <BarChart
-                  data={monthlyData}
-                  margin={{ top: 20, right: 30, left: 20, bottom: 5 }}
-                >
-                  <CartesianGrid strokeDasharray="3 3" vertical={false} />
-                  <XAxis dataKey="month" />
-                  <YAxis 
-                    label={{ 
-                      value: 'Précipitations (mm)', 
-                      angle: -90, 
-                      position: 'insideLeft',
-                      style: { textAnchor: 'middle' } 
-                    }} 
-                  />
-                  <Tooltip formatter={(value) => [`${value} mm`, '']} />
-                  <Legend />
-                  <Bar 
-                    dataKey="current" 
-                    name="Précipitations actuelles" 
-                    fill="#4ade80" 
-                    radius={[4, 4, 0, 0]} 
-                  />
-                  <Bar 
-                    dataKey="average" 
-                    name="Moyenne historique" 
-                    fill="#60a5fa" 
-                    radius={[4, 4, 0, 0]} 
-                  />
-                </BarChart>
-              </ResponsiveContainer>
-            </div>
-            
-            {selectedRegion && isEditMode && (
-              <div className="mt-4 border-t pt-4">
-                <h4 className="text-sm font-medium mb-2">Modifier les données mensuelles</h4>
-                <div className="grid grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-2">
-                  {monthlyData.map(item => (
-                    <div key={item.month} className="p-2 border rounded">
-                      <div className="text-xs font-medium">{item.month}</div>
-                      <EditableField
-                        value={item.current}
-                        type="number"
-                        onSave={(value) => handleUpdateMonthlyData(item.month, Number(value))}
-                        className="text-sm"
-                        inputClassName="w-full"
-                      />
-                      <div className="text-xs text-muted-foreground mt-1">Moy: {item.average}mm</div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
+          <Select value={filterYear} onValueChange={setFilterYear}>
+            <SelectTrigger className="w-[150px]">
+              <Calendar className="h-4 w-4 mr-2" />
+              <SelectValue placeholder="Année" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Toutes les années</SelectItem>
+              {uniqueYears.map(year => (
+                <SelectItem key={year} value={year.toString()}>{year}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          
+          <Select value={filterLocation} onValueChange={setFilterLocation}>
+            <SelectTrigger className="w-[180px]">
+              <CloudRain className="h-4 w-4 mr-2" />
+              <SelectValue placeholder="Région" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Toutes les régions</SelectItem>
+              {uniqueLocations.map(location => (
+                <SelectItem key={location} value={location}>{location}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          
+          <div className="flex space-x-1 ml-auto">
+            <Button variant="outline" size="sm" onClick={handleDownloadData}>
+              <Download className="h-4 w-4 mr-2" />
+              Télécharger
+            </Button>
           </div>
         </div>
+        
+        {/* Type de graphique */}
+        <Tabs value={chartType} onValueChange={setChartType} className="mb-6">
+          <TabsList>
+            <TabsTrigger value="bar">
+              <BarChart className="h-4 w-4 mr-2" />
+              Histogramme
+            </TabsTrigger>
+            <TabsTrigger value="line">
+              <LineChartIcon className="h-4 w-4 mr-2" />
+              Courbes
+            </TabsTrigger>
+            <TabsTrigger value="area">
+              <CloudRain className="h-4 w-4 mr-2" />
+              Aires
+            </TabsTrigger>
+          </TabsList>
+        </Tabs>
+        
+        {/* Graphiques */}
+        <div className="h-80 mb-6">
+          <ResponsiveContainer width="100%" height="100%">
+            {chartType === 'bar' ? (
+              <BarChart data={chartData}>
+                <CartesianGrid strokeDasharray="3 3" vertical={false} />
+                <XAxis dataKey="month" />
+                <YAxis />
+                <Tooltip formatter={(value) => [`${value} mm`, '']} />
+                <Legend />
+                {uniqueLocations.map(location => (
+                  <Bar 
+                    key={location} 
+                    dataKey={location} 
+                    name={location} 
+                    fill={locationColors[location] || '#8884d8'} 
+                  />
+                ))}
+              </BarChart>
+            ) : chartType === 'line' ? (
+              <LineChart data={chartData}>
+                <CartesianGrid strokeDasharray="3 3" vertical={false} />
+                <XAxis dataKey="month" />
+                <YAxis />
+                <Tooltip formatter={(value) => [`${value} mm`, '']} />
+                <Legend />
+                {uniqueLocations.map(location => (
+                  <Line 
+                    key={location} 
+                    type="monotone" 
+                    dataKey={location} 
+                    name={location} 
+                    stroke={locationColors[location] || '#8884d8'} 
+                    strokeWidth={2}
+                    activeDot={{ r: 8 }}
+                  />
+                ))}
+              </LineChart>
+            ) : (
+              <AreaChart data={chartData}>
+                <CartesianGrid strokeDasharray="3 3" vertical={false} />
+                <XAxis dataKey="month" />
+                <YAxis />
+                <Tooltip formatter={(value) => [`${value} mm`, '']} />
+                <Legend />
+                {uniqueLocations.map(location => (
+                  <Area 
+                    key={location} 
+                    type="monotone" 
+                    dataKey={location} 
+                    name={location} 
+                    fill={locationColors[location] || '#8884d8'} 
+                    stroke={locationColors[location] || '#8884d8'} 
+                    fillOpacity={0.6}
+                  />
+                ))}
+              </AreaChart>
+            )}
+          </ResponsiveContainer>
+        </div>
+        
+        {/* Tableau de données */}
+        <EditableTable
+          data={filteredData}
+          columns={columns}
+          onUpdate={handleTableUpdate}
+          onDelete={handleDeleteRow}
+          onAdd={handleAddRow}
+          sortable={true}
+        />
       </div>
     </div>
   );

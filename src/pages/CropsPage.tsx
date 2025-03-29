@@ -7,10 +7,18 @@ import CropPlanning from '../components/CropPlanning';
 import GuadeloupeHarvestTracking from '../components/GuadeloupeHarvestTracking';
 import GuadeloupeSpecificCrops from '../components/GuadeloupeSpecificCrops';
 import GuadeloupeRainfallTracking from '../components/GuadeloupeRainfallTracking';
+import GuadeloupeWeatherAlerts from '../components/GuadeloupeWeatherAlerts';
 import usePageMetadata from '../hooks/use-page-metadata';
 import { Button } from '@/components/ui/button';
-import { Download, Filter, HelpCircle } from 'lucide-react';
+import { Download, Filter, HelpCircle, Upload, CloudLightning } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { 
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 const CropsPage = () => {
   const { toast } = useToast();
@@ -30,6 +38,13 @@ const CropsPage = () => {
     toast({
       title: "Export des données",
       description: "L'export de toutes les données des cultures a démarré"
+    });
+  };
+
+  const handleImportData = () => {
+    toast({
+      title: "Import de données",
+      description: "Veuillez sélectionner un fichier à importer"
     });
   };
 
@@ -60,6 +75,11 @@ const CropsPage = () => {
       value: 'rainfall',
       label: 'Précipitations',
       content: <GuadeloupeRainfallTracking />
+    },
+    {
+      value: 'weather',
+      label: 'Alertes Météo',
+      content: <GuadeloupeWeatherAlerts />
     }
   ];
 
@@ -74,24 +94,31 @@ const CropsPage = () => {
             onDescriptionChange={handleDescriptionChange}
           />
           
-          <div className="flex space-x-2">
-            <div className="relative">
-              <select 
-                className="h-10 appearance-none pl-3 pr-8 py-2 border border-input rounded-md focus:outline-none focus:ring-2 focus:ring-ring bg-white"
-                value={activeViewType}
-                onChange={(e) => setActiveViewType(e.target.value as any)}
-              >
-                <option value="all">Toutes les cultures</option>
-                <option value="fruits">Fruits tropicaux</option>
-                <option value="vegetables">Légumes</option>
-                <option value="cash">Cultures de rente</option>
-              </select>
-              <Filter className="absolute right-2 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
-            </div>
+          <div className="flex flex-wrap gap-2">
+            <Select 
+              value={activeViewType} 
+              onValueChange={(value) => setActiveViewType(value as any)}
+            >
+              <SelectTrigger className="w-[180px]">
+                <Filter className="h-4 w-4 mr-2" />
+                <SelectValue placeholder="Toutes les cultures" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Toutes les cultures</SelectItem>
+                <SelectItem value="fruits">Fruits tropicaux</SelectItem>
+                <SelectItem value="vegetables">Légumes</SelectItem>
+                <SelectItem value="cash">Cultures de rente</SelectItem>
+              </SelectContent>
+            </Select>
             
             <Button variant="outline" onClick={handleExportData}>
               <Download className="mr-2 h-4 w-4" />
               Exporter
+            </Button>
+            
+            <Button variant="outline" onClick={handleImportData}>
+              <Upload className="mr-2 h-4 w-4" />
+              Importer
             </Button>
             
             <Button variant="outline" onClick={handleShowHelp}>
