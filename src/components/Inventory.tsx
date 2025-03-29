@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { 
   Package, 
@@ -875,7 +874,7 @@ const Inventory = () => {
                   />
                   <YAxis />
                   <Tooltip />
-                  <Bar dataKey="value" fill={(entry) => entry.fill || '#4CAF50'} radius={[4, 4, 0, 0]} />
+                  <Bar dataKey="value" fill="#4CAF50" radius={[4, 4, 0, 0]} />
                 </BarChart>
               </ResponsiveContainer>
             </div>
