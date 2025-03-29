@@ -28,6 +28,18 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { 
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useForm } from "react-hook-form";
+import * as z from "zod";
 
 interface RainfallData {
   id: number;
@@ -39,6 +51,15 @@ interface RainfallData {
   notes?: string;
 }
 
+const formSchema = z.object({
+  month: z.string().min(1, { message: "Le mois est requis" }),
+  year: z.coerce.number().min(2000, { message: "Année invalide" }).max(2100),
+  amount: z.coerce.number().min(0, { message: "Valeur invalide" }),
+  location: z.string().min(1, { message: "La région est requise" }),
+  impact: z.enum(['Positive', 'Neutral', 'Negative']),
+  notes: z.string().optional(),
+});
+
 const GuadeloupeRainfallTracking = () => {
   const { toast } = useToast();
   const [title, setTitle] = useState('Suivi des Précipitations en Guadeloupe');
@@ -47,6 +68,19 @@ const GuadeloupeRainfallTracking = () => {
   const [filterYear, setFilterYear] = useState('all');
   const [filterLocation, setFilterLocation] = useState('all');
   const [chartType, setChartType] = useState('bar');
+  const [dialogOpen, setDialogOpen] = useState(false);
+  
+  const form = useForm<z.infer<typeof formSchema>>({
+    resolver: zodResolver(formSchema),
+    defaultValues: {
+      month: "Janvier",
+      year: new Date().getFullYear(),
+      amount: 0,
+      location: "Basse-Terre",
+      impact: "Neutral",
+      notes: "",
+    },
+  });
   
   const [rainfallData, setRainfallData] = useState<RainfallData[]>([
     { id: 1, month: 'Janvier', year: 2023, amount: 210, location: 'Basse-Terre', impact: 'Positive', notes: 'Bon démarrage pour les cultures' },
@@ -87,17 +121,25 @@ const GuadeloupeRainfallTracking = () => {
     { id: 'year', header: 'Année', accessorKey: 'year', type: 'number', isEditable: true },
     { id: 'amount', header: 'Précipitations (mm)', accessorKey: 'amount', type: 'number', isEditable: true },
     { id: 'location', header: 'Région', accessorKey: 'location', isEditable: true },
-    { id: 'impact', header: 'Impact', accessorKey: 'impact', isEditable: true },
+    { id: 'impact', header: 'Impact', accessorKey: 'impact', isEditable: true, options: ['Positive', 'Neutral', 'Negative'] },
     { id: 'notes', header: 'Notes', accessorKey: 'notes', isEditable: true }
   ];
   
   // Handlers
   const handleTitleChange = (value: string | number) => {
     setTitle(String(value));
+    toast({
+      title: "Titre mis à jour",
+      description: "Le titre du module a été modifié avec succès"
+    });
   };
   
   const handleDescriptionChange = (value: string | number) => {
     setDescription(String(value));
+    toast({
+      title: "Description mise à jour",
+      description: "La description du module a été modifiée avec succès"
+    });
   };
   
   // Filtrer les données
@@ -167,33 +209,105 @@ const GuadeloupeRainfallTracking = () => {
   };
   
   // Ajouter une nouvelle ligne
-  const handleAddRow = (newRow: Record<string, any>) => {
+  const onSubmit = (data: z.infer<typeof formSchema>) => {
     const newId = Math.max(0, ...rainfallData.map(item => item.id)) + 1;
     
-    const typedRow: RainfallData = {
+    const newRow: RainfallData = {
       id: newId,
-      month: String(newRow.month || 'Janvier'),
-      year: Number(newRow.year || new Date().getFullYear()),
-      amount: Number(newRow.amount || 0),
-      location: String(newRow.location || 'Basse-Terre'),
-      impact: (newRow.impact as RainfallData['impact']) || 'Neutral',
-      notes: newRow.notes
+      month: data.month,
+      year: data.year,
+      amount: data.amount,
+      location: data.location,
+      impact: data.impact,
+      notes: data.notes
     };
     
-    setRainfallData([...rainfallData, typedRow]);
+    setRainfallData([...rainfallData, newRow]);
+    setDialogOpen(false);
+    form.reset();
     
     toast({
       title: "Données ajoutées",
-      description: `Nouvel enregistrement ajouté pour ${typedRow.month} ${typedRow.year}`
+      description: `Nouvel enregistrement ajouté pour ${newRow.month} ${newRow.year}`
     });
   };
   
   // Télécharger les données
   const handleDownloadData = () => {
+    // Créer un contenu CSV
+    const headers = columns.map(col => col.header).join(',');
+    const rows = rainfallData.map(item => {
+      return `${item.month},${item.year},${item.amount},${item.location},${item.impact},${item.notes || ''}`;
+    }).join('\n');
+    
+    const csvContent = `${headers}\n${rows}`;
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    
+    // Créer un lien et cliquer dessus pour télécharger
+    const link = document.createElement('a');
+    link.href = url;
+    link.setAttribute('download', `precipitations_guadeloupe_${new Date().toISOString().split('T')[0]}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    
     toast({
-      title: "Téléchargement démarré",
-      description: "Exportation des données de précipitations au format CSV"
+      title: "Téléchargement terminé",
+      description: "Exportation des données de précipitations au format CSV réussie"
     });
+  };
+  
+  // Importer des données CSV
+  const handleImportData = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+    
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const contents = e.target?.result as string;
+      const lines = contents.split('\n');
+      
+      // Ignorer l'en-tête
+      const dataLines = lines.slice(1);
+      
+      const importedData: RainfallData[] = [];
+      let lastId = Math.max(0, ...rainfallData.map(item => item.id));
+      
+      dataLines.forEach(line => {
+        if (!line.trim()) return;
+        
+        const values = line.split(',');
+        if (values.length >= 5) {
+          lastId++;
+          importedData.push({
+            id: lastId,
+            month: values[0],
+            year: parseInt(values[1], 10),
+            amount: parseFloat(values[2]),
+            location: values[3],
+            impact: values[4] as 'Positive' | 'Neutral' | 'Negative',
+            notes: values[5]
+          });
+        }
+      });
+      
+      if (importedData.length > 0) {
+        setRainfallData([...rainfallData, ...importedData]);
+        toast({
+          title: "Import réussi",
+          description: `${importedData.length} enregistrements ont été importés avec succès`
+        });
+      } else {
+        toast({
+          title: "Aucune donnée importée",
+          description: "Le fichier ne contient pas de données valides"
+        });
+      }
+    };
+    
+    reader.readAsText(file);
+    event.target.value = ''; // Réinitialiser l'input
   };
   
   // Calculer les statistiques
@@ -256,28 +370,28 @@ const GuadeloupeRainfallTracking = () => {
         
         {/* Statistiques */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-          <div className="bg-muted/30 rounded-lg p-4 border flex items-center space-x-3">
+          <div className="bg-muted/30 rounded-lg p-4 border flex items-center space-x-3 hover:border-blue-200 transition-all">
             <Droplets className="h-8 w-8 text-blue-500" />
             <div>
               <div className="text-sm text-muted-foreground">Moyenne</div>
               <div className="text-2xl font-bold">{stats.avg} mm</div>
             </div>
           </div>
-          <div className="bg-muted/30 rounded-lg p-4 border flex items-center space-x-3">
+          <div className="bg-muted/30 rounded-lg p-4 border flex items-center space-x-3 hover:border-green-200 transition-all">
             <Droplets className="h-8 w-8 text-green-500" />
             <div>
               <div className="text-sm text-muted-foreground">Maximum</div>
               <div className="text-2xl font-bold">{stats.max} mm</div>
             </div>
           </div>
-          <div className="bg-muted/30 rounded-lg p-4 border flex items-center space-x-3">
+          <div className="bg-muted/30 rounded-lg p-4 border flex items-center space-x-3 hover:border-red-200 transition-all">
             <Droplets className="h-8 w-8 text-red-500" />
             <div>
               <div className="text-sm text-muted-foreground">Minimum</div>
               <div className="text-2xl font-bold">{stats.min} mm</div>
             </div>
           </div>
-          <div className="bg-muted/30 rounded-lg p-4 border flex items-center space-x-3">
+          <div className="bg-muted/30 rounded-lg p-4 border flex items-center space-x-3 hover:border-purple-200 transition-all">
             <Droplets className="h-8 w-8 text-purple-500" />
             <div>
               <div className="text-sm text-muted-foreground">Total</div>
@@ -324,11 +438,169 @@ const GuadeloupeRainfallTracking = () => {
             </SelectContent>
           </Select>
           
-          <div className="flex space-x-1 ml-auto">
+          <div className="flex space-x-2 ml-auto">
+            <input
+              type="file"
+              id="csv-import"
+              accept=".csv"
+              className="hidden"
+              onChange={handleImportData}
+            />
+            <label htmlFor="csv-import">
+              <Button variant="outline" size="sm" asChild>
+                <span className="cursor-pointer">
+                  <PlusCircle className="h-4 w-4 mr-2" />
+                  Importer CSV
+                </span>
+              </Button>
+            </label>
+            
             <Button variant="outline" size="sm" onClick={handleDownloadData}>
               <Download className="h-4 w-4 mr-2" />
-              Télécharger
+              Exporter
             </Button>
+            
+            <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+              <DialogTrigger asChild>
+                <Button>
+                  <PlusCircle className="h-4 w-4 mr-2" />
+                  Ajouter
+                </Button>
+              </DialogTrigger>
+              <DialogContent>
+                <DialogHeader>
+                  <DialogTitle>Ajouter un nouvel enregistrement</DialogTitle>
+                </DialogHeader>
+                <Form {...form}>
+                  <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+                    <div className="grid grid-cols-2 gap-4">
+                      <FormField
+                        control={form.control}
+                        name="month"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Mois</FormLabel>
+                            <Select onValueChange={field.onChange} defaultValue={field.value}>
+                              <FormControl>
+                                <SelectTrigger>
+                                  <SelectValue placeholder="Sélectionner un mois" />
+                                </SelectTrigger>
+                              </FormControl>
+                              <SelectContent>
+                                {['Janvier', 'Février', 'Mars', 'Avril', 'Mai', 'Juin', 'Juillet', 'Août', 
+                                  'Septembre', 'Octobre', 'Novembre', 'Décembre'].map(month => (
+                                  <SelectItem key={month} value={month}>{month}</SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      
+                      <FormField
+                        control={form.control}
+                        name="year"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Année</FormLabel>
+                            <FormControl>
+                              <Input type="number" {...field} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    </div>
+                    
+                    <div className="grid grid-cols-2 gap-4">
+                      <FormField
+                        control={form.control}
+                        name="amount"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Précipitations (mm)</FormLabel>
+                            <FormControl>
+                              <Input type="number" step="0.1" {...field} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      
+                      <FormField
+                        control={form.control}
+                        name="location"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Région</FormLabel>
+                            <Select onValueChange={field.onChange} defaultValue={field.value}>
+                              <FormControl>
+                                <SelectTrigger>
+                                  <SelectValue placeholder="Sélectionner une région" />
+                                </SelectTrigger>
+                              </FormControl>
+                              <SelectContent>
+                                {uniqueLocations.map(location => (
+                                  <SelectItem key={location} value={location}>{location}</SelectItem>
+                                ))}
+                                <SelectItem value="Marie-Galante">Marie-Galante</SelectItem>
+                                <SelectItem value="Les Saintes">Les Saintes</SelectItem>
+                              </SelectContent>
+                            </Select>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    </div>
+                    
+                    <FormField
+                      control={form.control}
+                      name="impact"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Impact</FormLabel>
+                          <Select onValueChange={field.onChange} defaultValue={field.value}>
+                            <FormControl>
+                              <SelectTrigger>
+                                <SelectValue placeholder="Sélectionner un impact" />
+                              </SelectTrigger>
+                            </FormControl>
+                            <SelectContent>
+                              <SelectItem value="Positive">Positif</SelectItem>
+                              <SelectItem value="Neutral">Neutre</SelectItem>
+                              <SelectItem value="Negative">Négatif</SelectItem>
+                            </SelectContent>
+                          </Select>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    
+                    <FormField
+                      control={form.control}
+                      name="notes"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Notes</FormLabel>
+                          <FormControl>
+                            <Input {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    
+                    <div className="flex justify-end space-x-2">
+                      <Button variant="outline" type="button" onClick={() => setDialogOpen(false)}>
+                        Annuler
+                      </Button>
+                      <Button type="submit">Enregistrer</Button>
+                    </div>
+                  </form>
+                </Form>
+              </DialogContent>
+            </Dialog>
           </div>
         </div>
         
@@ -417,7 +689,6 @@ const GuadeloupeRainfallTracking = () => {
           columns={columns}
           onUpdate={handleTableUpdate}
           onDelete={handleDeleteRow}
-          onAdd={handleAddRow}
           sortable={true}
         />
       </div>
