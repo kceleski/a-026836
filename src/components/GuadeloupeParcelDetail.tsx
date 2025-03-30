@@ -12,11 +12,13 @@ import {
   LineChart,
   Camera,
   Plus,
-  Trash2
+  Trash2,
+  Check
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { Input } from './ui/input';
 import { useParams } from 'react-router-dom';
+import { Button } from './ui/button';
 
 interface ParcelDetail {
   id: string;
