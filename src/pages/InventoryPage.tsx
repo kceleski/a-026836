@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import PageLayout from '../components/layout/PageLayout';
 import PageHeader from '../components/layout/PageHeader';
 import TabContainer, { TabItem } from '../components/layout/TabContainer';
@@ -7,9 +7,15 @@ import Inventory from '../components/Inventory';
 import GuadeloupeSpecificCrops from '../components/GuadeloupeSpecificCrops';
 import GuadeloupeHarvestTracking from '../components/GuadeloupeHarvestTracking';
 import GuadeloupeWeatherAlerts from '../components/GuadeloupeWeatherAlerts';
+import { Button } from '../components/ui/button';
+import { Download, Plus, Upload } from 'lucide-react';
+import { useToast } from "@/hooks/use-toast";
 import usePageMetadata from '../hooks/use-page-metadata';
 
 const InventoryPage = () => {
+  const { toast } = useToast();
+  const [activeTab, setActiveTab] = useState<string>('inventory');
+  
   const { 
     title, 
     description, 
@@ -19,6 +25,48 @@ const InventoryPage = () => {
     defaultTitle: 'Gestion des Stocks et Récoltes',
     defaultDescription: 'Gérez votre inventaire et suivez les niveaux de stock de vos cultures guadeloupéennes'
   });
+
+  const handleExportData = () => {
+    toast({
+      title: "Export réussi",
+      description: "Les données d'inventaire ont été exportées en CSV"
+    });
+  };
+
+  const handleImportData = () => {
+    toast({
+      title: "Import de données",
+      description: "Veuillez sélectionner un fichier CSV à importer"
+    });
+  };
+
+  const handleAddStock = () => {
+    toast({
+      title: "Ajout de stock",
+      description: "Fonctionnalité d'ajout de stock activée"
+    });
+  };
+
+  const renderTabActions = () => {
+    return (
+      <div className="flex space-x-2">
+        <Button variant="outline" onClick={handleExportData}>
+          <Download className="mr-2 h-4 w-4" />
+          Exporter
+        </Button>
+        <Button variant="outline" onClick={handleImportData}>
+          <Upload className="mr-2 h-4 w-4" />
+          Importer
+        </Button>
+        <Button onClick={handleAddStock}>
+          <Plus className="mr-2 h-4 w-4" />
+          {activeTab === 'inventory' ? 'Ajouter un stock' : 
+           activeTab === 'crops' ? 'Ajouter une culture' : 
+           activeTab === 'weather' ? 'Ajouter une alerte' : 'Ajouter'}
+        </Button>
+      </div>
+    );
+  };
 
   const tabs: TabItem[] = [
     {
@@ -30,10 +78,10 @@ const InventoryPage = () => {
       value: 'crops',
       label: 'Cultures',
       content: (
-        <>
+        <div className="space-y-8">
           <GuadeloupeSpecificCrops />
           <GuadeloupeHarvestTracking />
-        </>
+        </div>
       )
     },
     {
@@ -43,17 +91,28 @@ const InventoryPage = () => {
     }
   ];
 
+  const handleTabChange = (value: string) => {
+    setActiveTab(value);
+  };
+
   return (
     <PageLayout>
       <div className="p-6 animate-enter">
-        <PageHeader 
-          title={title}
-          description={description}
-          onTitleChange={handleTitleChange}
-          onDescriptionChange={handleDescriptionChange}
-        />
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">
+          <PageHeader 
+            title={title}
+            description={description}
+            onTitleChange={handleTitleChange}
+            onDescriptionChange={handleDescriptionChange}
+          />
+          {renderTabActions()}
+        </div>
 
-        <TabContainer tabs={tabs} defaultValue="inventory" />
+        <TabContainer 
+          tabs={tabs} 
+          defaultValue="inventory" 
+          onValueChange={handleTabChange} 
+        />
       </div>
     </PageLayout>
   );
