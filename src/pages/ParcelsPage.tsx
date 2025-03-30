@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import PageLayout from '../components/layout/PageLayout';
 import ParcelManagement from '../components/ParcelManagement';
@@ -8,6 +9,7 @@ import ParcelFilters from '../components/parcels/ParcelFilters';
 import ParcelActionButtons from '../components/parcels/ParcelActionButtons';
 import ParcelMapDialog from '../components/parcels/ParcelMapDialog';
 import ParcelImportDialog from '../components/parcels/ParcelImportDialog';
+import GuadeloupeParcelManagement from '../components/GuadeloupeParcelManagement';
 
 const ParcelsPage = () => {
   const { toast } = useToast();
@@ -27,6 +29,7 @@ const ParcelsPage = () => {
   const [mapPreviewOpen, setMapPreviewOpen] = useState(false);
   const [importDialogOpen, setImportDialogOpen] = useState(false);
   const [weatherAlertsOpen, setWeatherAlertsOpen] = useState(false);
+  const [showGuadeloupeView, setShowGuadeloupeView] = useState(true);
   
   const [activeParcelAlerts, setActiveParcelAlerts] = useState([
     { id: 1, parcel: 'Parcelle A12', type: 'Pluie intense', severity: 'Haute' },
@@ -77,6 +80,14 @@ const ParcelsPage = () => {
     }
   };
 
+  const toggleView = () => {
+    setShowGuadeloupeView(!showGuadeloupeView);
+    toast({
+      title: `Vue ${showGuadeloupeView ? 'Standard' : 'Guadeloupe'} activée`,
+      description: `Vous utilisez maintenant la vue ${showGuadeloupeView ? 'standard' : 'spécifique à la Guadeloupe'}`
+    });
+  };
+
   return (
     <PageLayout>
       <div className="p-6 animate-enter">
@@ -108,10 +119,21 @@ const ParcelsPage = () => {
               setWeatherAlertsOpen={setWeatherAlertsOpen}
               getSeverityColor={getSeverityColor}
             />
+            
+            <button 
+              className="inline-flex items-center px-4 py-2 border border-input bg-white rounded-lg hover:bg-muted/30 transition-colors"
+              onClick={toggleView}
+            >
+              {showGuadeloupeView ? 'Vue Standard' : 'Vue Guadeloupe'}
+            </button>
           </div>
         </div>
 
-        <ParcelManagement />
+        {showGuadeloupeView ? (
+          <GuadeloupeParcelManagement />
+        ) : (
+          <ParcelManagement />
+        )}
         
         <ParcelMapDialog 
           isOpen={mapPreviewOpen} 
