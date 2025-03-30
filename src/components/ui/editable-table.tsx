@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { EditableField } from './editable-field';
 import { ChevronDown, Edit, Trash2, Plus } from 'lucide-react';
@@ -76,11 +75,26 @@ export const EditableTable = ({
     }
   };
 
-  // Generate class name for status-based styling
   const getRowClass = (row: Record<string, any>) => {
     if (row.status === 'critical') return 'bg-red-50';
     if (row.status === 'warning') return 'bg-yellow-50';
     return '';
+  };
+
+  const getPriorityStyle = (priority: string) => {
+    switch (priority) {
+      case 'Haute':
+      case 'Élevée':
+      case 'Urgente':
+        return 'bg-red-100 text-red-800';
+      case 'Moyenne':
+        return 'bg-orange-100 text-orange-800';
+      case 'Basse':
+      case 'Faible':
+        return 'bg-green-100 text-green-800';
+      default:
+        return 'bg-gray-100 text-gray-800';
+    }
   };
 
   return (
@@ -123,12 +137,27 @@ export const EditableTable = ({
                 {columns.map((column) => (
                   <td key={`${rowIndex}-${column.id}`} className="px-4 py-3">
                     {column.isEditable ? (
-                      <EditableField
-                        value={row[column.accessorKey]}
-                        type={column.type as 'text' | 'number' | 'date' | 'select'}
-                        options={column.options?.map(opt => ({ value: opt, label: opt }))}
-                        onSave={(value) => onUpdate(rowIndex, column.accessorKey, value)}
-                      />
+                      column.accessorKey === 'priority' ? (
+                        <div className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium ${getPriorityStyle(row[column.accessorKey])}`}>
+                          <EditableField
+                            value={row[column.accessorKey]}
+                            type={column.type as 'text' | 'number' | 'date' | 'select'}
+                            options={column.options?.map(opt => ({ value: opt, label: opt }))}
+                            onSave={(value) => onUpdate(rowIndex, column.accessorKey, value)}
+                          />
+                        </div>
+                      ) : (
+                        <EditableField
+                          value={row[column.accessorKey]}
+                          type={column.type as 'text' | 'number' | 'date' | 'select'}
+                          options={column.options?.map(opt => ({ value: opt, label: opt }))}
+                          onSave={(value) => onUpdate(rowIndex, column.accessorKey, value)}
+                        />
+                      )
+                    ) : column.accessorKey === 'priority' ? (
+                      <div className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium ${getPriorityStyle(row[column.accessorKey])}`}>
+                        {row[column.accessorKey]}
+                      </div>
                     ) : (
                       row[column.accessorKey]
                     )}

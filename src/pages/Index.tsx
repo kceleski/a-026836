@@ -5,6 +5,7 @@ import Dashboard from '../components/Dashboard';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import GuadeloupeHarvestTracking from '../components/GuadeloupeHarvestTracking';
 import GuadeloupeWeatherAlerts from '../components/GuadeloupeWeatherAlerts';
+import TaskList from '../components/cultures/TaskList';
 import { useToast } from '@/hooks/use-toast';
 
 const Index = () => {
@@ -27,6 +28,7 @@ const Index = () => {
             <TabsTrigger value="dashboard">Tableau de Bord</TabsTrigger>
             <TabsTrigger value="harvest">Suivi des Récoltes</TabsTrigger>
             <TabsTrigger value="weather">Alertes Météo</TabsTrigger>
+            <TabsTrigger value="tasks">Tâches</TabsTrigger>
           </TabsList>
           
           <TabsContent value="dashboard">
@@ -39,6 +41,10 @@ const Index = () => {
           
           <TabsContent value="weather">
             <GuadeloupeWeatherAlerts />
+          </TabsContent>
+          
+          <TabsContent value="tasks">
+            <TaskList />
           </TabsContent>
         </Tabs>
       </div>

@@ -1,16 +1,34 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Download, Printer, Share2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
+import { Button } from '@/components/ui/button';
 
 const StatisticsHeader = () => {
   const { toast } = useToast();
+  const [shareDialogOpen, setShareDialogOpen] = useState(false);
 
   const handleExport = () => {
     toast({
       title: "Export des statistiques",
       description: "Vos statistiques sont en cours d'exportation au format CSV"
     });
+    
+    // Simulate export download
+    setTimeout(() => {
+      const link = document.createElement('a');
+      link.href = '#';
+      link.setAttribute('download', 'statistiques_agricoles.csv');
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      
+      toast({
+        title: "Export terminé",
+        description: "Votre fichier a été téléchargé avec succès"
+      });
+    }, 1500);
   };
 
   const handlePrint = () => {
@@ -24,11 +42,31 @@ const StatisticsHeader = () => {
   };
 
   const handleShare = () => {
+    setShareDialogOpen(true);
+  };
+  
+  const handleShareByEmail = () => {
     toast({
-      title: "Partage des statistiques",
-      description: "Options de partage ouvertes"
+      title: "Partage par email",
+      description: "Un lien vers vos statistiques a été envoyé par email"
     });
-    // Dans une vraie application, on ouvrirait ici une boîte de dialogue de partage
+    setShareDialogOpen(false);
+  };
+  
+  const handleShareByPDF = () => {
+    toast({
+      title: "Génération du PDF",
+      description: "Votre rapport PDF est en cours de génération"
+    });
+    
+    setTimeout(() => {
+      toast({
+        title: "PDF généré",
+        description: "Le rapport a été généré et téléchargé"
+      });
+    }, 2000);
+    
+    setShareDialogOpen(false);
   };
 
   return (
@@ -60,6 +98,32 @@ const StatisticsHeader = () => {
           Partager
         </button>
       </div>
+      
+      <Dialog open={shareDialogOpen} onOpenChange={setShareDialogOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Partager les statistiques</DialogTitle>
+            <DialogDescription>
+              Choisissez comment vous souhaitez partager ces statistiques
+            </DialogDescription>
+          </DialogHeader>
+          <div className="grid gap-4 py-4">
+            <div className="grid grid-cols-2 gap-4">
+              <Button onClick={handleShareByEmail} variant="outline">
+                Envoyer par email
+              </Button>
+              <Button onClick={handleShareByPDF}>
+                Générer un PDF
+              </Button>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShareDialogOpen(false)}>
+              Annuler
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </header>
   );
 };

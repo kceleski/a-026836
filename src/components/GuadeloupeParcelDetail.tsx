@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { EditableField } from './ui/editable-field';
 import { EditableTable, Column } from './ui/editable-table';
@@ -85,35 +84,51 @@ const parcelData: ParcelDetail = {
 const initialTasks: TaskData[] = [
   { 
     id: 1, 
-    task: 'Entretien système irrigation', 
-    dueDate: '2023-10-15', 
+    task: 'Fertilisation de la canne', 
+    dueDate: '2023-09-25', 
     assignedTo: 'Jean Dupont', 
-    priority: 'Moyenne',
-    status: 'Terminée'
+    priority: 'Élevée',
+    status: 'À faire'
   },
   { 
     id: 2, 
-    task: 'Traitement bio contre parasites', 
-    dueDate: '2023-10-28', 
+    task: 'Traitement contre la cercosporiose', 
+    dueDate: '2023-09-28', 
     assignedTo: 'Marie Lambert', 
-    priority: 'Élevée',
+    priority: 'Moyenne',
     status: 'En cours'
   },
   { 
     id: 3, 
-    task: 'Préparation sol nouvelle plantation', 
-    dueDate: '2023-11-10', 
+    task: 'Inspection croissance ananas', 
+    dueDate: '2023-09-30', 
     assignedTo: 'Pierre Lafortune', 
+    priority: 'Basse',
+    status: 'À faire'
+  },
+  {
+    id: 4,
+    task: 'Désherbage parcelle madère',
+    dueDate: '2023-10-05',
+    assignedTo: 'Sophie Martin',
     priority: 'Moyenne',
+    status: 'À faire'
+  },
+  {
+    id: 5,
+    task: 'Préparation coupe canne',
+    dueDate: '2024-01-10',
+    assignedTo: 'Jean Dupont',
+    priority: 'Élevée',
     status: 'À faire'
   }
 ];
 
 const taskColumns: Column[] = [
   { id: 'task', header: 'Tâche', accessorKey: 'task', isEditable: true },
-  { id: 'dueDate', header: 'Échéance', accessorKey: 'dueDate', isEditable: true, width: '120px' },
   { id: 'assignedTo', header: 'Assigné à', accessorKey: 'assignedTo', isEditable: true },
-  { id: 'priority', header: 'Priorité', accessorKey: 'priority', isEditable: true, width: '100px' },
+  { id: 'dueDate', header: 'Date', accessorKey: 'dueDate', isEditable: true, width: '120px' },
+  { id: 'priority', header: 'Priorité', accessorKey: 'priority', isEditable: true, width: '120px' },
   { id: 'status', header: 'Statut', accessorKey: 'status', isEditable: true, width: '100px' }
 ];
 
@@ -132,7 +147,6 @@ const GuadeloupeParcelDetail = () => {
   const [activeTab, setActiveTab] = useState<'info' | 'crops' | 'tasks'>('info');
   const [showImageUpload, setShowImageUpload] = useState(false);
 
-  // Handlers for updating parcel information
   const handleParcelUpdate = (field: keyof ParcelDetail, value: string | number) => {
     setParcel({
       ...parcel,
@@ -141,7 +155,6 @@ const GuadeloupeParcelDetail = () => {
     toast.success(`${field} mis à jour`);
   };
 
-  // Handler for task updates
   const handleTaskUpdate = (rowIndex: number, columnId: string, value: any) => {
     const updatedTasks = [...tasks];
     const updatedTask = { ...updatedTasks[rowIndex] };
@@ -153,7 +166,6 @@ const GuadeloupeParcelDetail = () => {
     toast.success('Tâche mise à jour');
   };
 
-  // Handler for crop updates
   const handleCropUpdate = (rowIndex: number, columnId: string, value: any) => {
     const updatedParcel = { ...parcel };
     const updatedCrops = [...updatedParcel.crops];
@@ -167,7 +179,6 @@ const GuadeloupeParcelDetail = () => {
     toast.success('Culture mise à jour');
   };
 
-  // Handler for adding a task
   const handleAddTask = (newRow: Record<string, any>) => {
     const newId = Math.max(0, ...tasks.map(t => t.id)) + 1;
     
@@ -184,7 +195,6 @@ const GuadeloupeParcelDetail = () => {
     toast.success('Nouvelle tâche ajoutée');
   };
 
-  // Handler for adding a crop
   const handleAddCrop = (newRow: Record<string, any>) => {
     const updatedParcel = { ...parcel };
     
@@ -201,7 +211,6 @@ const GuadeloupeParcelDetail = () => {
     toast.success('Nouvelle culture ajoutée');
   };
 
-  // Handler for deleting a task
   const handleDeleteTask = (rowIndex: number) => {
     const updatedTasks = [...tasks];
     updatedTasks.splice(rowIndex, 1);
@@ -209,7 +218,6 @@ const GuadeloupeParcelDetail = () => {
     toast.success('Tâche supprimée');
   };
 
-  // Handler for deleting a crop
   const handleDeleteCrop = (rowIndex: number) => {
     const updatedParcel = { ...parcel };
     const updatedCrops = [...updatedParcel.crops];
@@ -389,7 +397,17 @@ const GuadeloupeParcelDetail = () => {
         
         {activeTab === 'tasks' && (
           <div className="space-y-6">
-            <h3 className="text-lg font-medium">Tâches et interventions</h3>
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-lg font-medium">Tâches à venir</h3>
+              <Button 
+                onClick={() => toast.success('Redirection vers la page des tâches')}
+                variant="outline"
+                className="text-sm"
+              >
+                Voir toutes les tâches
+              </Button>
+            </div>
+            
             <EditableTable
               data={tasks}
               columns={taskColumns}
@@ -397,6 +415,18 @@ const GuadeloupeParcelDetail = () => {
               onDelete={handleDeleteTask}
               onAdd={handleAddTask}
               className="border-none"
+              actions={[
+                {
+                  icon: <Check className="h-4 w-4 text-green-600" />,
+                  label: "Marquer comme terminée",
+                  onClick: (rowIndex) => {
+                    toast.success(`Tâche "${tasks[rowIndex].task}" marquée comme terminée`);
+                    const updatedTasks = [...tasks];
+                    updatedTasks[rowIndex].status = 'Terminée';
+                    setTasks(updatedTasks);
+                  }
+                }
+              ]}
             />
           </div>
         )}
