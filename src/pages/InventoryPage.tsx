@@ -56,16 +56,16 @@ const InventoryPage = () => {
 
   const renderTabActions = () => {
     return (
-      <div className="flex space-x-2">
-        <Button variant="outline" onClick={handleExportData}>
+      <div className="flex flex-wrap gap-2">
+        <Button variant="outline" onClick={handleExportData} className="whitespace-nowrap">
           <Download className="mr-2 h-4 w-4" />
           Exporter
         </Button>
-        <Button variant="outline" onClick={handleImportData}>
+        <Button variant="outline" onClick={handleImportData} className="whitespace-nowrap">
           <Upload className="mr-2 h-4 w-4" />
           Importer
         </Button>
-        <Button onClick={handleAddItem}>
+        <Button onClick={handleAddItem} className="whitespace-nowrap">
           <Plus className="mr-2 h-4 w-4" />
           {activeTab === 'inventory' ? 'Ajouter un stock' : 
            activeTab === 'crops' ? 'Ajouter une culture' : 
@@ -128,7 +128,7 @@ const InventoryPage = () => {
 
         <TabContainer 
           tabs={tabs} 
-          defaultValue="inventory" 
+          defaultValue={activeTab} 
           onValueChange={handleTabChange} 
         />
       </div>

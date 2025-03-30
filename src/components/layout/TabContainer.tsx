@@ -18,7 +18,7 @@ const TabContainer = ({ tabs, defaultValue, onValueChange }: TabContainerProps) 
   const [activeTab, setActiveTab] = useState(defaultValue);
 
   useEffect(() => {
-    // Initialize with default value
+    // Update the active tab when defaultValue changes
     setActiveTab(defaultValue);
   }, [defaultValue]);
 
@@ -35,9 +35,13 @@ const TabContainer = ({ tabs, defaultValue, onValueChange }: TabContainerProps) 
       onValueChange={handleValueChange}
       className="w-full"
     >
-      <TabsList className="mb-6">
+      <TabsList className="mb-6 w-full justify-start overflow-x-auto">
         {tabs.map(tab => (
-          <TabsTrigger key={tab.value} value={tab.value}>
+          <TabsTrigger 
+            key={tab.value} 
+            value={tab.value}
+            className="transition-all duration-200"
+          >
             {tab.label}
           </TabsTrigger>
         ))}
@@ -46,7 +50,7 @@ const TabContainer = ({ tabs, defaultValue, onValueChange }: TabContainerProps) 
         <TabsContent
           key={tab.value}
           value={tab.value}
-          className="animate-fade-in" // Use pre-defined animation class
+          className="animate-fade-in transition-all duration-300"
         >
           {tab.content}
         </TabsContent>

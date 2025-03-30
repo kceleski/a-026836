@@ -3,7 +3,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import Index from "./pages/Index";
 import ParcelsPage from "./pages/ParcelsPage";
 import ParcelsDetailsPage from "./pages/ParcelsDetailsPage";
@@ -13,7 +13,7 @@ import FinancePage from "./pages/FinancePage";
 import StatsPage from "./pages/StatsPage";
 import NotFound from "./pages/NotFound";
 
-// Define routes configuration
+// Define routes configuration with redirects
 const routes = [
   { path: "/", element: <Index /> },
   { path: "/parcelles", element: <ParcelsPage /> },
@@ -22,10 +22,19 @@ const routes = [
   { path: "/inventaire", element: <InventoryPage /> },
   { path: "/finances", element: <FinancePage /> },
   { path: "/statistiques", element: <StatsPage /> },
+  { path: "/dashboard", element: <Navigate to="/" replace /> },
   { path: "*", element: <NotFound /> }
 ];
 
-const queryClient = new QueryClient();
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      refetchOnWindowFocus: false,
+      retry: 1,
+      staleTime: 5 * 60 * 1000, // 5 minutes
+    },
+  },
+});
 
 const App = () => (
   <QueryClientProvider client={queryClient}>

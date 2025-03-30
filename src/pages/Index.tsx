@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import PageLayout from '../components/layout/PageLayout';
 import Dashboard from '../components/Dashboard';
 import TabContainer, { TabItem } from '../components/layout/TabContainer';
@@ -10,8 +10,11 @@ import { useToast } from '@/hooks/use-toast';
 
 const Index = () => {
   const { toast } = useToast();
+  const [activeTab, setActiveTab] = useState<string>('dashboard');
 
   const handleTabChange = (value: string) => {
+    setActiveTab(value);
+    
     const tabLabels = {
       dashboard: 'Tableau de Bord',
       harvest: 'Suivi des Récoltes',
@@ -57,7 +60,7 @@ const Index = () => {
         
         <TabContainer 
           tabs={tabs}
-          defaultValue="dashboard"
+          defaultValue={activeTab}
           onValueChange={handleTabChange}
         />
       </div>
