@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import PageLayout from '../components/layout/PageLayout';
 import ParcelManagement from '../components/ParcelManagement';
@@ -63,7 +62,6 @@ const ParcelsPage = () => {
     }
   };
   
-  // Fonction pour obtenir la couleur de sévérité
   const getSeverityColor = (severity: string) => {
     switch (severity) {
       case 'Basse':
@@ -113,11 +111,7 @@ const ParcelsPage = () => {
           </div>
         </div>
 
-        <ParcelManagement 
-          searchTerm={searchTerm}
-          filterStatus={filterStatus}
-          filterType={filterType}
-        />
+        <ParcelManagement />
         
         <ParcelMapDialog 
           isOpen={mapPreviewOpen} 

@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { EditableField } from './ui/editable-field';
 import { EditableTable, Column } from './ui/editable-table';
@@ -132,7 +131,6 @@ const GuadeloupeWeatherAlerts = () => {
     }
   ]);
   
-  // Colonnes pour le tableau éditable
   const columns: Column[] = [
     { id: 'date', header: 'Date', accessorKey: 'date', isEditable: true },
     { id: 'type', header: 'Type d\'alerte', accessorKey: 'type', isEditable: true },
@@ -141,7 +139,6 @@ const GuadeloupeWeatherAlerts = () => {
     { id: 'status', header: 'Statut', accessorKey: 'status', isEditable: true },
   ];
   
-  // Handlers
   const handleTitleChange = (value: string | number) => {
     setTitle(String(value));
     toast({
@@ -158,7 +155,6 @@ const GuadeloupeWeatherAlerts = () => {
     });
   };
   
-  // Filtrer les données
   const filteredAlerts = weatherAlerts.filter(alert => {
     const matchesSearch = 
       alert.type.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -172,7 +168,6 @@ const GuadeloupeWeatherAlerts = () => {
     return matchesSearch && matchesSeverity && matchesStatus;
   });
   
-  // Gérer les mises à jour du tableau
   const handleTableUpdate = (rowIndex: number, columnId: string, value: any) => {
     const newData = [...weatherAlerts];
     const itemId = filteredAlerts[rowIndex].id;
@@ -190,7 +185,6 @@ const GuadeloupeWeatherAlerts = () => {
     }
   };
   
-  // Gestion de suppression
   const handleDeleteRow = (rowIndex: number) => {
     const itemId = filteredAlerts[rowIndex].id;
     const newData = weatherAlerts.filter(item => item.id !== itemId);
@@ -202,13 +196,19 @@ const GuadeloupeWeatherAlerts = () => {
     });
   };
   
-  // Ajouter une nouvelle alerte
   const onSubmit = (data: z.infer<typeof alertFormSchema>) => {
     const newId = Math.max(0, ...weatherAlerts.map(item => item.id)) + 1;
     
     const newAlert: WeatherAlert = {
       id: newId,
-      ...data
+      date: data.date,
+      type: data.type,
+      region: data.region,
+      severity: data.severity,
+      impactCrops: data.impactCrops,
+      description: data.description,
+      recommendation: data.recommendation,
+      status: data.status
     };
     
     setWeatherAlerts([...weatherAlerts, newAlert]);
@@ -225,7 +225,6 @@ const GuadeloupeWeatherAlerts = () => {
     setExpandedAlertId(expandedAlertId === id ? null : id);
   };
   
-  // Fonction pour obtenir l'icône en fonction du type d'alerte
   const getAlertIcon = (type: string) => {
     switch (type) {
       case 'Pluie intense':
@@ -243,7 +242,6 @@ const GuadeloupeWeatherAlerts = () => {
     }
   };
   
-  // Fonction pour obtenir la couleur en fonction de la sévérité
   const getSeverityColor = (severity: string) => {
     switch (severity) {
       case 'Basse':
@@ -259,7 +257,6 @@ const GuadeloupeWeatherAlerts = () => {
     }
   };
   
-  // Fonction pour obtenir la couleur en fonction du statut
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'Active':
@@ -294,7 +291,6 @@ const GuadeloupeWeatherAlerts = () => {
           </p>
         </div>
         
-        {/* Filtres et recherche */}
         <div className="flex flex-wrap gap-4 mb-6 items-center">
           <div className="relative flex-grow max-w-sm">
             <Input
@@ -528,7 +524,6 @@ const GuadeloupeWeatherAlerts = () => {
           </div>
         </div>
         
-        {/* Cartes d'alertes */}
         <div className="space-y-4 mb-6">
           {filteredAlerts.length === 0 ? (
             <div className="text-center py-8 border rounded-lg bg-muted/30">
@@ -594,7 +589,6 @@ const GuadeloupeWeatherAlerts = () => {
           )}
         </div>
         
-        {/* Tableau de données */}
         <div className="border rounded-lg overflow-hidden">
           <h3 className="text-lg font-semibold p-4 bg-muted/20 border-b">Gérer les alertes</h3>
           <EditableTable
