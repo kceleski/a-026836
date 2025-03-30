@@ -4,11 +4,10 @@ import PageLayout from '../components/layout/PageLayout';
 import FinancialTracking from '../components/FinancialTracking';
 import PageHeader from '../components/layout/PageHeader';
 import usePageMetadata from '../hooks/use-page-metadata';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import TabContainer, { TabItem } from '../components/layout/TabContainer';
 import { Button } from "@/components/ui/button";
 import { Download, Upload, PieChart, BarChart, CreditCard, DollarSign, Filter, CalendarRange, Plus, FileText } from 'lucide-react';
 import { useToast } from "@/hooks/use-toast";
-import TabContainer, { TabItem } from '../components/layout/TabContainer';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { 
@@ -19,7 +18,8 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { EditableField } from '@/components/ui/editable-field';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogDescription, DialogFooter } from "@/components/ui/dialog";
+import FinancialCharts from '../components/statistics/FinancialCharts';
 
 const FinancePage = () => {
   const { toast } = useToast();
@@ -35,6 +35,7 @@ const FinancePage = () => {
 
   const [timeFrame, setTimeFrame] = useState('year');
   const [filterCategory, setFilterCategory] = useState('all');
+  const [activeTab, setActiveTab] = useState('overview');
   const [incomeTitle, setIncomeTitle] = useState('Gestion des Revenus');
   const [incomeDescription, setIncomeDescription] = useState('Suivez, catégorisez et analysez toutes vos sources de revenus agricoles');
   const [expensesTitle, setExpensesTitle] = useState('Gestion des Dépenses');
@@ -42,6 +43,9 @@ const FinancePage = () => {
   const [reportsTitle, setReportsTitle] = useState('Rapports Financiers');
   const [reportsDescription, setReportsDescription] = useState('Générez des rapports détaillés pour analyser la performance financière de votre exploitation');
   const [importDialogOpen, setImportDialogOpen] = useState(false);
+  const [showAddIncomeForm, setShowAddIncomeForm] = useState(false);
+  const [showAddExpenseForm, setShowAddExpenseForm] = useState(false);
+  const [reportGenerating, setReportGenerating] = useState(false);
 
   const handleExportData = () => {
     toast({
@@ -63,17 +67,157 @@ const FinancePage = () => {
   };
 
   const handleGenerateReport = () => {
+    setReportGenerating(true);
+    
+    setTimeout(() => {
+      setReportGenerating(false);
+      toast({
+        title: "Génération de rapport",
+        description: `Rapport financier ${timeFrame} généré et prêt à télécharger`
+      });
+    }, 1500);
+  };
+  
+  const handleAddIncome = () => {
+    setShowAddIncomeForm(true);
+    
+    setTimeout(() => {
+      setShowAddIncomeForm(false);
+      toast({
+        title: "Revenu ajouté",
+        description: "Le nouveau revenu a été ajouté avec succès"
+      });
+    }, 1000);
+  };
+  
+  const handleAddExpense = () => {
+    setShowAddExpenseForm(true);
+    
+    setTimeout(() => {
+      setShowAddExpenseForm(false);
+      toast({
+        title: "Dépense ajoutée",
+        description: "La nouvelle dépense a été ajoutée avec succès"
+      });
+    }, 1000);
+  };
+  
+  const handleActivateModule = (moduleName: string) => {
     toast({
-      title: "Génération de rapport",
-      description: `Rapport financier ${timeFrame} généré et prêt à télécharger`
+      title: `Module ${moduleName} activé`,
+      description: `Le module de ${moduleName.toLowerCase()} a été activé avec succès`
     });
+  };
+  
+  const handleCardDetailClick = (cardType: string) => {
+    toast({
+      title: `Détails ${cardType}`,
+      description: `Affichage des détails de ${cardType.toLowerCase()}`
+    });
+  };
+  
+  const handleTabChange = (value: string) => {
+    setActiveTab(value);
+    toast({
+      title: "Changement d'onglet",
+      description: `Vous consultez maintenant l'onglet ${value === 'overview' ? 'Aperçu' : 
+                                                         value === 'income' ? 'Revenus' : 
+                                                         value === 'expenses' ? 'Dépenses' : 'Rapports'}`
+    });
+  };
+
+  const renderHeaderActions = () => {
+    return (
+      <div className="flex space-x-2">
+        <Button variant="outline" onClick={handleExportData}>
+          <Download className="mr-2 h-4 w-4" />
+          Exporter
+        </Button>
+        
+        <Button variant="outline" onClick={handleImportData}>
+          <Upload className="mr-2 h-4 w-4" />
+          Importer
+        </Button>
+        
+        <Button 
+          onClick={() => {
+            if (activeTab === 'overview') {
+              handleGenerateReport();
+            } else if (activeTab === 'income') {
+              handleAddIncome();
+            } else if (activeTab === 'expenses') {
+              handleAddExpense();
+            } else {
+              handleGenerateReport();
+            }
+          }}
+        >
+          {activeTab === 'overview' ? (
+            <>
+              <FileText className="mr-2 h-4 w-4" />
+              Générer un rapport
+            </>
+          ) : activeTab === 'income' ? (
+            <>
+              <Plus className="mr-2 h-4 w-4" />
+              Ajouter un revenu
+            </>
+          ) : activeTab === 'expenses' ? (
+            <>
+              <Plus className="mr-2 h-4 w-4" />
+              Ajouter une dépense
+            </>
+          ) : (
+            <>
+              <FileText className="mr-2 h-4 w-4" />
+              Nouveau rapport
+            </>
+          )}
+        </Button>
+        
+        <Dialog open={importDialogOpen} onOpenChange={setImportDialogOpen}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Importer des données financières</DialogTitle>
+            </DialogHeader>
+            <div className="space-y-4">
+              <p className="text-muted-foreground">Choisissez le type de données à importer:</p>
+              <div className="grid grid-cols-1 gap-2">
+                <Button variant="outline" className="justify-start" onClick={() => handleImportConfirm('bancaires')}>
+                  <CreditCard className="h-4 w-4 mr-2" />
+                  Données bancaires (CSV)
+                </Button>
+                <Button variant="outline" className="justify-start" onClick={() => handleImportConfirm('comptables')}>
+                  <FileText className="h-4 w-4 mr-2" />
+                  Données comptables (Excel)
+                </Button>
+                <Button variant="outline" className="justify-start" onClick={() => handleImportConfirm('factures')}>
+                  <DollarSign className="h-4 w-4 mr-2" />
+                  Factures scannées (PDF)
+                </Button>
+              </div>
+              <div className="flex justify-end">
+                <Button variant="ghost" onClick={() => setImportDialogOpen(false)}>
+                  Annuler
+                </Button>
+              </div>
+            </div>
+          </DialogContent>
+        </Dialog>
+      </div>
+    );
   };
 
   const tabs: TabItem[] = [
     {
       value: 'overview',
       label: 'Aperçu général',
-      content: <FinancialTracking />
+      content: (
+        <div className="space-y-6">
+          <FinancialTracking />
+          <FinancialCharts />
+        </div>
+      )
     },
     {
       value: 'income',
@@ -107,7 +251,7 @@ const FinancePage = () => {
           </p>
           
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-            <Card>
+            <Card className="hover:shadow-md transition-shadow cursor-pointer" onClick={() => handleCardDetailClick('Récoltes')}>
               <CardHeader className="pb-2">
                 <CardTitle className="text-lg flex items-center">
                   <Badge className="mr-2 bg-green-100 text-green-800 hover:bg-green-200">Ventes</Badge> 
@@ -125,14 +269,17 @@ const FinancePage = () => {
                 </p>
               </CardContent>
               <CardFooter className="pt-0">
-                <Button variant="outline" size="sm" className="w-full">
+                <Button variant="outline" size="sm" className="w-full" onClick={(e) => {
+                  e.stopPropagation();
+                  handleCardDetailClick('Récoltes');
+                }}>
                   <FileText className="h-4 w-4 mr-2" />
                   Détails
                 </Button>
               </CardFooter>
             </Card>
             
-            <Card>
+            <Card className="hover:shadow-md transition-shadow cursor-pointer" onClick={() => handleCardDetailClick('PAC')}>
               <CardHeader className="pb-2">
                 <CardTitle className="text-lg flex items-center">
                   <Badge className="mr-2 bg-blue-100 text-blue-800 hover:bg-blue-200">Subventions</Badge> 
@@ -150,14 +297,17 @@ const FinancePage = () => {
                 </p>
               </CardContent>
               <CardFooter className="pt-0">
-                <Button variant="outline" size="sm" className="w-full">
+                <Button variant="outline" size="sm" className="w-full" onClick={(e) => {
+                  e.stopPropagation();
+                  handleCardDetailClick('PAC');
+                }}>
                   <FileText className="h-4 w-4 mr-2" />
                   Détails
                 </Button>
               </CardFooter>
             </Card>
             
-            <Card>
+            <Card className="hover:shadow-md transition-shadow cursor-pointer" onClick={() => handleCardDetailClick('Autres revenues')}>
               <CardHeader className="pb-2">
                 <CardTitle className="text-lg flex items-center">
                   <Badge className="mr-2 bg-purple-100 text-purple-800 hover:bg-purple-200">Autres</Badge> 
@@ -175,7 +325,10 @@ const FinancePage = () => {
                 </p>
               </CardContent>
               <CardFooter className="pt-0">
-                <Button variant="outline" size="sm" className="w-full">
+                <Button variant="outline" size="sm" className="w-full" onClick={(e) => {
+                  e.stopPropagation();
+                  handleCardDetailClick('Autres revenues');
+                }}>
                   <FileText className="h-4 w-4 mr-2" />
                   Détails
                 </Button>
@@ -185,21 +338,32 @@ const FinancePage = () => {
           
           <div className="flex justify-between items-center mb-4">
             <h3 className="text-lg font-semibold">Sources de revenus récentes</h3>
-            <Button>
+            <Button onClick={handleAddIncome}>
               <Plus className="h-4 w-4 mr-2" />
               Ajouter un revenu
             </Button>
           </div>
           
-          <div className="bg-muted/20 rounded-lg p-6 text-center">
-            <DollarSign className="h-12 w-12 mx-auto text-muted-foreground mb-2" />
-            <h3 className="text-lg font-semibold mb-2">Module de gestion des revenus</h3>
-            <p className="text-muted-foreground mb-4">
-              Activez ce module pour suivre en détail toutes vos sources de revenus
-              et générer des rapports personnalisés.
-            </p>
-            <Button>Activer ce module</Button>
-          </div>
+          {showAddIncomeForm ? (
+            <div className="animate-fade-in bg-muted/20 rounded-lg p-6 text-center border border-primary/20">
+              <DollarSign className="h-12 w-12 mx-auto text-primary mb-2" />
+              <h3 className="text-lg font-semibold mb-2">Ajout d'un nouveau revenu</h3>
+              <p className="text-muted-foreground mb-4">Traitement en cours...</p>
+              <div className="w-full bg-muted rounded-full h-2 mb-4">
+                <div className="bg-primary h-2 rounded-full animate-pulse" style={{width: '60%'}}></div>
+              </div>
+            </div>
+          ) : (
+            <div className="bg-muted/20 rounded-lg p-6 text-center">
+              <DollarSign className="h-12 w-12 mx-auto text-muted-foreground mb-2" />
+              <h3 className="text-lg font-semibold mb-2">Module de gestion des revenus</h3>
+              <p className="text-muted-foreground mb-4">
+                Activez ce module pour suivre en détail toutes vos sources de revenus
+                et générer des rapports personnalisés.
+              </p>
+              <Button onClick={() => handleActivateModule('gestion des revenus')}>Activer ce module</Button>
+            </div>
+          )}
         </div>
       )
     },
@@ -235,7 +399,7 @@ const FinancePage = () => {
           </p>
           
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-            <Card>
+            <Card className="hover:shadow-md transition-shadow cursor-pointer" onClick={() => handleCardDetailClick('Semences & Fertilisants')}>
               <CardHeader className="pb-2">
                 <CardTitle className="text-lg flex items-center">
                   <Badge className="mr-2 bg-amber-100 text-amber-800 hover:bg-amber-200">Intrants</Badge> 
@@ -253,14 +417,17 @@ const FinancePage = () => {
                 </p>
               </CardContent>
               <CardFooter className="pt-0">
-                <Button variant="outline" size="sm" className="w-full">
+                <Button variant="outline" size="sm" className="w-full" onClick={(e) => {
+                  e.stopPropagation();
+                  handleCardDetailClick('Semences & Fertilisants');
+                }}>
                   <FileText className="h-4 w-4 mr-2" />
                   Détails
                 </Button>
               </CardFooter>
             </Card>
             
-            <Card>
+            <Card className="hover:shadow-md transition-shadow cursor-pointer" onClick={() => handleCardDetailClick('Matériel')}>
               <CardHeader className="pb-2">
                 <CardTitle className="text-lg flex items-center">
                   <Badge className="mr-2 bg-indigo-100 text-indigo-800 hover:bg-indigo-200">Équipement</Badge> 
@@ -278,14 +445,17 @@ const FinancePage = () => {
                 </p>
               </CardContent>
               <CardFooter className="pt-0">
-                <Button variant="outline" size="sm" className="w-full">
+                <Button variant="outline" size="sm" className="w-full" onClick={(e) => {
+                  e.stopPropagation();
+                  handleCardDetailClick('Matériel');
+                }}>
                   <FileText className="h-4 w-4 mr-2" />
                   Détails
                 </Button>
               </CardFooter>
             </Card>
             
-            <Card>
+            <Card className="hover:shadow-md transition-shadow cursor-pointer" onClick={() => handleCardDetailClick('Main d\'oeuvre')}>
               <CardHeader className="pb-2">
                 <CardTitle className="text-lg flex items-center">
                   <Badge className="mr-2 bg-teal-100 text-teal-800 hover:bg-teal-200">Services</Badge> 
@@ -303,7 +473,10 @@ const FinancePage = () => {
                 </p>
               </CardContent>
               <CardFooter className="pt-0">
-                <Button variant="outline" size="sm" className="w-full">
+                <Button variant="outline" size="sm" className="w-full" onClick={(e) => {
+                  e.stopPropagation();
+                  handleCardDetailClick('Main d\'oeuvre');
+                }}>
                   <FileText className="h-4 w-4 mr-2" />
                   Détails
                 </Button>
@@ -328,15 +501,26 @@ const FinancePage = () => {
             </Select>
           </div>
           
-          <div className="bg-muted/20 rounded-lg p-6 text-center">
-            <CreditCard className="h-12 w-12 mx-auto text-muted-foreground mb-2" />
-            <h3 className="text-lg font-semibold mb-2">Module de gestion des dépenses</h3>
-            <p className="text-muted-foreground mb-4">
-              Activez ce module pour catégoriser, suivre et optimiser 
-              toutes vos dépenses en détail.
-            </p>
-            <Button>Activer ce module</Button>
-          </div>
+          {showAddExpenseForm ? (
+            <div className="animate-fade-in bg-muted/20 rounded-lg p-6 text-center border border-primary/20">
+              <CreditCard className="h-12 w-12 mx-auto text-primary mb-2" />
+              <h3 className="text-lg font-semibold mb-2">Ajout d'une nouvelle dépense</h3>
+              <p className="text-muted-foreground mb-4">Traitement en cours...</p>
+              <div className="w-full bg-muted rounded-full h-2 mb-4">
+                <div className="bg-primary h-2 rounded-full animate-pulse" style={{width: '60%'}}></div>
+              </div>
+            </div>
+          ) : (
+            <div className="bg-muted/20 rounded-lg p-6 text-center">
+              <CreditCard className="h-12 w-12 mx-auto text-muted-foreground mb-2" />
+              <h3 className="text-lg font-semibold mb-2">Module de gestion des dépenses</h3>
+              <p className="text-muted-foreground mb-4">
+                Activez ce module pour catégoriser, suivre et optimiser 
+                toutes vos dépenses en détail.
+              </p>
+              <Button onClick={() => handleActivateModule('gestion des dépenses')}>Activer ce module</Button>
+            </div>
+          )}
         </div>
       )
     },
@@ -372,14 +556,35 @@ const FinancePage = () => {
           </p>
           
           <div className="mb-6">
-            <Tabs value={timeFrame} onValueChange={setTimeFrame}>
-              <TabsList>
-                <TabsTrigger value="month">Mois en cours</TabsTrigger>
-                <TabsTrigger value="quarter">Trimestre</TabsTrigger>
-                <TabsTrigger value="year">Année</TabsTrigger>
-                <TabsTrigger value="custom">Personnalisé</TabsTrigger>
-              </TabsList>
-            </Tabs>
+            <div className="p-4 bg-muted/30 rounded-lg mb-4">
+              <h3 className="font-medium mb-2">Période d'analyse</h3>
+              <div className="tabs tabs-boxed inline-flex p-1 bg-muted rounded-md">
+                <button 
+                  className={`py-1.5 px-3 rounded-sm ${timeFrame === 'month' ? 'bg-background shadow-sm' : 'hover:bg-muted/80'}`}
+                  onClick={() => setTimeFrame('month')}
+                >
+                  Mois en cours
+                </button>
+                <button 
+                  className={`py-1.5 px-3 rounded-sm ${timeFrame === 'quarter' ? 'bg-background shadow-sm' : 'hover:bg-muted/80'}`}
+                  onClick={() => setTimeFrame('quarter')}
+                >
+                  Trimestre
+                </button>
+                <button 
+                  className={`py-1.5 px-3 rounded-sm ${timeFrame === 'year' ? 'bg-background shadow-sm' : 'hover:bg-muted/80'}`}
+                  onClick={() => setTimeFrame('year')}
+                >
+                  Année
+                </button>
+                <button 
+                  className={`py-1.5 px-3 rounded-sm ${timeFrame === 'custom' ? 'bg-background shadow-sm' : 'hover:bg-muted/80'}`}
+                  onClick={() => setTimeFrame('custom')}
+                >
+                  Personnalisé
+                </button>
+              </div>
+            </div>
           </div>
           
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
@@ -432,7 +637,12 @@ const FinancePage = () => {
                       <p className="text-xs text-muted-foreground">Généré le 15/05/2024</p>
                     </div>
                   </div>
-                  <Button variant="ghost" size="sm">
+                  <Button variant="ghost" size="sm" onClick={() => {
+                    toast({
+                      title: "Téléchargement",
+                      description: "Téléchargement du rapport de rentabilité"
+                    });
+                  }}>
                     <Download className="h-4 w-4" />
                   </Button>
                 </div>
@@ -445,7 +655,12 @@ const FinancePage = () => {
                       <p className="text-xs text-muted-foreground">Généré le 10/05/2024</p>
                     </div>
                   </div>
-                  <Button variant="ghost" size="sm">
+                  <Button variant="ghost" size="sm" onClick={() => {
+                    toast({
+                      title: "Téléchargement",
+                      description: "Téléchargement de l'analyse des dépenses"
+                    });
+                  }}>
                     <Download className="h-4 w-4" />
                   </Button>
                 </div>
@@ -458,7 +673,12 @@ const FinancePage = () => {
                       <p className="text-xs text-muted-foreground">Généré le 05/05/2024</p>
                     </div>
                   </div>
-                  <Button variant="ghost" size="sm">
+                  <Button variant="ghost" size="sm" onClick={() => {
+                    toast({
+                      title: "Téléchargement",
+                      description: "Téléchargement du récapitulatif des revenus"
+                    });
+                  }}>
                     <Download className="h-4 w-4" />
                   </Button>
                 </div>
@@ -466,10 +686,21 @@ const FinancePage = () => {
             </Card>
           </div>
           
-          <Button className="w-full" onClick={handleGenerateReport}>
-            <FileText className="h-4 w-4 mr-2" />
-            Générer un nouveau rapport
-          </Button>
+          {reportGenerating ? (
+            <div className="animate-fade-in bg-muted/20 rounded-lg p-6 text-center border border-primary/20">
+              <FileText className="h-12 w-12 mx-auto text-primary mb-2" />
+              <h3 className="text-lg font-semibold mb-2">Génération du rapport en cours</h3>
+              <p className="text-muted-foreground mb-4">Veuillez patienter pendant la préparation de votre rapport...</p>
+              <div className="w-full bg-muted rounded-full h-2 mb-4">
+                <div className="bg-primary h-2 rounded-full animate-pulse" style={{width: '75%'}}></div>
+              </div>
+            </div>
+          ) : (
+            <Button className="w-full" onClick={handleGenerateReport}>
+              <FileText className="h-4 w-4 mr-2" />
+              Générer un nouveau rapport
+            </Button>
+          )}
         </div>
       )
     }
@@ -486,50 +717,14 @@ const FinancePage = () => {
             onDescriptionChange={handleDescriptionChange}
           />
           
-          <div className="flex space-x-2">
-            <Button variant="outline" onClick={handleExportData}>
-              <Download className="mr-2 h-4 w-4" />
-              Exporter
-            </Button>
-            
-            <Button variant="outline" onClick={handleImportData}>
-              <Upload className="mr-2 h-4 w-4" />
-              Importer
-            </Button>
-            
-            <Dialog open={importDialogOpen} onOpenChange={setImportDialogOpen}>
-              <DialogContent>
-                <DialogHeader>
-                  <DialogTitle>Importer des données financières</DialogTitle>
-                </DialogHeader>
-                <div className="space-y-4">
-                  <p className="text-muted-foreground">Choisissez le type de données à importer:</p>
-                  <div className="grid grid-cols-1 gap-2">
-                    <Button variant="outline" className="justify-start" onClick={() => handleImportConfirm('bancaires')}>
-                      <CreditCard className="h-4 w-4 mr-2" />
-                      Données bancaires (CSV)
-                    </Button>
-                    <Button variant="outline" className="justify-start" onClick={() => handleImportConfirm('comptables')}>
-                      <FileText className="h-4 w-4 mr-2" />
-                      Données comptables (Excel)
-                    </Button>
-                    <Button variant="outline" className="justify-start" onClick={() => handleImportConfirm('factures')}>
-                      <DollarSign className="h-4 w-4 mr-2" />
-                      Factures scannées (PDF)
-                    </Button>
-                  </div>
-                  <div className="flex justify-end">
-                    <Button variant="ghost" onClick={() => setImportDialogOpen(false)}>
-                      Annuler
-                    </Button>
-                  </div>
-                </div>
-              </DialogContent>
-            </Dialog>
-          </div>
+          {renderHeaderActions()}
         </div>
 
-        <TabContainer tabs={tabs} defaultValue="overview" />
+        <TabContainer 
+          tabs={tabs} 
+          defaultValue="overview"
+          onValueChange={handleTabChange}
+        />
       </div>
     </PageLayout>
   );

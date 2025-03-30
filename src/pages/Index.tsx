@@ -2,7 +2,7 @@
 import React from 'react';
 import PageLayout from '../components/layout/PageLayout';
 import Dashboard from '../components/Dashboard';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import TabContainer, { TabItem } from '../components/layout/TabContainer';
 import GuadeloupeHarvestTracking from '../components/GuadeloupeHarvestTracking';
 import GuadeloupeWeatherAlerts from '../components/GuadeloupeWeatherAlerts';
 import TaskList from '../components/cultures/TaskList';
@@ -12,41 +12,54 @@ const Index = () => {
   const { toast } = useToast();
 
   const handleTabChange = (value: string) => {
+    const tabLabels = {
+      dashboard: 'Tableau de Bord',
+      harvest: 'Suivi des Récoltes',
+      weather: 'Alertes Météo',
+      tasks: 'Tâches'
+    };
+    
+    const label = tabLabels[value as keyof typeof tabLabels] || value;
+    
     toast({
-      title: `${value} activé`,
-      description: `Vous consultez maintenant les données de ${value}`
+      title: `${label} activé`,
+      description: `Vous consultez maintenant les données de ${label.toLowerCase()}`
     });
   };
+
+  const tabs: TabItem[] = [
+    {
+      value: 'dashboard',
+      label: 'Tableau de Bord',
+      content: <Dashboard />
+    },
+    {
+      value: 'harvest',
+      label: 'Suivi des Récoltes',
+      content: <GuadeloupeHarvestTracking />
+    },
+    {
+      value: 'weather',
+      label: 'Alertes Météo',
+      content: <GuadeloupeWeatherAlerts />
+    },
+    {
+      value: 'tasks',
+      label: 'Tâches',
+      content: <TaskList />
+    }
+  ];
 
   return (
     <PageLayout>
       <div className="p-6 animate-enter">
         <h1 className="text-3xl font-bold mb-6">Tableau de Bord AgriSavant</h1>
         
-        <Tabs defaultValue="dashboard" onValueChange={handleTabChange} className="w-full">
-          <TabsList className="mb-4">
-            <TabsTrigger value="dashboard">Tableau de Bord</TabsTrigger>
-            <TabsTrigger value="harvest">Suivi des Récoltes</TabsTrigger>
-            <TabsTrigger value="weather">Alertes Météo</TabsTrigger>
-            <TabsTrigger value="tasks">Tâches</TabsTrigger>
-          </TabsList>
-          
-          <TabsContent value="dashboard">
-            <Dashboard />
-          </TabsContent>
-          
-          <TabsContent value="harvest">
-            <GuadeloupeHarvestTracking />
-          </TabsContent>
-          
-          <TabsContent value="weather">
-            <GuadeloupeWeatherAlerts />
-          </TabsContent>
-          
-          <TabsContent value="tasks">
-            <TaskList />
-          </TabsContent>
-        </Tabs>
+        <TabContainer 
+          tabs={tabs}
+          defaultValue="dashboard"
+          onValueChange={handleTabChange}
+        />
       </div>
     </PageLayout>
   );
