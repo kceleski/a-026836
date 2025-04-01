@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { 
   Package, 
   Plus, 
@@ -15,7 +15,11 @@ import {
   X,
   Check,
   BarChart2,
-  Save
+  Save,
+  Upload,
+  Download,
+  FileUp,
+  FileDown
 } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { EditableField } from './ui/editable-field';
@@ -25,6 +29,9 @@ import { Input } from './ui/input';
 import { Label } from './ui/label';
 import { Textarea } from './ui/textarea';
 import { useToast } from "@/hooks/use-toast";
+import { toast } from 'sonner';
+import ConfirmDialog from './inventory/ConfirmDialog';
+import { exportInventoryToCSV, importInventoryFromCSV } from './inventory/ImportExportFunctions';
 
 // Mock data for inventory items
 const initialInventoryData = [
@@ -128,7 +135,7 @@ const initialCategoryStats = [
 ];
 
 const Inventory = () => {
-  const { toast } = useToast();
+  const { toast: shadowToast } = useToast();
   const [inventoryData, setInventoryData] = useState(initialInventoryData);
   const [transactionHistory, setTransactionHistory] = useState(initialTransactionHistory);
   const [categoryStats, setCategoryStats] = useState(initialCategoryStats);
@@ -156,6 +163,15 @@ const Inventory = () => {
     notes: '',
     date: new Date().toISOString().split('T')[0]
   });
+  
+  // New state for confirmation dialogs
+  const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
+  const [itemToDelete, setItemToDelete] = useState<number | null>(null);
+  const [transactionToDelete, setTransactionToDelete] = useState<number | null>(null);
+  const [transactionDeleteConfirmOpen, setTransactionDeleteConfirmOpen] = useState(false);
+  
+  // File input ref for CSV import
+  const fileInputRef = useRef<HTMLInputElement>(null);
   
   // Alerts based on inventory levels
   const generateAlerts = () => {
@@ -213,14 +229,145 @@ const Inventory = () => {
     }
   };
   
+  // Add new import/export handlers
+  const handleExportData = () => {
+    exportInventoryToCSV(inventoryData);
+  };
+  
+  const handleImportClick = () => {
+    if (fileInputRef.current) {
+      fileInputRef.current.click();
+    }
+  };
+  
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    
+    importInventoryFromCSV(file, (importedData) => {
+      // Option 1: Replace all inventory data
+      // setInventoryData(importedData);
+      
+      // Option 2: Merge with existing data (avoiding duplicates by ID)
+      const existingIds = new Set(inventoryData.map(item => item.id));
+      const newItems = importedData.filter(item => !existingIds.has(item.id));
+      const updatedItems = importedData.filter(item => existingIds.has(item.id));
+      
+      // Update existing items
+      const updatedInventory = inventoryData.map(item => {
+        const updatedItem = updatedItems.find(update => update.id === item.id);
+        return updatedItem || item;
+      });
+      
+      // Add new items
+      setInventoryData([...updatedInventory, ...newItems]);
+      
+      // Update category stats
+      updateCategoryStats([...updatedInventory, ...newItems]);
+    });
+    
+    // Reset file input
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
+  };
+  
+  const updateCategoryStats = (items: typeof inventoryData) => {
+    const categories: Record<string, number> = {};
+    const colors: Record<string, string> = {};
+    
+    // Get existing colors
+    categoryStats.forEach(stat => {
+      colors[stat.name] = stat.fill;
+    });
+    
+    // Calculate new quantities by category
+    items.forEach(item => {
+      if (!categories[item.category]) {
+        categories[item.category] = 0;
+        if (!colors[item.category]) {
+          colors[item.category] = getRandomColor();
+        }
+      }
+      categories[item.category] += item.quantity;
+    });
+    
+    // Create new stats array
+    const newStats = Object.entries(categories).map(([name, value]) => ({
+      name,
+      value,
+      fill: colors[name]
+    }));
+    
+    setCategoryStats(newStats);
+  };
+  
+  // Modified delete handlers to use confirmation dialog
+  const confirmDeleteItem = (id: number) => {
+    setItemToDelete(id);
+    setDeleteConfirmOpen(true);
+  };
+  
+  const handleDeleteItem = () => {
+    if (itemToDelete === null) return;
+    
+    const itemToDeleteObj = inventoryData.find(item => item.id === itemToDelete);
+    if (!itemToDeleteObj) return;
+    
+    setInventoryData(inventoryData.filter(item => item.id !== itemToDelete));
+    
+    // Update category stats
+    setCategoryStats(categoryStats.map(stat => 
+      stat.name === itemToDeleteObj.category 
+        ? { ...stat, value: Math.max(0, stat.value - itemToDeleteObj.quantity) }
+        : stat
+    ));
+    
+    // If the deleted item is selected, clear selection
+    if (selectedItem && selectedItem.id === itemToDelete) {
+      setSelectedItem(null);
+    }
+    
+    toast.success(`${itemToDeleteObj.name} a été supprimé de l'inventaire`);
+    setItemToDelete(null);
+    setDeleteConfirmOpen(false);
+  };
+  
+  const confirmDeleteTransaction = (id: number) => {
+    setTransactionToDelete(id);
+    setTransactionDeleteConfirmOpen(true);
+  };
+  
+  const handleDeleteTransaction = () => {
+    if (transactionToDelete === null || !selectedItem) return;
+    
+    const transaction = transactionHistory.find(t => t.id === transactionToDelete);
+    if (!transaction) return;
+    
+    // Remove transaction
+    const updatedTransactions = transactionHistory.filter(t => t.id !== transactionToDelete);
+    setTransactionHistory(updatedTransactions);
+    
+    // Adjust item quantity
+    const quantityChange = transaction.type === 'in' 
+      ? -transaction.quantity 
+      : transaction.quantity;
+    
+    handleUpdateItem(
+      selectedItem.id, 
+      'quantity', 
+      Math.max(0, selectedItem.quantity + quantityChange)
+    );
+    
+    toast.success("Transaction supprimée et stock ajusté");
+    setTransactionToDelete(null);
+    setTransactionDeleteConfirmOpen(false);
+  };
+  
   // Add new inventory item
   const handleAddItem = () => {
     if (!newItem.name || !newItem.category || !newItem.unit) {
-      toast({
-        title: "Champs obligatoires",
-        description: "Veuillez remplir tous les champs obligatoires",
-        variant: "destructive"
-      });
+      toast.error("Veuillez remplir tous les champs obligatoires");
       return;
     }
     
@@ -236,7 +383,7 @@ const Inventory = () => {
     
     setInventoryData([...inventoryData, itemToAdd]);
     
-    // Update category stats if needed
+    // Update category stats
     const existingCategoryStat = categoryStats.find(stat => stat.name === newItem.category);
     if (existingCategoryStat) {
       setCategoryStats(categoryStats.map(stat => 
@@ -264,41 +411,13 @@ const Inventory = () => {
       notes: ''
     });
     
-    toast({
-      title: "Article ajouté",
-      description: `${newItem.name} a été ajouté à l'inventaire`,
-    });
+    toast.success(`${newItem.name} a été ajouté à l'inventaire`);
   };
   
   // Generate a random color for new categories
   const getRandomColor = () => {
     const colors = ['#4CAF50', '#8D6E63', '#F44336', '#2196F3', '#FFC107', '#9C27B0', '#FF5722', '#3F51B5'];
     return colors[Math.floor(Math.random() * colors.length)];
-  };
-  
-  // Delete inventory item
-  const handleDeleteItem = (id: number) => {
-    const itemToDelete = inventoryData.find(item => item.id === id);
-    if (!itemToDelete) return;
-    
-    setInventoryData(inventoryData.filter(item => item.id !== id));
-    
-    // Update category stats
-    setCategoryStats(categoryStats.map(stat => 
-      stat.name === itemToDelete.category 
-        ? { ...stat, value: Math.max(0, stat.value - itemToDelete.quantity) }
-        : stat
-    ));
-    
-    // If the deleted item is selected, clear selection
-    if (selectedItem && selectedItem.id === id) {
-      setSelectedItem(null);
-    }
-    
-    toast({
-      title: "Article supprimé",
-      description: `${itemToDelete.name} a été supprimé de l'inventaire`,
-    });
   };
   
   // Update an inventory item
@@ -345,11 +464,7 @@ const Inventory = () => {
   // Submit transaction
   const handleSubmitTransaction = () => {
     if (!selectedItem || !showTransactionForm || newTransaction.quantity <= 0) {
-      toast({
-        title: "Erreur",
-        description: "Veuillez spécifier une quantité valide",
-        variant: "destructive"
-      });
+      toast.error("Veuillez spécifier une quantité valide");
       return;
     }
     
@@ -381,10 +496,7 @@ const Inventory = () => {
       date: new Date().toISOString().split('T')[0]
     });
     
-    toast({
-      title: showTransactionForm === 'in' ? "Entrée enregistrée" : "Sortie enregistrée",
-      description: `${newTransaction.quantity} ${selectedItem.unit} ${showTransactionForm === 'in' ? 'ajoutés' : 'retirés'} de l'inventaire`,
-    });
+    toast.success(`${newTransaction.quantity} ${selectedItem.unit} ${showTransactionForm === 'in' ? 'ajoutés' : 'retirés'} de l'inventaire`);
   };
   
   // Get transactions for the selected item
@@ -421,6 +533,14 @@ const Inventory = () => {
     handleUpdateItem(item.id, columnId, value);
   };
   
+  // Add keyboard accessibility handling
+  const handleKeyDown = (e: React.KeyboardEvent, action: Function) => {
+    if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault();
+      action();
+    }
+  };
+  
   return (
     <div className="animate-enter">
       <header className="flex flex-col md:flex-row md:justify-between md:items-center mb-6 gap-4">
@@ -428,7 +548,7 @@ const Inventory = () => {
           <h1 className="text-2xl font-bold mb-1">Gestion des Stocks</h1>
           <p className="text-muted-foreground">Gérez votre inventaire et suivez les niveaux de stock</p>
         </div>
-        <div className="flex space-x-2">
+        <div className="flex flex-wrap gap-2">
           <Button 
             variant={view === 'list' ? 'default' : 'outline'}
             onClick={() => setView('list')}
@@ -441,13 +561,39 @@ const Inventory = () => {
             onClick={() => setView('stats')}
             className="px-4 py-2"
           >
+            <BarChart2 className="mr-2 h-4 w-4" />
             Statistiques
           </Button>
+          <Button 
+            variant="outline"
+            onClick={handleExportData}
+            className="px-4 py-2"
+          >
+            <FileDown className="mr-2 h-4 w-4" />
+            Exporter
+          </Button>
+          <div className="relative">
+            <Button 
+              variant="outline"
+              onClick={handleImportClick}
+              className="px-4 py-2"
+            >
+              <FileUp className="mr-2 h-4 w-4" />
+              Importer
+            </Button>
+            <input 
+              type="file" 
+              ref={fileInputRef} 
+              onChange={handleFileChange} 
+              accept=".csv"
+              className="hidden" 
+            />
+          </div>
           <Button 
             onClick={() => setShowAddForm(true)}
             className="ml-2"
           >
-            <Plus className="mr-2" />
+            <Plus className="mr-2 h-4 w-4" />
             Ajouter un article
           </Button>
         </div>
@@ -512,6 +658,7 @@ const Inventory = () => {
                 <button 
                   onClick={() => setSelectedItem(null)}
                   className="mr-3 hover:bg-white/10 p-1 rounded"
+                  aria-label="Retour à la liste"
                 >
                   <ChevronRight className="h-5 w-5 transform rotate-180" />
                 </button>
@@ -521,30 +668,30 @@ const Inventory = () => {
                   className="text-xl font-semibold"
                 />
               </div>
-              <div className="flex space-x-2">
+              <div className="flex flex-wrap gap-2">
                 <Button 
                   onClick={() => handleAddTransaction('in')}
                   variant="outline"
                   className="bg-white/10 hover:bg-white/20 text-white border-none"
                 >
-                  <ArrowDown className="mr-1.5" />
-                  Entrée
+                  <ArrowDown className="mr-1.5 h-4 w-4" />
+                  <span className="hidden sm:inline">Entrée</span>
                 </Button>
                 <Button 
                   onClick={() => handleAddTransaction('out')}
                   variant="outline"
                   className="bg-white/10 hover:bg-white/20 text-white border-none"
                 >
-                  <ArrowUp className="mr-1.5" />
-                  Sortie
+                  <ArrowUp className="mr-1.5 h-4 w-4" />
+                  <span className="hidden sm:inline">Sortie</span>
                 </Button>
                 <Button 
-                  onClick={() => handleDeleteItem(selectedItem.id)}
+                  onClick={() => confirmDeleteItem(selectedItem.id)}
                   variant="outline"
                   className="bg-white/10 hover:bg-white/20 text-white border-none"
                 >
-                  <Trash2 className="mr-1.5" />
-                  Supprimer
+                  <Trash2 className="mr-1.5 h-4 w-4" />
+                  <span className="hidden sm:inline">Supprimer</span>
                 </Button>
               </div>
             </div>
@@ -710,7 +857,7 @@ const Inventory = () => {
                       Annuler
                     </Button>
                     <Button onClick={handleSubmitTransaction}>
-                      <Save className="mr-2" />
+                      <Save className="mr-2 h-4 w-4" />
                       Enregistrer
                     </Button>
                   </div>
@@ -734,7 +881,7 @@ const Inventory = () => {
                       </tr>
                     </thead>
                     <tbody>
-                      {itemTransactions.map((transaction, index) => (
+                      {itemTransactions.map((transaction) => (
                         <tr key={transaction.id} className="border-t">
                           <td className="px-4 py-3">{new Date(transaction.date).toLocaleDateString()}</td>
                           <td className="px-4 py-3">
@@ -763,8 +910,11 @@ const Inventory = () => {
                               value={transaction.notes}
                               onSave={(value) => {
                                 const updatedTransactions = [...transactionHistory];
-                                updatedTransactions[index].notes = value.toString();
-                                setTransactionHistory(updatedTransactions);
+                                const index = updatedTransactions.findIndex(t => t.id === transaction.id);
+                                if (index !== -1) {
+                                  updatedTransactions[index].notes = value.toString();
+                                  setTransactionHistory(updatedTransactions);
+                                }
                               }}
                             />
                           </td>
@@ -772,27 +922,9 @@ const Inventory = () => {
                             <Button 
                               variant="ghost" 
                               size="sm"
-                              onClick={() => {
-                                // Delete transaction
-                                const updatedTransactions = transactionHistory.filter(t => t.id !== transaction.id);
-                                setTransactionHistory(updatedTransactions);
-                                
-                                // Adjust item quantity
-                                const quantityChange = transaction.type === 'in' 
-                                  ? -transaction.quantity 
-                                  : transaction.quantity;
-                                handleUpdateItem(
-                                  selectedItem.id, 
-                                  'quantity', 
-                                  Math.max(0, selectedItem.quantity + quantityChange)
-                                );
-                                
-                                toast({
-                                  title: "Transaction supprimée",
-                                  description: "La transaction a été supprimée et le stock a été ajusté",
-                                });
-                              }}
+                              onClick={() => confirmDeleteTransaction(transaction.id)}
                               className="text-agri-danger"
+                              aria-label="Supprimer la transaction"
                             >
                               <Trash2 className="h-4 w-4" />
                             </Button>
@@ -830,6 +962,7 @@ const Inventory = () => {
                   className="h-10 appearance-none pl-3 pr-8 py-2 border border-input rounded-md focus:outline-none focus:ring-2 focus:ring-ring bg-white"
                   value={categoryFilter}
                   onChange={(e) => setCategoryFilter(e.target.value)}
+                  aria-label="Filtrer par catégorie"
                 >
                   {categories.map(category => (
                     <option key={category} value={category}>
@@ -847,7 +980,7 @@ const Inventory = () => {
               onUpdate={handleTableUpdate}
               onDelete={(rowIndex) => {
                 const item = filteredItems[rowIndex];
-                if (item) handleDeleteItem(item.id);
+                if (item) confirmDeleteItem(item.id);
               }}
               sortable={true}
               className="mb-6"
@@ -874,7 +1007,7 @@ const Inventory = () => {
                   />
                   <YAxis />
                   <Tooltip />
-                  <Bar dataKey="value" fill="#4CAF50" radius={[4, 4, 0, 0]} />
+                  <Bar dataKey="value" fill={(entry) => entry.fill || "#4CAF50"} radius={[4, 4, 0, 0]} />
                 </BarChart>
               </ResponsiveContainer>
             </div>
@@ -901,6 +1034,7 @@ const Inventory = () => {
         </div>
       )}
       
+      {/* Add Form Modal */}
       {showAddForm && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
@@ -1019,7 +1153,7 @@ const Inventory = () => {
                 <Button 
                   onClick={handleAddItem}
                 >
-                  <Check className="mr-2" />
+                  <Check className="mr-2 h-4 w-4" />
                   Ajouter
                 </Button>
               </div>
@@ -1027,6 +1161,25 @@ const Inventory = () => {
           </div>
         </div>
       )}
+      
+      {/* Confirmation Dialogs */}
+      <ConfirmDialog
+        open={deleteConfirmOpen}
+        onOpenChange={setDeleteConfirmOpen}
+        title="Supprimer cet article"
+        description="Êtes-vous sûr de vouloir supprimer cet article de l'inventaire ? Cette action ne peut pas être annulée."
+        onConfirm={handleDeleteItem}
+        variant="destructive"
+      />
+      
+      <ConfirmDialog
+        open={transactionDeleteConfirmOpen}
+        onOpenChange={setTransactionDeleteConfirmOpen}
+        title="Supprimer cette transaction"
+        description="Êtes-vous sûr de vouloir supprimer cette transaction ? Le stock sera ajusté en conséquence."
+        onConfirm={handleDeleteTransaction}
+        variant="destructive"
+      />
     </div>
   );
 };

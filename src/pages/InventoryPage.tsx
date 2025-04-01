@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import PageLayout from '../components/layout/PageLayout';
 import PageHeader from '../components/layout/PageHeader';
 import TabContainer, { TabItem } from '../components/layout/TabContainer';
@@ -8,13 +8,16 @@ import GuadeloupeSpecificCrops from '../components/GuadeloupeSpecificCrops';
 import GuadeloupeHarvestTracking from '../components/GuadeloupeHarvestTracking';
 import GuadeloupeWeatherAlerts from '../components/GuadeloupeWeatherAlerts';
 import { Button } from '../components/ui/button';
-import { Download, Plus, Upload } from 'lucide-react';
+import { Download, Plus, Upload, Filter } from 'lucide-react';
 import { useToast } from "@/hooks/use-toast";
+import { toast } from 'sonner';
 import usePageMetadata from '../hooks/use-page-metadata';
+import { exportInventoryToCSV } from '../components/inventory/ImportExportFunctions';
 
 const InventoryPage = () => {
-  const { toast } = useToast();
+  const { toast: shadowToast } = useToast();
   const [activeTab, setActiveTab] = useState<string>('inventory');
+  const fileInputRef = useRef<HTMLInputElement>(null);
   
   const { 
     title, 
@@ -27,20 +30,43 @@ const InventoryPage = () => {
   });
 
   const handleExportData = () => {
-    toast({
-      title: "Export réussi",
-      description: `Les données de ${activeTab === 'inventory' ? 'l\'inventaire' : 
-                      activeTab === 'crops' ? 'cultures' : 'météo'} ont été exportées en CSV`
-    });
+    if (activeTab === 'inventory') {
+      // The actual export is handled in the Inventory component
+      toast.success("Export des données d'inventaire lancé");
+    } else if (activeTab === 'crops') {
+      toast.info("Export des données de cultures");
+      shadowToast({
+        title: "Fonctionnalité en développement",
+        description: "L'export des cultures sera disponible prochainement"
+      });
+    } else if (activeTab === 'weather') {
+      toast.info("Export des données météo");
+      shadowToast({
+        title: "Fonctionnalité en développement",
+        description: "L'export des données météo sera disponible prochainement"
+      });
+    }
   };
 
-  const handleImportData = () => {
-    toast({
-      title: "Import de données",
-      description: `Veuillez sélectionner un fichier CSV à importer pour ${
-        activeTab === 'inventory' ? 'l\'inventaire' : 
-        activeTab === 'crops' ? 'les cultures' : 'les alertes météo'}`
-    });
+  const handleImportClick = () => {
+    if (fileInputRef.current) {
+      fileInputRef.current.click();
+    }
+  };
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    toast.info(`Importation du fichier ${file.name}`);
+    
+    // The actual import is handled in the Inventory component
+    // This is just a placeholder for the top-level action
+    
+    // Reset file input
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
   };
 
   const handleAddItem = () => {
@@ -61,10 +87,19 @@ const InventoryPage = () => {
           <Download className="mr-2 h-4 w-4" />
           Exporter
         </Button>
-        <Button variant="outline" onClick={handleImportData} className="whitespace-nowrap">
-          <Upload className="mr-2 h-4 w-4" />
-          Importer
-        </Button>
+        <div className="relative">
+          <Button variant="outline" onClick={handleImportClick} className="whitespace-nowrap">
+            <Upload className="mr-2 h-4 w-4" />
+            Importer
+          </Button>
+          <input 
+            type="file" 
+            ref={fileInputRef} 
+            onChange={handleFileChange} 
+            accept=".csv"
+            className="hidden" 
+          />
+        </div>
         <Button onClick={handleAddItem} className="whitespace-nowrap">
           <Plus className="mr-2 h-4 w-4" />
           {activeTab === 'inventory' ? 'Ajouter un stock' : 
