@@ -12,7 +12,8 @@ import {
   BarChart,
   Bar,
   LineChart,
-  Line
+  Line,
+  Legend
 } from 'recharts';
 import { useStatistics } from '../../contexts/StatisticsContext';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
