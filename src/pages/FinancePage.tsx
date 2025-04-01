@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+
+import React, { useState, useEffect } from 'react';
 import PageLayout from '../components/layout/PageLayout';
 import FinancialTracking from '../components/FinancialTracking';
 import PageHeader from '../components/layout/PageHeader';
@@ -22,6 +23,7 @@ import FinancialCharts from '../components/statistics/FinancialCharts';
 import FinancialForecast from '../components/statistics/FinancialForecast';
 import BudgetPlanning from '../components/BudgetPlanning';
 import { toast } from 'sonner';
+import { StatisticsProvider } from '../contexts/StatisticsContext';
 
 const FinancePage = () => {
   const { toast: shadowToast } = useToast();
@@ -231,10 +233,12 @@ const FinancePage = () => {
       value: 'overview',
       label: 'Aperçu général',
       content: (
-        <div className="space-y-6">
-          <FinancialTracking />
-          <FinancialCharts />
-        </div>
+        <StatisticsProvider>
+          <div className="space-y-6">
+            <FinancialTracking />
+            <FinancialCharts />
+          </div>
+        </StatisticsProvider>
       )
     },
     {
@@ -542,33 +546,35 @@ const FinancePage = () => {
       value: 'forecast',
       label: 'Prévisions',
       content: (
-        <div className="p-6 bg-white rounded-xl border">
-          <h2 className="text-xl font-bold mb-4 flex items-center">
-            <BarChart className="h-5 w-5 mr-2 text-indigo-500" />
-            <EditableField
-              value={forecastTitle}
-              onSave={(value) => {
-                setForecastTitle(String(value));
-                toast.success("Titre mis à jour", {
-                  description: "Le titre de la section prévisions a été modifié"
-                });
-              }}
-            />
-          </h2>
-          <p className="text-muted-foreground mb-6">
-            <EditableField
-              value={forecastDescription}
-              onSave={(value) => {
-                setForecastDescription(String(value));
-                toast.success("Description mise à jour", {
-                  description: "La description de la section prévisions a été modifiée"
-                });
-              }}
-            />
-          </p>
-          
-          <FinancialForecast />
-        </div>
+        <StatisticsProvider>
+          <div className="p-6 bg-white rounded-xl border">
+            <h2 className="text-xl font-bold mb-4 flex items-center">
+              <BarChart className="h-5 w-5 mr-2 text-indigo-500" />
+              <EditableField
+                value={forecastTitle}
+                onSave={(value) => {
+                  setForecastTitle(String(value));
+                  toast.success("Titre mis à jour", {
+                    description: "Le titre de la section prévisions a été modifié"
+                  });
+                }}
+              />
+            </h2>
+            <p className="text-muted-foreground mb-6">
+              <EditableField
+                value={forecastDescription}
+                onSave={(value) => {
+                  setForecastDescription(String(value));
+                  toast.success("Description mise à jour", {
+                    description: "La description de la section prévisions a été modifiée"
+                  });
+                }}
+              />
+            </p>
+            
+            <FinancialForecast />
+          </div>
+        </StatisticsProvider>
       )
     },
     {
