@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import PageLayout from '../components/layout/PageLayout';
 import FinancialTracking from '../components/FinancialTracking';
@@ -78,7 +77,7 @@ const FinancePage = () => {
     setTimeout(() => {
       setReportGenerating(false);
       toast.success("Génération de rapport", {
-        description: `Rapport financier ${timeFrame} généré et prêt �� télécharger`
+        description: `Rapport financier ${timeFrame} généré et prêt  télécharger`
       });
     }, 1500);
   };
@@ -691,124 +690,3 @@ const FinancePage = () => {
                   <CreditCard className="h-4 w-4 mr-2" />
                   Analyse des dépenses
                 </Button>
-                <Button variant="outline" className="w-full justify-start" onClick={handleGenerateReport}>
-                  <DollarSign className="h-4 w-4 mr-2" />
-                  Récapitulatif des revenus
-                </Button>
-                <Button variant="outline" className="w-full justify-start" onClick={handleGenerateReport}>
-                  <CalendarRange className="h-4 w-4 mr-2" />
-                  Flux de trésorerie {timeFrame === 'year' ? 'annuel' : timeFrame === 'quarter' ? 'trimestriel' : 'mensuel'}
-                </Button>
-              </CardContent>
-            </Card>
-            
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center">
-                  <FileText className="h-4 w-4 mr-2 text-teal-500" />
-                  Rapports récents
-                </CardTitle>
-                <CardDescription>
-                  Vos derniers rapports générés
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-3">
-                <div className="flex items-center justify-between border-b pb-2">
-                  <div className="flex items-center">
-                    <BarChart className="h-4 w-4 mr-2 text-muted-foreground" />
-                    <div>
-                      <p className="text-sm font-medium">Rapport de rentabilité</p>
-                      <p className="text-xs text-muted-foreground">Généré le 15/05/2024</p>
-                    </div>
-                  </div>
-                  <Button variant="ghost" size="sm" onClick={() => {
-                    toast.success("Téléchargement", {
-                      description: "Téléchargement du rapport de rentabilité"
-                    });
-                  }}>
-                    <Download className="h-4 w-4" />
-                  </Button>
-                </div>
-                
-                <div className="flex items-center justify-between border-b pb-2">
-                  <div className="flex items-center">
-                    <CreditCard className="h-4 w-4 mr-2 text-muted-foreground" />
-                    <div>
-                      <p className="text-sm font-medium">Analyse des dépenses</p>
-                      <p className="text-xs text-muted-foreground">Généré le 10/05/2024</p>
-                    </div>
-                  </div>
-                  <Button variant="ghost" size="sm" onClick={() => {
-                    toast.success("Téléchargement", {
-                      description: "Téléchargement de l'analyse des dépenses"
-                    });
-                  }}>
-                    <Download className="h-4 w-4" />
-                  </Button>
-                </div>
-                
-                <div className="flex items-center justify-between pb-2">
-                  <div className="flex items-center">
-                    <DollarSign className="h-4 w-4 mr-2 text-muted-foreground" />
-                    <div>
-                      <p className="text-sm font-medium">Récapitulatif des revenus</p>
-                      <p className="text-xs text-muted-foreground">Généré le 05/05/2024</p>
-                    </div>
-                  </div>
-                  <Button variant="ghost" size="sm" onClick={() => {
-                    toast.success("Téléchargement", {
-                      description: "Téléchargement du récapitulatif des revenus"
-                    });
-                  }}>
-                    <Download className="h-4 w-4" />
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-          
-          {reportGenerating ? (
-            <div className="animate-fade-in bg-muted/20 rounded-lg p-6 text-center border border-primary/20">
-              <FileText className="h-12 w-12 mx-auto text-primary mb-2" />
-              <h3 className="text-lg font-semibold mb-2">Génération du rapport en cours</h3>
-              <p className="text-muted-foreground mb-4">Veuillez patienter pendant la préparation de votre rapport...</p>
-              <div className="w-full bg-muted rounded-full h-2 mb-4">
-                <div className="bg-primary h-2 rounded-full animate-pulse" style={{width: '75%'}}></div>
-              </div>
-            </div>
-          ) : (
-            <Button className="w-full" onClick={handleGenerateReport}>
-              <FileText className="h-4 w-4 mr-2" />
-              Générer un nouveau rapport
-            </Button>
-          )}
-        </div>
-      )
-    }
-  ];
-
-  return (
-    <PageLayout>
-      <div className="p-6 animate-enter">
-        <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-6 gap-4">
-          <PageHeader 
-            title={title}
-            description={description}
-            onTitleChange={handleTitleChange}
-            onDescriptionChange={handleDescriptionChange}
-          />
-          
-          {renderHeaderActions()}
-        </div>
-
-        <TabContainer 
-          tabs={tabs} 
-          defaultValue="overview"
-          onValueChange={handleTabChange}
-        />
-      </div>
-    </PageLayout>
-  );
-};
-
-export default FinancePage;
