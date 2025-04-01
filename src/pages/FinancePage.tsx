@@ -77,7 +77,7 @@ const FinancePage = () => {
     setTimeout(() => {
       setReportGenerating(false);
       toast.success("Génération de rapport", {
-        description: `Rapport financier ${timeFrame} généré et prêt  télécharger`
+        description: `Rapport financier ${timeFrame} généré et prêt à télécharger`
       });
     }, 1500);
   };
@@ -690,3 +690,73 @@ const FinancePage = () => {
                   <CreditCard className="h-4 w-4 mr-2" />
                   Analyse des dépenses
                 </Button>
+              </CardContent>
+            </Card>
+            
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center">
+                  <FileText className="h-4 w-4 mr-2 text-muted-foreground" />
+                  Génération de rapports
+                </CardTitle>
+                <CardDescription>
+                  État de la génération
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                {reportGenerating ? (
+                  <div className="space-y-4">
+                    <div className="flex items-center justify-between mb-2">
+                      <span>Génération du rapport {timeFrame}...</span>
+                      <span className="text-sm text-muted-foreground">75%</span>
+                    </div>
+                    <div className="w-full bg-muted rounded-full h-2">
+                      <div className="bg-primary h-2 rounded-full animate-pulse" style={{width: '75%'}}></div>
+                    </div>
+                    <p className="text-sm text-muted-foreground">
+                      Veuillez patienter pendant la compilation des données financières...
+                    </p>
+                  </div>
+                ) : (
+                  <div className="text-center py-6">
+                    <FileText className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
+                    <h4 className="text-lg font-medium mb-2">Aucun rapport en cours</h4>
+                    <p className="text-sm text-muted-foreground mb-4">
+                      Choisissez un type de rapport à gauche pour lancer la génération
+                    </p>
+                    <Button variant="outline" onClick={handleGenerateReport}>
+                      Générer un rapport
+                    </Button>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </div>
+        </div>
+      )
+    }
+  ];
+
+  return (
+    <PageLayout>
+      <PageHeader 
+        title={title}
+        description={description}
+        onTitleChange={handleTitleChange}
+        onDescriptionChange={handleDescriptionChange}
+      />
+      
+      <div className="mb-6">
+        {renderHeaderActions()}
+      </div>
+      
+      <TabContainer 
+        tabs={tabs} 
+        defaultValue={activeTab}
+        onValueChange={handleTabChange}
+      />
+    </PageLayout>
+  );
+};
+
+export default FinancePage;
