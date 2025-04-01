@@ -12,6 +12,7 @@ import InventoryPage from "./pages/InventoryPage";
 import FinancePage from "./pages/FinancePage";
 import StatsPage from "./pages/StatsPage";
 import NotFound from "./pages/NotFound";
+import { useEffect } from "react";
 
 // Define routes configuration with redirects
 const routes = [
@@ -26,22 +27,35 @@ const routes = [
   { path: "*", element: <NotFound /> }
 ];
 
+// Create query client with enhanced configuration
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
       refetchOnWindowFocus: false,
       retry: 1,
       staleTime: 5 * 60 * 1000, // 5 minutes
+      gcTime: 10 * 60 * 1000, // 10 minutes
     },
   },
 });
+
+// Router change handler component
+const RouterChangeHandler = () => {
+  useEffect(() => {
+    // Scroll to top on route change
+    window.scrollTo(0, 0);
+  }, [location.pathname]);
+  
+  return null;
+};
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
       <Toaster />
-      <Sonner />
+      <Sonner position="top-right" expand={true} closeButton richColors />
       <BrowserRouter>
+        <RouterChangeHandler />
         <Routes>
           {routes.map((route) => (
             <Route 
