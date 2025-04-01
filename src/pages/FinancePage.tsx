@@ -76,7 +76,7 @@ const FinancePage = () => {
     setTimeout(() => {
       setReportGenerating(false);
       toast.success("Génération de rapport", {
-        description: `Rapport financier ${timeFrame} généré et prêt à télécharger`
+        description: `Rapport financier ${timeFrame} généré et prêt �� télécharger`
       });
     }, 1500);
   };
@@ -281,7 +281,7 @@ const FinancePage = () => {
                   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4 mr-1">
                     <path fillRule="evenodd" d="M12 7a1 1 0 110-2h5a1 1 0 011 1v5a1 1 0 11-2 0V8.414l-4.293 4.293a1 1 0 01-1.414 0L8 10.414l-4.293 4.293a1 1 0 01-1.414-1.414l5-5a1 1 0 011.414 0L11 10.586l3.293-3.293A1 1 0 0114 7h-2z" clipRule="evenodd" />
                   </svg>
-                  +12.5% compar�� à l'an dernier
+                  +12.5% comparée à l'an dernier
                 </p>
               </CardContent>
               <CardFooter className="pt-0">
@@ -307,7 +307,7 @@ const FinancePage = () => {
                 <div className="text-2xl font-bold">18 500 €</div>
                 <p className="text-sm text-blue-600 flex items-center">
                   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4 mr-1">
-                    <path fillRule="evenodd" d="M1 10a5 5 0 015-5h8a5 5 0 015 5v8a1 1 0 01-1 1H1a1 1 0 01-1-1v-8z" clipRule="evenodd" />
+                    <path fillRule="evenodd" d="M1 10a5 5 0 015-5h8a5 5 0 015 5v8a1 1 0 01-2 0v-8z" clipRule="evenodd" />
                   </svg>
                   Stable par rapport à l'an dernier
                 </p>
@@ -716,8 +716,7 @@ const FinancePage = () => {
                     </div>
                   </div>
                   <Button variant="ghost" size="sm" onClick={() => {
-                    toast({
-                      title: "Téléchargement",
+                    toast.success("Téléchargement", {
                       description: "Téléchargement du rapport de rentabilité"
                     });
                   }}>
@@ -734,8 +733,7 @@ const FinancePage = () => {
                     </div>
                   </div>
                   <Button variant="ghost" size="sm" onClick={() => {
-                    toast({
-                      title: "Téléchargement",
+                    toast.success("Téléchargement", {
                       description: "Téléchargement de l'analyse des dépenses"
                     });
                   }}>
@@ -752,8 +750,7 @@ const FinancePage = () => {
                     </div>
                   </div>
                   <Button variant="ghost" size="sm" onClick={() => {
-                    toast({
-                      title: "Téléchargement",
+                    toast.success("Téléchargement", {
                       description: "Téléchargement du récapitulatif des revenus"
                     });
                   }}>
