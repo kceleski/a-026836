@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import PageLayout from '../components/layout/PageLayout';
 import FinancialTracking from '../components/FinancialTracking';
@@ -20,9 +19,12 @@ import {
 import { EditableField } from '@/components/ui/editable-field';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import FinancialCharts from '../components/statistics/FinancialCharts';
+import FinancialForecast from '../components/statistics/FinancialForecast';
+import BudgetPlanning from '../components/BudgetPlanning';
+import { toast } from 'sonner';
 
 const FinancePage = () => {
-  const { toast } = useToast();
+  const { toast: shadowToast } = useToast();
   const { 
     title, 
     description, 
@@ -42,14 +44,17 @@ const FinancePage = () => {
   const [expensesDescription, setExpensesDescription] = useState('Catégorisez et optimisez toutes vos dépenses liées à l\'exploitation');
   const [reportsTitle, setReportsTitle] = useState('Rapports Financiers');
   const [reportsDescription, setReportsDescription] = useState('Générez des rapports détaillés pour analyser la performance financière de votre exploitation');
+  const [forecastTitle, setForecastTitle] = useState('Prévisions Financières');
+  const [forecastDescription, setForecastDescription] = useState('Simulez différents scénarios pour anticiper l\'évolution de votre situation financière');
+  const [budgetTitle, setBudgetTitle] = useState('Gestion Budgétaire');
+  const [budgetDescription, setBudgetDescription] = useState('Planifiez et suivez votre budget pour optimiser vos dépenses');
   const [importDialogOpen, setImportDialogOpen] = useState(false);
   const [showAddIncomeForm, setShowAddIncomeForm] = useState(false);
   const [showAddExpenseForm, setShowAddExpenseForm] = useState(false);
   const [reportGenerating, setReportGenerating] = useState(false);
 
   const handleExportData = () => {
-    toast({
-      title: "Export des données financières",
+    toast.success("Export des données financières", {
       description: "Vos données ont été exportées au format Excel"
     });
   };
@@ -60,8 +65,7 @@ const FinancePage = () => {
 
   const handleImportConfirm = (importType: string) => {
     setImportDialogOpen(false);
-    toast({
-      title: "Import de données réussi",
+    toast.success("Import de données réussi", {
       description: `Les données ${importType} ont été importées avec succès`
     });
   };
@@ -71,8 +75,7 @@ const FinancePage = () => {
     
     setTimeout(() => {
       setReportGenerating(false);
-      toast({
-        title: "Génération de rapport",
+      toast.success("Génération de rapport", {
         description: `Rapport financier ${timeFrame} généré et prêt à télécharger`
       });
     }, 1500);
@@ -83,8 +86,7 @@ const FinancePage = () => {
     
     setTimeout(() => {
       setShowAddIncomeForm(false);
-      toast({
-        title: "Revenu ajouté",
+      toast.success("Revenu ajouté", {
         description: "Le nouveau revenu a été ajouté avec succès"
       });
     }, 1000);
@@ -95,40 +97,38 @@ const FinancePage = () => {
     
     setTimeout(() => {
       setShowAddExpenseForm(false);
-      toast({
-        title: "Dépense ajoutée",
+      toast.success("Dépense ajoutée", {
         description: "La nouvelle dépense a été ajoutée avec succès"
       });
     }, 1000);
   };
   
   const handleActivateModule = (moduleName: string) => {
-    toast({
-      title: `Module ${moduleName} activé`,
+    toast.success(`Module ${moduleName} activé`, {
       description: `Le module de ${moduleName.toLowerCase()} a été activé avec succès`
     });
   };
   
   const handleCardDetailClick = (cardType: string) => {
-    toast({
-      title: `Détails ${cardType}`,
+    toast.info(`Détails ${cardType}`, {
       description: `Affichage des détails de ${cardType.toLowerCase()}`
     });
   };
   
   const handleTabChange = (value: string) => {
     setActiveTab(value);
-    toast({
-      title: "Changement d'onglet",
+    toast.info("Changement d'onglet", {
       description: `Vous consultez maintenant l'onglet ${value === 'overview' ? 'Aperçu' : 
-                                                         value === 'income' ? 'Revenus' : 
-                                                         value === 'expenses' ? 'Dépenses' : 'Rapports'}`
+                                                        value === 'income' ? 'Revenus' : 
+                                                        value === 'expenses' ? 'Dépenses' :
+                                                        value === 'forecast' ? 'Prévisions' :
+                                                        value === 'budget' ? 'Budget' : 'Rapports'}`
     });
   };
 
   const renderHeaderActions = () => {
     return (
-      <div className="flex space-x-2">
+      <div className="flex flex-wrap space-x-2">
         <Button variant="outline" onClick={handleExportData}>
           <Download className="mr-2 h-4 w-4" />
           Exporter
@@ -147,6 +147,14 @@ const FinancePage = () => {
               handleAddIncome();
             } else if (activeTab === 'expenses') {
               handleAddExpense();
+            } else if (activeTab === 'forecast') {
+              toast.info("Simulation lancée", {
+                description: "La simulation financière est en cours d'exécution"
+              });
+            } else if (activeTab === 'budget') {
+              toast.info("Budget enregistré", {
+                description: "Les modifications du budget ont été sauvegardées"
+              });
             } else {
               handleGenerateReport();
             }
@@ -166,6 +174,16 @@ const FinancePage = () => {
             <>
               <Plus className="mr-2 h-4 w-4" />
               Ajouter une dépense
+            </>
+          ) : activeTab === 'forecast' ? (
+            <>
+              <BarChart className="mr-2 h-4 w-4" />
+              Lancer une simulation
+            </>
+          ) : activeTab === 'budget' ? (
+            <>
+              <Plus className="mr-2 h-4 w-4" />
+              Ajouter une catégorie
             </>
           ) : (
             <>
@@ -230,8 +248,7 @@ const FinancePage = () => {
               value={incomeTitle}
               onSave={(value) => {
                 setIncomeTitle(String(value));
-                toast({
-                  title: "Titre mis à jour",
+                toast.success("Titre mis à jour", {
                   description: "Le titre de la section revenus a été modifié"
                 });
               }}
@@ -242,8 +259,7 @@ const FinancePage = () => {
               value={incomeDescription}
               onSave={(value) => {
                 setIncomeDescription(String(value));
-                toast({
-                  title: "Description mise à jour",
+                toast.success("Description mise à jour", {
                   description: "La description de la section revenus a été modifiée"
                 });
               }}
@@ -265,7 +281,7 @@ const FinancePage = () => {
                   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4 mr-1">
                     <path fillRule="evenodd" d="M12 7a1 1 0 110-2h5a1 1 0 011 1v5a1 1 0 11-2 0V8.414l-4.293 4.293a1 1 0 01-1.414 0L8 10.414l-4.293 4.293a1 1 0 01-1.414-1.414l5-5a1 1 0 011.414 0L11 10.586l3.293-3.293A1 1 0 0114 7h-2z" clipRule="evenodd" />
                   </svg>
-                  +12.5% comparé à l'an dernier
+                  +12.5% compar�� à l'an dernier
                 </p>
               </CardContent>
               <CardFooter className="pt-0">
@@ -378,8 +394,7 @@ const FinancePage = () => {
               value={expensesTitle}
               onSave={(value) => {
                 setExpensesTitle(String(value));
-                toast({
-                  title: "Titre mis à jour",
+                toast.success("Titre mis à jour", {
                   description: "Le titre de la section dépenses a été modifié"
                 });
               }}
@@ -390,8 +405,7 @@ const FinancePage = () => {
               value={expensesDescription}
               onSave={(value) => {
                 setExpensesDescription(String(value));
-                toast({
-                  title: "Description mise à jour",
+                toast.success("Description mise à jour", {
                   description: "La description de la section dépenses a été modifiée"
                 });
               }}
@@ -525,6 +539,72 @@ const FinancePage = () => {
       )
     },
     {
+      value: 'forecast',
+      label: 'Prévisions',
+      content: (
+        <div className="p-6 bg-white rounded-xl border">
+          <h2 className="text-xl font-bold mb-4 flex items-center">
+            <BarChart className="h-5 w-5 mr-2 text-indigo-500" />
+            <EditableField
+              value={forecastTitle}
+              onSave={(value) => {
+                setForecastTitle(String(value));
+                toast.success("Titre mis à jour", {
+                  description: "Le titre de la section prévisions a été modifié"
+                });
+              }}
+            />
+          </h2>
+          <p className="text-muted-foreground mb-6">
+            <EditableField
+              value={forecastDescription}
+              onSave={(value) => {
+                setForecastDescription(String(value));
+                toast.success("Description mise à jour", {
+                  description: "La description de la section prévisions a été modifiée"
+                });
+              }}
+            />
+          </p>
+          
+          <FinancialForecast />
+        </div>
+      )
+    },
+    {
+      value: 'budget',
+      label: 'Budget',
+      content: (
+        <div className="p-6 bg-white rounded-xl border">
+          <h2 className="text-xl font-bold mb-4 flex items-center">
+            <PieChart className="h-5 w-5 mr-2 text-orange-500" />
+            <EditableField
+              value={budgetTitle}
+              onSave={(value) => {
+                setBudgetTitle(String(value));
+                toast.success("Titre mis à jour", {
+                  description: "Le titre de la section budget a été modifié"
+                });
+              }}
+            />
+          </h2>
+          <p className="text-muted-foreground mb-6">
+            <EditableField
+              value={budgetDescription}
+              onSave={(value) => {
+                setBudgetDescription(String(value));
+                toast.success("Description mise à jour", {
+                  description: "La description de la section budget a été modifiée"
+                });
+              }}
+            />
+          </p>
+          
+          <BudgetPlanning />
+        </div>
+      )
+    },
+    {
       value: 'reports',
       label: 'Rapports',
       content: (
@@ -535,8 +615,7 @@ const FinancePage = () => {
               value={reportsTitle}
               onSave={(value) => {
                 setReportsTitle(String(value));
-                toast({
-                  title: "Titre mis à jour",
+                toast.success("Titre mis à jour", {
                   description: "Le titre de la section rapports a été modifié"
                 });
               }}
@@ -547,8 +626,7 @@ const FinancePage = () => {
               value={reportsDescription}
               onSave={(value) => {
                 setReportsDescription(String(value));
-                toast({
-                  title: "Description mise à jour",
+                toast.success("Description mise à jour", {
                   description: "La description de la section rapports a été modifiée"
                 });
               }}
@@ -591,7 +669,7 @@ const FinancePage = () => {
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center">
-                  <PieChart className="h-5 w-5 mr-2 text-indigo-500" />
+                  <PieChart className="h-4 w-4 mr-2 text-muted-foreground" />
                   Rapports disponibles
                 </CardTitle>
                 <CardDescription>
@@ -621,7 +699,7 @@ const FinancePage = () => {
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center">
-                  <FileText className="h-5 w-5 mr-2 text-teal-500" />
+                  <FileText className="h-4 w-4 mr-2 text-teal-500" />
                   Rapports récents
                 </CardTitle>
                 <CardDescription>

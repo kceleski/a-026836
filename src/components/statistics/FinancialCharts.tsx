@@ -73,10 +73,10 @@ const FinancialCharts = () => {
                   if (active && payload && payload.length) {
                     return (
                       <div className="bg-white p-2 border rounded shadow-sm">
-                        <p className="font-medium">{payload[2].payload.name}</p>
-                        <p>Culture: {payload[2].value}</p>
-                        <p>Taille: {payload[0].value} ha</p>
-                        <p>Rentabilité: {payload[1].value} €/ha</p>
+                        <p className="font-medium">{payload[2]?.payload.name}</p>
+                        <p>Culture: {payload[2]?.value}</p>
+                        <p>Taille: {payload[0]?.value} ha</p>
+                        <p>Rentabilité: {payload[1]?.value} €/ha</p>
                       </div>
                     );
                   }
@@ -190,12 +190,12 @@ const FinancialCharts = () => {
           <div className="border rounded-lg p-4">
             <p className="text-sm text-muted-foreground mb-1">EBE (EBITDA)</p>
             <p className="text-2xl font-semibold">42,500 €</p>
-            <p className="text-xs text-agri-success">32% du chiffre d'affaires</p>
+            <p className="text-xs text-green-600">32% du chiffre d'affaires</p>
           </div>
           <div className="border rounded-lg p-4">
             <p className="text-sm text-muted-foreground mb-1">Rentabilité</p>
             <p className="text-2xl font-semibold">18%</p>
-            <p className="text-xs text-agri-success">+2.5% vs année précédente</p>
+            <p className="text-xs text-green-600">+2.5% vs année précédente</p>
           </div>
           <div className="border rounded-lg p-4">
             <p className="text-sm text-muted-foreground mb-1">ROI</p>
