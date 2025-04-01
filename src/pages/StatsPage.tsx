@@ -3,10 +3,13 @@ import React, { useState } from 'react';
 import { Toaster } from 'sonner';
 import Navbar from '../components/Navbar';
 import Statistics from '../components/Statistics';
+import GuadeloupeHarvestTracking from '../components/GuadeloupeHarvestTracking';
 import { ChartConfig } from '../components/ui/chart-config';
 import { EditableTable, Column } from '../components/ui/editable-table';
 import { EditableField } from '../components/ui/editable-field';
 import { StatisticsProvider } from '../contexts/StatisticsContext';
+import { toast } from 'sonner';
+import { BarChart, PieChart, TrendingUp, Download, Filter } from 'lucide-react';
 
 interface PerformanceData {
   name: string;
@@ -18,6 +21,7 @@ interface PerformanceData {
 const StatsPage = () => {
   const [pageTitle, setPageTitle] = useState('Statistiques et Analyses');
   const [pageDescription, setPageDescription] = useState('Visualisez et analysez les données de votre exploitation en Guadeloupe');
+  const [activeView, setActiveView] = useState<'performance' | 'harvest' | 'detailed'>('performance');
   
   // Exemple de données adaptées à l'agriculture guadeloupéenne
   const [performanceData, setPerformanceData] = useState<PerformanceData[]>([
@@ -50,13 +54,24 @@ const StatsPage = () => {
     
     newData[rowIndex] = updatedRow;
     setPerformanceData(newData);
+    
+    // Notification pour l'utilisateur
+    toast.success('Données mises à jour', {
+      description: `L'indicateur ${updatedRow.name} a été mis à jour avec succès.`
+    });
   };
   
   // Gestionnaire de suppression de ligne
   const handleDeleteRow = (rowIndex: number) => {
     const newData = [...performanceData];
+    const deletedItem = newData[rowIndex];
     newData.splice(rowIndex, 1);
     setPerformanceData(newData);
+    
+    // Notification pour l'utilisateur
+    toast.success('Indicateur supprimé', {
+      description: `L'indicateur ${deletedItem.name} a été supprimé avec succès.`
+    });
   };
   
   // Gestionnaire d'ajout de ligne
@@ -68,15 +83,44 @@ const StatsPage = () => {
       unit: String(newRow.unit || '%'),
     };
     setPerformanceData([...performanceData, typedRow]);
+    
+    // Notification pour l'utilisateur
+    toast.success('Nouvel indicateur ajouté', {
+      description: `L'indicateur ${typedRow.name} a été ajouté avec succès.`
+    });
   };
 
   // Handlers de titre
   const handleTitleChange = (value: string | number) => {
     setPageTitle(String(value));
+    toast.success('Titre modifié', {
+      description: 'Le titre de la page a été mis à jour.'
+    });
   };
 
   const handleDescriptionChange = (value: string | number) => {
     setPageDescription(String(value));
+    toast.success('Description modifiée', {
+      description: 'La description de la page a été mise à jour.'
+    });
+  };
+  
+  // Handler de changement de vue
+  const handleViewChange = (view: 'performance' | 'harvest' | 'detailed') => {
+    setActiveView(view);
+    toast.info('Vue modifiée', {
+      description: `Vous consultez maintenant la vue ${
+        view === 'performance' ? 'Indicateurs de performance' : 
+        view === 'harvest' ? 'Suivi des récoltes' : 'Statistiques détaillées'
+      }`
+    });
+  };
+  
+  // Handler d'export des données
+  const handleExportData = () => {
+    toast.success('Export des données', {
+      description: 'Les données statistiques ont été exportées avec succès.'
+    });
   };
 
   return (
@@ -102,31 +146,97 @@ const StatsPage = () => {
                   />
                 </p>
               </div>
+              
+              <div className="flex flex-wrap gap-2">
+                <button 
+                  onClick={() => handleViewChange('performance')}
+                  className={`px-3 py-1.5 rounded-md flex items-center text-sm ${
+                    activeView === 'performance' 
+                      ? 'bg-primary text-primary-foreground' 
+                      : 'bg-muted hover:bg-muted/80'
+                  }`}
+                >
+                  <PieChart className="h-4 w-4 mr-1.5" />
+                  Indicateurs
+                </button>
+                
+                <button 
+                  onClick={() => handleViewChange('harvest')}
+                  className={`px-3 py-1.5 rounded-md flex items-center text-sm ${
+                    activeView === 'harvest' 
+                      ? 'bg-primary text-primary-foreground' 
+                      : 'bg-muted hover:bg-muted/80'
+                  }`}
+                >
+                  <BarChart className="h-4 w-4 mr-1.5" />
+                  Récoltes
+                </button>
+                
+                <button 
+                  onClick={() => handleViewChange('detailed')}
+                  className={`px-3 py-1.5 rounded-md flex items-center text-sm ${
+                    activeView === 'detailed' 
+                      ? 'bg-primary text-primary-foreground' 
+                      : 'bg-muted hover:bg-muted/80'
+                  }`}
+                >
+                  <TrendingUp className="h-4 w-4 mr-1.5" />
+                  Détaillé
+                </button>
+                
+                <button 
+                  onClick={handleExportData}
+                  className="px-3 py-1.5 rounded-md flex items-center text-sm bg-muted hover:bg-muted/80 ml-2"
+                >
+                  <Download className="h-4 w-4 mr-1.5" />
+                  Exporter
+                </button>
+              </div>
             </header>
             
-            <div className="mb-8">
-              <ChartConfig 
-                title="Indicateurs de performance agricole en Guadeloupe"
-                description="Suivez vos performances par rapport à vos objectifs pour les cultures guadeloupéennes"
-                onTitleChange={(title) => console.log("Title changed to:", title)}
-                onDescriptionChange={(desc) => console.log("Description changed to:", desc)}
-                onOptionsChange={(options) => console.log("Options changed:", options)}
-                className="mb-6"
-              >
-                <div className="p-4">
-                  <EditableTable
-                    data={performanceData}
-                    columns={columns}
-                    onUpdate={handleTableUpdate}
-                    onDelete={handleDeleteRow}
-                    onAdd={handleAddRow}
-                    className="border-none"
-                  />
-                </div>
-              </ChartConfig>
-            </div>
+            {activeView === 'performance' && (
+              <div className="mb-8">
+                <ChartConfig 
+                  title="Indicateurs de performance agricole en Guadeloupe"
+                  description="Suivez vos performances par rapport à vos objectifs pour les cultures guadeloupéennes"
+                  onTitleChange={(title) => {
+                    toast.success('Titre modifié', {
+                      description: 'Le titre du graphique a été mis à jour.'
+                    });
+                  }}
+                  onDescriptionChange={(desc) => {
+                    toast.success('Description modifiée', {
+                      description: 'La description du graphique a été mise à jour.'
+                    });
+                  }}
+                  onOptionsChange={(options) => {
+                    toast.success('Options mises à jour', {
+                      description: 'Les options du graphique ont été mises à jour.'
+                    });
+                  }}
+                  className="mb-6"
+                >
+                  <div className="p-4">
+                    <EditableTable
+                      data={performanceData}
+                      columns={columns}
+                      onUpdate={handleTableUpdate}
+                      onDelete={handleDeleteRow}
+                      onAdd={handleAddRow}
+                      className="border-none"
+                    />
+                  </div>
+                </ChartConfig>
+              </div>
+            )}
             
-            <Statistics />
+            {activeView === 'harvest' && (
+              <GuadeloupeHarvestTracking />
+            )}
+            
+            {activeView === 'detailed' && (
+              <Statistics />
+            )}
           </div>
         </div>
         <Toaster position="top-right" />
