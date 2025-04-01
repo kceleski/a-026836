@@ -49,25 +49,28 @@ const RouterChangeHandler = () => {
   return null;
 };
 
-const App = () => (
-  <QueryClientProvider client={queryClient}>
-    <TooltipProvider>
-      <Toaster />
-      <Sonner position="top-right" expand={true} closeButton richColors />
+// Application main component with properly nested providers
+const App = () => {
+  return (
+    <QueryClientProvider client={queryClient}>
       <BrowserRouter>
-        <RouterChangeHandler />
-        <Routes>
-          {routes.map((route) => (
-            <Route 
-              key={route.path} 
-              path={route.path} 
-              element={route.element} 
-            />
-          ))}
-        </Routes>
+        <TooltipProvider>
+          <RouterChangeHandler />
+          <Routes>
+            {routes.map((route) => (
+              <Route 
+                key={route.path} 
+                path={route.path} 
+                element={route.element} 
+              />
+            ))}
+          </Routes>
+          <Toaster />
+          <Sonner position="top-right" expand={true} closeButton richColors />
+        </TooltipProvider>
       </BrowserRouter>
-    </TooltipProvider>
-  </QueryClientProvider>
-);
+    </QueryClientProvider>
+  );
+};
 
 export default App;

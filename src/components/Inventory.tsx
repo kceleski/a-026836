@@ -773,7 +773,7 @@ const Inventory = () => {
                           { name: 'Stock actuel', value: selectedItem.quantity },
                           { name: 'Seuil minimal', value: selectedItem.minQuantity }
                         ]}
-                        margin={{ top: 10, right: 30, left: 0, bottom: 0 }}
+                        margin={{ top: 10, right: 30, left: 20, bottom: 40 }}
                       >
                         <CartesianGrid strokeDasharray="3 3" vertical={false} />
                         <XAxis dataKey="name" />
@@ -781,8 +781,9 @@ const Inventory = () => {
                         <Tooltip formatter={(value) => [`${value} ${selectedItem.unit}`, '']} />
                         <Bar 
                           dataKey="value" 
-                          fill={selectedItem.quantity < selectedItem.minQuantity ? '#F44336' : '#4CAF50'} 
+                          fill="#4CAF50" 
                           radius={[4, 4, 0, 0]}
+                          fillOpacity={1}
                         />
                       </BarChart>
                     </ResponsiveContainer>
@@ -1007,7 +1008,7 @@ const Inventory = () => {
                   />
                   <YAxis />
                   <Tooltip />
-                  <Bar dataKey="value" fill={(entry) => entry.fill || "#4CAF50"} radius={[4, 4, 0, 0]} />
+                  <Bar dataKey="value" fill="#4CAF50" radius={[4, 4, 0, 0]} fillOpacity={1} />
                 </BarChart>
               </ResponsiveContainer>
             </div>

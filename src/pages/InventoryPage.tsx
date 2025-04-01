@@ -1,4 +1,3 @@
-
 import React, { useState, useRef } from 'react';
 import PageLayout from '../components/layout/PageLayout';
 import PageHeader from '../components/layout/PageHeader';
@@ -71,9 +70,7 @@ const InventoryPage = () => {
                       activeTab === 'crops' ? 'culture' : 
                       activeTab === 'weather' ? 'alerte' : 'élément';
                       
-    toast({
-      description: `Fonctionnalité d'ajout de ${actionText} activée`
-    });
+    toast.info(`Fonctionnalité d'ajout de ${actionText} activée`);
   };
 
   const renderTabActions = () => {
@@ -138,9 +135,7 @@ const InventoryPage = () => {
       weather: 'les Alertes Météo'
     };
     
-    toast({
-      description: `Vous consultez maintenant ${tabLabels[value as keyof typeof tabLabels] || value}`
-    });
+    toast.info(`Vous consultez maintenant ${tabLabels[value as keyof typeof tabLabels] || value}`);
   };
 
   return (
