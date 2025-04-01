@@ -10,6 +10,7 @@ import { useToast } from '@/hooks/use-toast';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { PlusCircle, Download, Filter, RefreshCw } from 'lucide-react';
+import { StatisticsProvider } from '../contexts/StatisticsContext';
 
 const Index = () => {
   const { toast: shadowToast } = useToast();
@@ -121,20 +122,22 @@ const Index = () => {
   ];
 
   return (
-    <PageLayout>
-      <div className="p-6 animate-enter">
-        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
-          <h1 className="text-3xl font-bold">Tableau de Bord AgriSavant</h1>
-          {getTabActions()}
+    <StatisticsProvider>
+      <PageLayout>
+        <div className="p-6 animate-enter">
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
+            <h1 className="text-3xl font-bold">Tableau de Bord AgriSavant</h1>
+            {getTabActions()}
+          </div>
+          
+          <TabContainer 
+            tabs={tabs}
+            defaultValue={activeTab}
+            onValueChange={handleTabChange}
+          />
         </div>
-        
-        <TabContainer 
-          tabs={tabs}
-          defaultValue={activeTab}
-          onValueChange={handleTabChange}
-        />
-      </div>
-    </PageLayout>
+      </PageLayout>
+    </StatisticsProvider>
   );
 };
 

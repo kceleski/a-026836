@@ -4,7 +4,8 @@ import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContaine
 import { EditableField } from './ui/editable-field';
 import { EditableTable, Column } from './ui/editable-table';
 import { toast } from 'sonner';
-import { Tractor, Carrot, ChevronDown, ArrowUp, ArrowDown } from 'lucide-react';
+import { Tractor, Carrot, ArrowUp, ArrowDown } from 'lucide-react';
+import { useStatistics } from '../contexts/StatisticsContext';
 
 interface HarvestData {
   crop: string;
@@ -16,51 +17,25 @@ interface HarvestData {
 }
 
 const GuadeloupeHarvestTracking = () => {
+  const { yieldData } = useStatistics();
   const [title, setTitle] = useState('Suivi des Récoltes en Guadeloupe');
   const [description, setDescription] = useState('Suivez les rendements et la qualité des récoltes pour les principales cultures guadeloupéennes');
   
-  const [harvestData, setHarvestData] = useState<HarvestData[]>([
-    { 
-      crop: 'Canne à Sucre', 
-      currentYield: 85, 
-      previousYield: 82, 
-      unit: 't/ha', 
-      harvestArea: 12500, 
-      quality: 'Bonne' 
-    },
-    { 
-      crop: 'Banane', 
-      currentYield: 32, 
-      previousYield: 30, 
-      unit: 't/ha', 
-      harvestArea: 2300, 
-      quality: 'Excellente' 
-    },
-    { 
-      crop: 'Ananas', 
-      currentYield: 45, 
-      previousYield: 48, 
-      unit: 't/ha', 
-      harvestArea: 350, 
-      quality: 'Bonne' 
-    },
-    { 
-      crop: 'Igname', 
-      currentYield: 18, 
-      previousYield: 15, 
-      unit: 't/ha', 
-      harvestArea: 420, 
-      quality: 'Moyenne' 
-    },
-    { 
-      crop: 'Madère', 
-      currentYield: 22, 
-      previousYield: 20, 
-      unit: 't/ha', 
-      harvestArea: 180, 
-      quality: 'Bonne' 
-    }
-  ]);
+  // Convertir les données de rendement pour les adapter au format attendu
+  const [harvestData, setHarvestData] = useState<HarvestData[]>(
+    yieldData.map(item => ({
+      crop: item.name,
+      currentYield: item.current,
+      previousYield: item.previous,
+      unit: item.unit,
+      harvestArea: item.name === 'Canne à Sucre' ? 12500 :
+                   item.name === 'Banane' ? 2300 :
+                   item.name === 'Ananas' ? 350 :
+                   item.name === 'Igname' ? 420 : 180,
+      quality: item.name === 'Banane' ? 'Excellente' :
+               item.name === 'Ananas' || item.name === 'Canne à Sucre' || item.name === 'Madère' ? 'Bonne' : 'Moyenne'
+    }))
+  );
   
   // Colonnes pour le tableau éditable
   const columns: Column[] = [

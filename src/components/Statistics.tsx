@@ -1,16 +1,24 @@
 
-import React, { useState } from 'react';
+import React from 'react';
 import StatisticsHeader from './statistics/StatisticsHeader';
 import ChartSelector from './statistics/ChartSelector';
 import ChartFilters from './statistics/ChartFilters';
 import YieldsCharts from './statistics/YieldsCharts';
 import FinancialCharts from './statistics/FinancialCharts';
 import EnvironmentalCharts from './statistics/EnvironmentalCharts';
+import { useStatistics } from '../contexts/StatisticsContext';
+import { toast } from 'sonner';
 
 const Statistics = () => {
-  const [period, setPeriod] = useState('year');
-  const [cropFilter, setCropFilter] = useState('all');
-  const [currentChart, setCurrentChart] = useState<'yields' | 'financial' | 'environmental'>('yields');
+  const { 
+    period, 
+    setPeriod, 
+    cropFilter, 
+    setCropFilter,
+    updateDataWithFilters
+  } = useStatistics();
+  
+  const [currentChart, setCurrentChart] = React.useState<'yields' | 'financial' | 'environmental'>('yields');
   
   const getChartTitle = () => {
     switch (currentChart) {
@@ -29,6 +37,19 @@ const Statistics = () => {
       default: return 'Données statistiques de votre exploitation';
     }
   };
+
+  const handleFilterChange = (newPeriod: any, newCropFilter: string) => {
+    setPeriod(newPeriod);
+    setCropFilter(newCropFilter);
+    
+    // Mettre à jour les données avec les nouveaux filtres
+    updateDataWithFilters(newPeriod, newCropFilter);
+    
+    // Notification pour l'utilisateur
+    toast.success("Filtres appliqués", {
+      description: `Affichage des données pour la période: ${newPeriod}, culture: ${newCropFilter === 'all' ? 'Toutes' : newCropFilter}`
+    });
+  };
   
   return (
     <div className="p-6 animate-enter">
@@ -43,9 +64,9 @@ const Statistics = () => {
         <h2 className="text-xl font-semibold">{getChartTitle()}</h2>
         <ChartFilters 
           period={period}
-          setPeriod={setPeriod}
+          setPeriod={(newPeriod) => handleFilterChange(newPeriod, cropFilter)}
           cropFilter={cropFilter}
-          setCropFilter={setCropFilter}
+          setCropFilter={(newCropFilter) => handleFilterChange(period, newCropFilter)}
         />
       </div>
 
