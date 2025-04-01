@@ -8,11 +8,10 @@ import GuadeloupeSpecificCrops from '../components/GuadeloupeSpecificCrops';
 import GuadeloupeHarvestTracking from '../components/GuadeloupeHarvestTracking';
 import GuadeloupeWeatherAlerts from '../components/GuadeloupeWeatherAlerts';
 import { Button } from '../components/ui/button';
-import { Download, Plus, Upload, Filter } from 'lucide-react';
+import { Download, Plus, Upload } from 'lucide-react';
 import { useToast } from "@/hooks/use-toast";
 import { toast } from 'sonner';
 import usePageMetadata from '../hooks/use-page-metadata';
-import { exportInventoryToCSV } from '../components/inventory/ImportExportFunctions';
 
 const InventoryPage = () => {
   const { toast: shadowToast } = useToast();
@@ -36,13 +35,11 @@ const InventoryPage = () => {
     } else if (activeTab === 'crops') {
       toast.info("Export des données de cultures");
       shadowToast({
-        title: "Fonctionnalité en développement",
         description: "L'export des cultures sera disponible prochainement"
       });
     } else if (activeTab === 'weather') {
       toast.info("Export des données météo");
       shadowToast({
-        title: "Fonctionnalité en développement",
         description: "L'export des données météo sera disponible prochainement"
       });
     }
@@ -75,7 +72,6 @@ const InventoryPage = () => {
                       activeTab === 'weather' ? 'alerte' : 'élément';
                       
     toast({
-      title: `Ajout de ${actionText}`,
       description: `Fonctionnalité d'ajout de ${actionText} activée`
     });
   };
@@ -143,7 +139,6 @@ const InventoryPage = () => {
     };
     
     toast({
-      title: "Changement d'onglet",
       description: `Vous consultez maintenant ${tabLabels[value as keyof typeof tabLabels] || value}`
     });
   };

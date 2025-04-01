@@ -2,7 +2,7 @@
 import { toast } from 'sonner';
 import Papa from 'papaparse';
 
-type InventoryItem = {
+export type InventoryItem = {
   id: number;
   name: string;
   category: string;
