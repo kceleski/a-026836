@@ -1,4 +1,3 @@
-
 import { toast } from 'sonner';
 import Papa from 'papaparse';
 
@@ -51,7 +50,7 @@ export const exportToExcel = (data: any[], fileName: string): boolean => {
 export const exportToPDF = async (data: any[], fileName: string, options: any = {}): Promise<boolean> => {
   try {
     // Show toast notification
-    toast.success("Génération du PDF en cours...");
+    toast.info("Génération du PDF en cours...");
     
     // Create HTML content based on template type
     let htmlContent = '';
@@ -60,6 +59,9 @@ export const exportToPDF = async (data: any[], fileName: string, options: any = 
       // Create technical sheet layout
       const item = data[0];
       htmlContent = createTechnicalSheetHTML(item, options.title || 'Fiche Technique');
+    } else if (options.template === 'report' && data.length > 0) {
+      // Create report layout
+      htmlContent = createReportHTML(data, options.title || fileName, options.columns || []);
     } else {
       // Create standard table-based layout
       htmlContent = createTableBasedHTML(data, options.title || fileName, options.columns || []);
@@ -81,6 +83,7 @@ export const exportToPDF = async (data: any[], fileName: string, options: any = 
     // Wait a moment for styles to load then print
     setTimeout(() => {
       try {
+        printWindow.focus();
         printWindow.print();
         toast.success("PDF généré avec succès");
       } catch (printError) {
@@ -203,6 +206,83 @@ const createTechnicalSheetHTML = (item: any, title: string): string => {
   `;
 };
 
+// Helper function to create enhanced report HTML
+const createReportHTML = (data: any[], title: string, columns: { key: string, header: string }[]): string => {
+  // Generate table headers
+  const tableHeaders = columns
+    .map(col => `<th>${col.header}</th>`)
+    .join('');
+    
+  // Generate table rows
+  const tableRows = data.map((row) => {
+    const cells = columns.map((column) => 
+      `<td>${typeof row[column.key] === 'object' ? JSON.stringify(row[column.key]) : row[column.key] || ''}</td>`
+    ).join('');
+    return `<tr>${cells}</tr>`;
+  }).join('');
+
+  const currentDate = new Date().toLocaleDateString('fr-FR', {
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric'
+  });
+  
+  return `
+    <!DOCTYPE html>
+    <html>
+      <head>
+        <title>${title}</title>
+        <meta charset="UTF-8">
+        <style>
+          body { font-family: Arial, sans-serif; margin: 0; padding: 20px; }
+          .report { max-width: 100%; margin: 0 auto; }
+          .report-header { display: flex; justify-content: space-between; margin-bottom: 30px; border-bottom: 2px solid #4CAF50; padding-bottom: 10px; }
+          .report-title { margin: 0; color: #2e7d32; }
+          .report-date { text-align: right; color: #666; }
+          .report-summary { background-color: #f9f9f9; padding: 15px; margin-bottom: 20px; border-radius: 4px; }
+          h1 { color: #2e7d32; }
+          table { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
+          th { background-color: #4CAF50; color: white; text-align: left; padding: 10px; }
+          td { padding: 8px; text-align: left; border-bottom: 1px solid #ddd; }
+          tr:nth-child(even) { background-color: #f2f2f2; }
+          .footer { margin-top: 30px; text-align: center; font-size: 0.9em; color: #666; border-top: 1px solid #ddd; padding-top: 10px; }
+          @media print {
+            body { padding: 0; }
+            .report { border: none; }
+          }
+        </style>
+      </head>
+      <body>
+        <div class="report">
+          <div class="report-header">
+            <h1 class="report-title">${title}</h1>
+            <div class="report-date">
+              <p>Date: ${currentDate}</p>
+            </div>
+          </div>
+          
+          <div class="report-summary">
+            <p>Ce rapport contient ${data.length} enregistrement${data.length > 1 ? 's' : ''} au total.</p>
+          </div>
+          
+          <table>
+            <thead>
+              <tr>${tableHeaders}</tr>
+            </thead>
+            <tbody>
+              ${tableRows}
+            </tbody>
+          </table>
+          
+          <div class="footer">
+            <p>Agri Dom - Rapport généré le ${currentDate}</p>
+          </div>
+        </div>
+      </body>
+    </html>
+  `;
+};
+
 // Helper function to create table-based HTML
 const createTableBasedHTML = (data: any[], title: string, columns: { key: string, header: string }[]): string => {
   // Generate table headers
@@ -302,6 +382,9 @@ export const printData = (
       if (options.template === 'technical_sheet' && data.length > 0) {
         // For technical sheet
         htmlContent = createTechnicalSheetHTML(data[0], title);
+      } else if (options.template === 'report' && data.length > 0) {
+        // For report
+        htmlContent = createReportHTML(data, title, columns);
       } else {
         // Default table-based print template
         htmlContent = createTableBasedHTML(data, title, columns);
@@ -324,6 +407,7 @@ export const printData = (
       // Auto print after a short delay
       setTimeout(() => {
         try {
+          printWindow.focus();
           printWindow.print();
           toast.success("Document prêt pour impression");
           resolve(true);

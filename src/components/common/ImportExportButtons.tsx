@@ -7,6 +7,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '
 import { Label } from '@/components/ui/label';
 import { toast } from 'sonner';
 import { useToast } from '@/hooks/use-toast';
+import ReportGenerationButton from './ReportGenerationButton';
 
 interface ImportExportButtonsProps {
   moduleName: string;
@@ -14,6 +15,7 @@ interface ImportExportButtonsProps {
   onImportComplete?: () => void;
   showPrint?: boolean;
   showTechnicalSheet?: boolean;
+  showReportGeneration?: boolean;
 }
 
 const ImportExportButtons: React.FC<ImportExportButtonsProps> = ({
@@ -21,7 +23,8 @@ const ImportExportButtons: React.FC<ImportExportButtonsProps> = ({
   className = "",
   onImportComplete,
   showPrint = true,
-  showTechnicalSheet = false
+  showTechnicalSheet = false,
+  showReportGeneration = true
 }) => {
   const [importDialogOpen, setImportDialogOpen] = useState(false);
   const [exportDialogOpen, setExportDialogOpen] = useState(false);
@@ -97,12 +100,19 @@ const ImportExportButtons: React.FC<ImportExportButtonsProps> = ({
   
   return (
     <div className={`flex flex-wrap gap-2 ${className}`}>
+      {showReportGeneration && (
+        <ReportGenerationButton
+          moduleName={moduleName}
+          className="mr-2"
+        />
+      )}
+      
       <Button
         variant="outline"
         className="flex items-center gap-2"
         onClick={handleExportClick}
       >
-        <Download className="h-4 w-4" />
+        <Download className="h-4 w-4 mr-2" />
         Exporter
       </Button>
       
@@ -111,7 +121,7 @@ const ImportExportButtons: React.FC<ImportExportButtonsProps> = ({
         className="flex items-center gap-2"
         onClick={handleImportClick}
       >
-        <Upload className="h-4 w-4" />
+        <Upload className="h-4 w-4 mr-2" />
         Importer
       </Button>
       
@@ -121,7 +131,7 @@ const ImportExportButtons: React.FC<ImportExportButtonsProps> = ({
           className="flex items-center gap-2"
           onClick={handlePrintClick}
         >
-          <Printer className="h-4 w-4" />
+          <Printer className="h-4 w-4 mr-2" />
           Imprimer
         </Button>
       )}
@@ -132,7 +142,7 @@ const ImportExportButtons: React.FC<ImportExportButtonsProps> = ({
           className="flex items-center gap-2"
           onClick={handleTechnicalSheetClick}
         >
-          <FileText className="h-4 w-4" />
+          <FileText className="h-4 w-4 mr-2" />
           Guide technique
         </Button>
       )}

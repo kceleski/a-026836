@@ -6,6 +6,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, Di
 import { Button } from '@/components/ui/button';
 import { useCRM } from '../../contexts/CRMContext';
 import { toast } from 'sonner';
+import ReportGenerationButton from '../common/ReportGenerationButton';
 
 const StatisticsHeader = () => {
   const { toast: shadowToast } = useToast();
@@ -88,7 +89,12 @@ const StatisticsHeader = () => {
         <h1 className="text-2xl font-bold mb-1">Statistiques et Analyses</h1>
         <p className="text-muted-foreground">Visualisez et analysez les données de votre exploitation</p>
       </div>
-      <div className="flex space-x-2">
+      <div className="flex flex-wrap gap-2">
+        <ReportGenerationButton 
+          moduleName="statistiques" 
+          className="mr-2"
+        />
+        
         <button 
           className="inline-flex items-center px-4 py-2 border border-input bg-white rounded-lg hover:bg-muted/30 transition-colors"
           onClick={handleExport}

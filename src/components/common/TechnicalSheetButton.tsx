@@ -58,7 +58,7 @@ const TechnicalSheetButton: React.FC<TechnicalSheetButtonProps> = ({
   return (
     <Button
       variant={variant}
-      className={className}
+      className={`bg-green-600 hover:bg-green-700 text-white ${className}`}
       onClick={downloadTechnicalSheet}
     >
       <FileText className="mr-2 h-4 w-4" />
