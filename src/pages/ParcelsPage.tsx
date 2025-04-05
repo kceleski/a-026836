@@ -11,6 +11,7 @@ import ParcelMapDialog from '../components/parcels/ParcelMapDialog';
 import ParcelImportDialog from '../components/parcels/ParcelImportDialog';
 import GuadeloupeParcelManagement from '../components/GuadeloupeParcelManagement';
 import { toast } from 'sonner';
+import { useCRM } from '../contexts/CRMContext';
 
 const ParcelsPage = () => {
   const { toast: shadowToast } = useToast();
@@ -32,6 +33,7 @@ const ParcelsPage = () => {
   const [weatherAlertsOpen, setWeatherAlertsOpen] = useState(false);
   const [showGuadeloupeView, setShowGuadeloupeView] = useState(true);
   const [lastSyncDate, setLastSyncDate] = useState<Date>(new Date());
+  const { syncDataAcrossCRM } = useCRM();
   
   const [activeParcelAlerts, setActiveParcelAlerts] = useState([
     { id: 1, parcel: 'Parcelle A12', type: 'Pluie intense', severity: 'Haute' },
@@ -48,6 +50,7 @@ const ParcelsPage = () => {
       // Simule un délai de synchronisation
       const timer = setTimeout(() => {
         setLastSyncDate(new Date());
+        syncDataAcrossCRM();
         toast.success("Synchronisation terminée", {
           description: "Les données des parcelles sont maintenant synchronisées avec tous les modules"
         });
@@ -57,17 +60,15 @@ const ParcelsPage = () => {
     };
     
     syncWithOtherModules();
-  }, []);
+  }, [syncDataAcrossCRM]);
 
   const handleExportData = () => {
-    toast({
-      title: "Export des données",
+    shadowToast({
       description: "L'export de toutes les données des parcelles a démarré"
     });
     
     // Synchronisation avec d'autres modules
     shadowToast({
-      title: "Notification inter-modules",
       description: "Les données exportées sont maintenant disponibles dans le module Statistiques"
     });
   };
@@ -78,14 +79,12 @@ const ParcelsPage = () => {
   
   const handleImportConfirm = (importType: string) => {
     setImportDialogOpen(false);
-    toast({
-      title: "Import de données réussi",
+    toast.success("Import de données réussi", {
       description: `Les données ${importType} ont été importées avec succès`
     });
     
     // Mise à jour des autres modules
     shadowToast({
-      title: "Mise à jour des modules liés",
       description: "Les modules Cultures et Statistiques ont été mis à jour avec les nouvelles données"
     });
   };
@@ -93,8 +92,7 @@ const ParcelsPage = () => {
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
     if (searchTerm) {
-      toast({
-        title: "Recherche effectuée",
+      toast.info("Recherche effectuée", {
         description: `Résultats pour "${searchTerm}" affichés`
       });
     }
@@ -117,14 +115,12 @@ const ParcelsPage = () => {
 
   const toggleView = () => {
     setShowGuadeloupeView(!showGuadeloupeView);
-    toast({
-      title: `Vue ${showGuadeloupeView ? 'Standard' : 'Guadeloupe'} activée`,
+    toast.info(`Vue ${showGuadeloupeView ? 'Standard' : 'Guadeloupe'} activée`, {
       description: `Vous utilisez maintenant la vue ${showGuadeloupeView ? 'standard' : 'spécifique à la Guadeloupe'}`
     });
     
     // Synchronisation avec d'autres modules
     shadowToast({
-      title: "Changement de vue",
       description: "Les données affichées dans les modules Cultures et Finances ont été adaptées"
     });
   };
