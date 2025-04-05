@@ -16,6 +16,31 @@ const Index = () => {
   const { toast: shadowToast } = useToast();
   const [activeTab, setActiveTab] = useState<string>('dashboard');
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const [userName, setUserName] = useState('Exploitant');
+  const [lastSync, setLastSync] = useState(new Date());
+
+  // Simulate data synchronization across the CRM
+  const syncDataAcrossCRM = () => {
+    setIsRefreshing(true);
+    toast.info('Synchronisation des données en cours...', {
+      description: 'Toutes les données sont en cours de synchronisation entre les modules'
+    });
+    
+    // Simulate refresh
+    setTimeout(() => {
+      setIsRefreshing(false);
+      setLastSync(new Date());
+      toast.success('Données synchronisées', {
+        description: 'Toutes les données ont été synchronisées entre les modules du CRM'
+      });
+      
+      // Update other sections notification
+      shadowToast({
+        title: "Données actualisées",
+        description: `Les données des parcelles, cultures, finances et statistiques ont été synchronisées`
+      });
+    }, 1500);
+  };
 
   // Actions based on the active tab
   const getTabActions = () => {
@@ -25,19 +50,10 @@ const Index = () => {
           <Button 
             variant="outline" 
             className="flex items-center gap-2"
-            onClick={() => {
-              setIsRefreshing(true);
-              toast.info('Actualisation des données en cours...');
-              
-              // Simulate refresh
-              setTimeout(() => {
-                setIsRefreshing(false);
-                toast.success('Données actualisées avec succès');
-              }, 1500);
-            }}
+            onClick={syncDataAcrossCRM}
           >
             <RefreshCw className={`h-4 w-4 ${isRefreshing ? 'animate-spin' : ''}`} />
-            Actualiser
+            Synchroniser
           </Button>
         );
       case 'harvest':
@@ -126,7 +142,12 @@ const Index = () => {
       <PageLayout>
         <div className="p-6 animate-enter">
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
-            <h1 className="text-3xl font-bold">Tableau de Bord AgriSavant</h1>
+            <div>
+              <h1 className="text-3xl font-bold">Tableau de Bord Agri Dom</h1>
+              <p className="text-muted-foreground">
+                Bienvenue, {userName} | Dernière synchronisation: {lastSync.toLocaleTimeString()}
+              </p>
+            </div>
             {getTabActions()}
           </div>
           

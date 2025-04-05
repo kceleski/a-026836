@@ -86,7 +86,7 @@ const Navbar = () => {
         <div className="p-4 border-b border-border flex items-center justify-between">
           <Link to="/" className="flex items-center space-x-2">
             <Sprout className="h-6 w-6 text-agri-primary" />
-            <span className="text-lg font-bold text-foreground">AgriSavant</span>
+            <span className="text-lg font-bold text-foreground">Agri Dom</span>
           </Link>
           <button 
             onClick={toggleTheme} 
@@ -125,7 +125,7 @@ const Navbar = () => {
         <div className="p-4 border-t border-border">
           <div className="flex items-center space-x-3 px-3 py-2">
             <div className="w-8 h-8 bg-gray-200 dark:bg-gray-700 rounded-full flex items-center justify-center">
-              <span className="text-sm font-medium">AS</span>
+              <span className="text-sm font-medium">AD</span>
             </div>
             <div className="flex-1 min-w-0">
               <p className="text-sm font-medium truncate">Utilisateur</p>

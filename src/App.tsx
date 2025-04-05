@@ -13,6 +13,7 @@ import FinancePage from "./pages/FinancePage";
 import StatsPage from "./pages/StatsPage";
 import NotFound from "./pages/NotFound";
 import { useEffect } from "react";
+import { CRMProvider } from "./contexts/CRMContext";
 
 // Define routes configuration with redirects
 const routes = [
@@ -53,22 +54,24 @@ const RouterChangeHandler = () => {
 const App = () => {
   return (
     <QueryClientProvider client={queryClient}>
-      <BrowserRouter>
-        <TooltipProvider>
-          <RouterChangeHandler />
-          <Routes>
-            {routes.map((route) => (
-              <Route 
-                key={route.path} 
-                path={route.path} 
-                element={route.element} 
-              />
-            ))}
-          </Routes>
-          <Toaster />
-          <Sonner position="top-right" expand={true} closeButton richColors />
-        </TooltipProvider>
-      </BrowserRouter>
+      <CRMProvider>
+        <BrowserRouter>
+          <TooltipProvider>
+            <RouterChangeHandler />
+            <Routes>
+              {routes.map((route) => (
+                <Route 
+                  key={route.path} 
+                  path={route.path} 
+                  element={route.element} 
+                />
+              ))}
+            </Routes>
+            <Toaster />
+            <Sonner position="top-right" expand={true} closeButton richColors />
+          </TooltipProvider>
+        </BrowserRouter>
+      </CRMProvider>
     </QueryClientProvider>
   );
 };
