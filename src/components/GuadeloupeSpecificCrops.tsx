@@ -5,29 +5,55 @@ import { Button } from './ui/button';
 import { Plus, Download, Upload, Filter, Search } from 'lucide-react';
 import { useToast } from "@/hooks/use-toast";
 import { Input } from './ui/input';
+import { useCRM } from '../contexts/CRMContext';
+import { toast } from 'sonner';
 
 const GuadeloupeSpecificCrops = () => {
-  const { toast } = useToast();
+  const { toast: shadowToast } = useToast();
   const [showAddForm, setShowAddForm] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [filterType, setFilterType] = useState('all');
+  const { exportModuleData, importModuleData } = useCRM();
 
   const handleAddCulture = () => {
     setShowAddForm(true);
   };
 
-  const handleExportData = () => {
-    toast({
-      title: "Export réussi",
-      description: "Les données des cultures ont été exportées en CSV"
-    });
+  const handleExportData = async () => {
+    toast.info("Export en cours...");
+    const success = await exportModuleData('cultures', 'csv');
+    
+    if (success) {
+      shadowToast({
+        description: "Les données des cultures ont été exportées en CSV"
+      });
+    }
   };
 
   const handleImportData = () => {
-    toast({
-      title: "Import de données",
+    // Here you would open a file picker dialog
+    shadowToast({
       description: "Veuillez sélectionner un fichier CSV à importer"
     });
+    
+    // For demonstration purposes, we'll simulate a file selection
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = '.csv';
+    input.onchange = async (e) => {
+      const file = (e.target as HTMLInputElement).files?.[0];
+      if (file) {
+        toast.info(`Import ${file.name} en cours...`);
+        const success = await importModuleData('cultures', file);
+        
+        if (success) {
+          toast.success("Import réussi", {
+            description: "Les données des cultures ont été mises à jour"
+          });
+        }
+      }
+    };
+    input.click();
   };
 
   return (

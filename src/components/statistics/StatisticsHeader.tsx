@@ -4,41 +4,40 @@ import { Download, Printer, Share2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
+import { useCRM } from '../../contexts/CRMContext';
+import { toast } from 'sonner';
 
 const StatisticsHeader = () => {
-  const { toast } = useToast();
+  const { toast: shadowToast } = useToast();
   const [shareDialogOpen, setShareDialogOpen] = useState(false);
+  const { exportModuleData, printModuleData } = useCRM();
 
-  const handleExport = () => {
-    toast({
-      title: "Export des statistiques",
+  const handleExport = async () => {
+    toast.info("Export des statistiques", {
       description: "Vos statistiques sont en cours d'exportation au format CSV"
     });
     
-    // Simulate export download
-    setTimeout(() => {
-      const link = document.createElement('a');
-      link.href = '#';
-      link.setAttribute('download', 'statistiques_agricoles.csv');
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      
-      toast({
-        title: "Export terminé",
+    const success = await exportModuleData('statistiques', 'csv');
+    
+    if (success) {
+      toast.success("Export terminé", {
         description: "Votre fichier a été téléchargé avec succès"
       });
-    }, 1500);
+    }
   };
 
-  const handlePrint = () => {
-    toast({
-      title: "Impression des statistiques",
+  const handlePrint = async () => {
+    toast.info("Impression des statistiques", {
       description: "Préparation du document pour impression"
     });
-    setTimeout(() => {
-      window.print();
-    }, 500);
+    
+    const success = await printModuleData('statistiques');
+    
+    if (success) {
+      shadowToast({
+        description: "Le document est prêt à être imprimé"
+      });
+    }
   };
 
   const handleShare = () => {
@@ -46,25 +45,24 @@ const StatisticsHeader = () => {
   };
   
   const handleShareByEmail = () => {
-    toast({
-      title: "Partage par email",
+    toast.success("Partage par email", {
       description: "Un lien vers vos statistiques a été envoyé par email"
     });
     setShareDialogOpen(false);
   };
   
-  const handleShareByPDF = () => {
-    toast({
-      title: "Génération du PDF",
+  const handleShareByPDF = async () => {
+    toast.info("Génération du PDF", {
       description: "Votre rapport PDF est en cours de génération"
     });
     
-    setTimeout(() => {
-      toast({
-        title: "PDF généré",
+    const success = await exportModuleData('statistiques', 'pdf');
+    
+    if (success) {
+      toast.success("PDF généré", {
         description: "Le rapport a été généré et téléchargé"
       });
-    }, 2000);
+    }
     
     setShareDialogOpen(false);
   };

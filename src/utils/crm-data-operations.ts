@@ -48,7 +48,7 @@ export const exportToExcel = (data: any[], fileName: string): boolean => {
 /**
  * Export data to PDF format
  */
-export const exportToPDF = async (data: any[], fileName: string): Promise<boolean> => {
+export const exportToPDF = async (data: any[], fileName: string, options: any = {}): Promise<boolean> => {
   try {
     // Simulate PDF generation
     toast.success("Génération du PDF en cours...");
@@ -111,7 +111,8 @@ export const importFromCSV = (file: File): Promise<any[]> => {
 export const printData = (
   data: any[], 
   title: string, 
-  columns: { key: string, header: string }[]
+  columns: { key: string, header: string }[],
+  options: any = {}
 ): Promise<boolean> => {
   return new Promise((resolve) => {
     try {
@@ -137,54 +138,175 @@ export const printData = (
         .map(col => `<th>${col.header}</th>`)
         .join('');
       
-      // Create HTML content
-      const htmlContent = `
-        <!DOCTYPE html>
-        <html>
-          <head>
-            <title>${title}</title>
-            <style>
-              body { font-family: Arial, sans-serif; margin: 0; padding: 20px; }
-              h1 { text-align: center; margin-bottom: 20px; }
-              table { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
-              th, td { padding: 8px; text-align: left; border-bottom: 1px solid #ddd; }
-              th { background-color: #f2f2f2; }
-              .print-header { display: flex; justify-content: space-between; margin-bottom: 20px; }
-              .print-date { text-align: right; font-size: 0.9em; color: #666; }
-              @media print {
-                body { padding: 0; }
-                button { display: none; }
-              }
-            </style>
-          </head>
-          <body>
-            <div class="print-header">
-              <h1>${title}</h1>
-              <div class="print-date">
-                <p>Agri Dom - CRM</p>
-                <p>Date: ${new Date().toLocaleDateString()}</p>
+      // For technical sheet template
+      let htmlContent = '';
+      
+      if (options.template === 'technical_sheet') {
+        // Assuming first item is the technical sheet data
+        const item = data[0];
+        htmlContent = `
+          <!DOCTYPE html>
+          <html>
+            <head>
+              <title>${title || 'Fiche Technique'}</title>
+              <style>
+                body { font-family: Arial, sans-serif; margin: 0; padding: 20px; }
+                .technical-sheet { max-width: 800px; margin: 0 auto; border: 1px solid #ddd; padding: 20px; }
+                .technical-sheet-header { text-align: center; margin-bottom: 30px; }
+                h1 { color: #2e7d32; }
+                .section { margin-bottom: 20px; }
+                .section h2 { color: #1565c0; border-bottom: 1px solid #eee; padding-bottom: 5px; }
+                .property-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px; }
+                .property { margin-bottom: 10px; }
+                .property-label { font-weight: bold; display: block; }
+                .notes { background: #f5f5f5; padding: 15px; border-radius: 5px; }
+                .print-button { text-align: center; margin-top: 30px; }
+                @media print {
+                  .print-button { display: none; }
+                  body { padding: 0; }
+                }
+              </style>
+            </head>
+            <body>
+              <div class="technical-sheet">
+                <div class="technical-sheet-header">
+                  <h1>${item.nom || 'Culture'}</h1>
+                  <p><em>${item.nomScientifique || ''}</em></p>
+                </div>
+                
+                <div class="section">
+                  <h2>Informations générales</h2>
+                  <div class="property-grid">
+                    <div class="property">
+                      <span class="property-label">Famille:</span>
+                      ${item.famille || ''}
+                    </div>
+                    <div class="property">
+                      <span class="property-label">Origine:</span>
+                      ${item.origine || ''}
+                    </div>
+                    <div class="property">
+                      <span class="property-label">Type:</span>
+                      ${item.type || ''}
+                    </div>
+                    <div class="property">
+                      <span class="property-label">Saison de culture:</span>
+                      ${item.saisonCulture || ''}
+                    </div>
+                  </div>
+                </div>
+                
+                <div class="section">
+                  <h2>Conditions de culture</h2>
+                  <div class="property-grid">
+                    <div class="property">
+                      <span class="property-label">Type de sol:</span>
+                      ${item.typeSol || ''}
+                    </div>
+                    <div class="property">
+                      <span class="property-label">Besoin en eau:</span>
+                      ${item.besoinEau || ''}
+                    </div>
+                    <div class="property">
+                      <span class="property-label">Fertilisation:</span>
+                      ${item.fertilisation || ''}
+                    </div>
+                    <div class="property">
+                      <span class="property-label">Période de récolte:</span>
+                      ${item.periodeRecolte || ''}
+                    </div>
+                    <div class="property">
+                      <span class="property-label">Rendement par hectare:</span>
+                      ${item.rendementHectare || ''}
+                    </div>
+                  </div>
+                </div>
+                
+                <div class="section">
+                  <h2>Problèmes phytosanitaires</h2>
+                  <div class="property-grid">
+                    <div class="property">
+                      <span class="property-label">Ravageurs:</span>
+                      ${item.ravageurs || ''}
+                    </div>
+                    <div class="property">
+                      <span class="property-label">Maladies:</span>
+                      ${item.maladies || ''}
+                    </div>
+                  </div>
+                </div>
+                
+                <div class="section">
+                  <h2>Notes</h2>
+                  <div class="notes">
+                    ${item.notes || 'Aucune note disponible'}
+                  </div>
+                </div>
+                
+                <div class="print-button">
+                  <button onclick="window.print();return false;" style="padding: 10px 20px; background-color: #4CAF50; color: white; border: none; border-radius: 4px; cursor: pointer;">
+                    Imprimer la fiche
+                  </button>
+                </div>
               </div>
-            </div>
-            <table>
-              <thead>
-                <tr>${tableHeaders}</tr>
-              </thead>
-              <tbody>
-                ${tableRows}
-              </tbody>
-            </table>
-            <button onclick="window.print();return false;" style="padding: 10px 20px; margin: 20px auto; display: block;">
-              Imprimer
-            </button>
-            <script>
-              // Auto print after a short delay
-              setTimeout(() => {
-                window.print();
-              }, 500);
-            </script>
-          </body>
-        </html>
-      `;
+              <script>
+                setTimeout(() => {
+                  window.print();
+                }, 500);
+              </script>
+            </body>
+          </html>
+        `;
+      } else {
+        // Default table-based print template
+        htmlContent = `
+          <!DOCTYPE html>
+          <html>
+            <head>
+              <title>${title}</title>
+              <style>
+                body { font-family: Arial, sans-serif; margin: 0; padding: 20px; }
+                h1 { text-align: center; margin-bottom: 20px; }
+                table { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
+                th, td { padding: 8px; text-align: left; border-bottom: 1px solid #ddd; }
+                th { background-color: #f2f2f2; }
+                .print-header { display: flex; justify-content: space-between; margin-bottom: 20px; }
+                .print-date { text-align: right; font-size: 0.9em; color: #666; }
+                @media print {
+                  body { padding: 0; }
+                  button { display: none; }
+                }
+              </style>
+            </head>
+            <body>
+              <div class="print-header">
+                <h1>${title}</h1>
+                <div class="print-date">
+                  <p>Agri Dom - CRM</p>
+                  <p>Date: ${new Date().toLocaleDateString()}</p>
+                </div>
+              </div>
+              <table>
+                <thead>
+                  <tr>${tableHeaders}</tr>
+                </thead>
+                <tbody>
+                  ${tableRows}
+                </tbody>
+              </table>
+              <button onclick="window.print();return false;" style="padding: 10px 20px; margin: 20px auto; display: block;">
+                Imprimer
+              </button>
+              <script>
+                // Auto print after a short delay
+                setTimeout(() => {
+                  window.print();
+                }, 500);
+              </script>
+            </body>
+          </html>
+        `;
+      }
       
       // Write to print window
       printWindow.document.open();

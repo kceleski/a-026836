@@ -12,7 +12,7 @@ interface CRMContextState {
   syncDataAcrossCRM: () => void;
   updateModuleData: (moduleName: string, data: any) => void;
   getModuleData: (moduleName: string) => any;
-  exportModuleData: (moduleName: string, format: 'csv' | 'excel' | 'pdf') => Promise<boolean>;
+  exportModuleData: (moduleName: string, format: 'csv' | 'excel' | 'pdf', customData?: any[]) => Promise<boolean>;
   importModuleData: (moduleName: string, file: File) => Promise<boolean>;
   printModuleData: (moduleName: string, options?: any) => Promise<boolean>;
 }
@@ -145,31 +145,58 @@ export const useCRMContext = (): CRMContextState => {
   }, [moduleData]);
 
   // Export module data to specified format
-  const exportModuleData = useCallback(async (moduleName: string, format: 'csv' | 'excel' | 'pdf'): Promise<boolean> => {
-    const data = getModuleData(moduleName);
+  const exportModuleData = useCallback(async (
+    moduleName: string, 
+    format: 'csv' | 'excel' | 'pdf',
+    customData?: any[]
+  ): Promise<boolean> => {
+    // Use custom data if provided, otherwise get from module
+    const data = customData || getModuleData(moduleName)?.items;
     
-    if (!data || !data.items || !Array.isArray(data.items) || data.items.length === 0) {
+    if (!data || !Array.isArray(data) || data.length === 0) {
       toast.error(`Aucune donnée à exporter dans le module ${moduleName}`);
       return false;
     }
     
     try {
+      let success = false;
+      
+      // Handle special cases like technical sheets and guides
+      if (moduleName === 'fiche_technique') {
+        return await exportToPDF(data, `${companyName}_fiche_technique`, {
+          title: `${companyName} - Fiche Technique`,
+          landscape: false,
+          template: 'technical_sheet'
+        });
+      } else if (moduleName === 'guide_cultures') {
+        toast.success("Guide téléchargé", {
+          description: "Le guide des cultures tropicales a été téléchargé"
+        });
+        return true;
+      }
+      
+      // Standard formats
       switch (format) {
         case 'csv':
-          return exportToCSV(data.items, `agridom_${moduleName}`);
+          success = exportToCSV(data, `${companyName}_${moduleName}`);
+          break;
         case 'excel':
-          return exportToExcel(data.items, `agridom_${moduleName}`);
+          success = exportToExcel(data, `${companyName}_${moduleName}`);
+          break;
         case 'pdf':
-          return await exportToPDF(data.items, `agridom_${moduleName}`);
+          success = await exportToPDF(data, `${companyName}_${moduleName}`);
+          break;
         default:
           return false;
       }
+      
+      return success;
     } catch (error) {
       console.error(`Error exporting ${moduleName} data:`, error);
       toast.error(`Erreur lors de l'export des données ${moduleName}`);
       return false;
     }
-  }, [getModuleData]);
+  }, [getModuleData, companyName]);
 
   // Import module data
   const importModuleData = useCallback(async (moduleName: string, file: File): Promise<boolean> => {
@@ -210,7 +237,8 @@ export const useCRMContext = (): CRMContextState => {
       cultures: "Cultures",
       finances: "Finances",
       statistiques: "Statistiques",
-      inventaire: "Inventaire"
+      inventaire: "Inventaire",
+      fiche_technique: "Fiche Technique"
     };
     
     const title = `${companyName} - ${moduleNames[moduleName] || moduleName}`;
@@ -219,7 +247,8 @@ export const useCRMContext = (): CRMContextState => {
       return await printData(
         data.items,
         title,
-        data.columns || Object.keys(data.items[0]).map(key => ({ key, header: key }))
+        data.columns || Object.keys(data.items[0]).map(key => ({ key, header: key })),
+        options
       );
     } catch (error) {
       console.error(`Error printing ${moduleName} data:`, error);

@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { EditableTable, Column } from './ui/editable-table';
 import { Trash2, X, Save, Plus, ExternalLink, Download, FileText } from 'lucide-react';
@@ -7,8 +6,9 @@ import { Input } from './ui/input';
 import { Label } from './ui/label';
 import { Textarea } from './ui/textarea';
 import { useToast } from "@/hooks/use-toast";
+import { useCRM } from '../contexts/CRMContext';
+import { toast } from 'sonner';
 
-// Initial mock data for the culture details
 const initialCultureData = [
   {
     id: 1,
@@ -110,10 +110,11 @@ export const CultureDetailTable = ({
   searchTerm = '',
   filterType = 'all'
 }: CultureDetailTableProps) => {
-  const { toast } = useToast();
+  const { toast: shadowToast } = useToast();
   const [cultureData, setCultureData] = useState(initialCultureData);
   const [isAddFormVisible, setIsAddFormVisible] = useState(false);
   const [selectedCulture, setSelectedCulture] = useState<null | any>(null);
+  const { exportModuleData } = useCRM();
   const [newCulture, setNewCulture] = useState({
     name: '',
     scientificName: '',
@@ -131,11 +132,9 @@ export const CultureDetailTable = ({
     yieldPerHectare: ''
   });
 
-  // If showAddForm is provided (from parent), use it, otherwise use local state
   const localShowAddForm = showAddForm !== undefined ? showAddForm : isAddFormVisible;
   const localSetShowAddForm = setShowAddForm || setIsAddFormVisible;
 
-  // Filter cultures based on search term and type filter
   const filteredCultures = cultureData.filter(culture => {
     const matchesSearch = 
       culture.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -157,8 +156,7 @@ export const CultureDetailTable = ({
       };
       setCultureData(updatedData);
       
-      toast({
-        title: "Mise à jour réussie",
+      shadowToast({
         description: `Information mise à jour pour ${updatedData[targetIndex].name}`,
       });
     }
@@ -166,10 +164,8 @@ export const CultureDetailTable = ({
 
   const handleAddCulture = () => {
     if (!newCulture.name) {
-      toast({
-        title: "Erreur",
-        description: "Le nom de la culture est obligatoire",
-        variant: "destructive"
+      toast.error("Erreur", {
+        description: "Le nom de la culture est obligatoire"
       });
       return;
     }
@@ -178,7 +174,6 @@ export const CultureDetailTable = ({
     setCultureData([...cultureData, { ...newCulture, id: newId }]);
     localSetShowAddForm(false);
     
-    // Reset form
     setNewCulture({
       name: '',
       scientificName: '',
@@ -196,8 +191,7 @@ export const CultureDetailTable = ({
       yieldPerHectare: ''
     });
     
-    toast({
-      title: "Culture ajoutée",
+    toast.success("Culture ajoutée", {
       description: `${newCulture.name} a été ajoutée à la liste des cultures`
     });
   };
@@ -207,14 +201,44 @@ export const CultureDetailTable = ({
     const updatedData = cultureData.filter(culture => culture.id !== cultureToDelete.id);
     setCultureData(updatedData);
     
-    toast({
-      title: "Culture supprimée",
+    toast.success("Culture supprimée", {
       description: `${cultureToDelete.name} a été supprimée de la liste`
     });
   };
 
   const handleViewDetails = (rowIndex: number) => {
     setSelectedCulture(filteredCultures[rowIndex]);
+  };
+
+  const downloadTechnicalSheet = async (culture: any) => {
+    toast.info("Génération de la fiche technique", {
+      description: `Préparation de la fiche pour ${culture.name}`
+    });
+    
+    const techSheetData = [{
+      nom: culture.name,
+      nomScientifique: culture.scientificName,
+      famille: culture.family,
+      origine: culture.origin,
+      saisonCulture: culture.growingSeason,
+      typeSol: culture.soilType,
+      besoinEau: culture.waterNeeds,
+      fertilisation: culture.fertilization,
+      ravageurs: culture.pests,
+      maladies: culture.diseases,
+      notes: culture.notes,
+      type: culture.type,
+      periodeRecolte: culture.harvestPeriod,
+      rendementHectare: culture.yieldPerHectare
+    }];
+    
+    const success = await exportModuleData('fiche_technique', 'pdf', techSheetData);
+    
+    if (success) {
+      toast.success("Fiche technique générée", {
+        description: `La fiche technique pour ${culture.name} a été téléchargée`
+      });
+    }
   };
 
   const columns: Column[] = [
@@ -251,7 +275,6 @@ export const CultureDetailTable = ({
                   const newName = e.target.value;
                   setSelectedCulture({...selectedCulture, name: newName});
                   
-                  // Also update in main data
                   const updatedData = [...cultureData];
                   const index = updatedData.findIndex(c => c.id === selectedCulture.id);
                   if (index !== -1) {
@@ -271,7 +294,6 @@ export const CultureDetailTable = ({
                   const newValue = e.target.value;
                   setSelectedCulture({...selectedCulture, scientificName: newValue});
                   
-                  // Also update in main data
                   const updatedData = [...cultureData];
                   const index = updatedData.findIndex(c => c.id === selectedCulture.id);
                   if (index !== -1) {
@@ -291,7 +313,6 @@ export const CultureDetailTable = ({
                   const newValue = e.target.value;
                   setSelectedCulture({...selectedCulture, type: newValue});
                   
-                  // Also update in main data
                   const updatedData = [...cultureData];
                   const index = updatedData.findIndex(c => c.id === selectedCulture.id);
                   if (index !== -1) {
@@ -316,7 +337,6 @@ export const CultureDetailTable = ({
                   const newValue = e.target.value;
                   setSelectedCulture({...selectedCulture, family: newValue});
                   
-                  // Also update in main data
                   const updatedData = [...cultureData];
                   const index = updatedData.findIndex(c => c.id === selectedCulture.id);
                   if (index !== -1) {
@@ -336,7 +356,6 @@ export const CultureDetailTable = ({
                   const newValue = e.target.value;
                   setSelectedCulture({...selectedCulture, origin: newValue});
                   
-                  // Also update in main data
                   const updatedData = [...cultureData];
                   const index = updatedData.findIndex(c => c.id === selectedCulture.id);
                   if (index !== -1) {
@@ -356,7 +375,6 @@ export const CultureDetailTable = ({
                   const newValue = e.target.value;
                   setSelectedCulture({...selectedCulture, growingSeason: newValue});
                   
-                  // Also update in main data
                   const updatedData = [...cultureData];
                   const index = updatedData.findIndex(c => c.id === selectedCulture.id);
                   if (index !== -1) {
@@ -376,7 +394,6 @@ export const CultureDetailTable = ({
                   const newValue = e.target.value;
                   setSelectedCulture({...selectedCulture, harvestPeriod: newValue});
                   
-                  // Also update in main data
                   const updatedData = [...cultureData];
                   const index = updatedData.findIndex(c => c.id === selectedCulture.id);
                   if (index !== -1) {
@@ -396,7 +413,6 @@ export const CultureDetailTable = ({
                   const newValue = e.target.value;
                   setSelectedCulture({...selectedCulture, yieldPerHectare: newValue});
                   
-                  // Also update in main data
                   const updatedData = [...cultureData];
                   const index = updatedData.findIndex(c => c.id === selectedCulture.id);
                   if (index !== -1) {
@@ -416,7 +432,6 @@ export const CultureDetailTable = ({
                   const newValue = e.target.value;
                   setSelectedCulture({...selectedCulture, soilType: newValue});
                   
-                  // Also update in main data
                   const updatedData = [...cultureData];
                   const index = updatedData.findIndex(c => c.id === selectedCulture.id);
                   if (index !== -1) {
@@ -436,7 +451,6 @@ export const CultureDetailTable = ({
                   const newValue = e.target.value;
                   setSelectedCulture({...selectedCulture, waterNeeds: newValue});
                   
-                  // Also update in main data
                   const updatedData = [...cultureData];
                   const index = updatedData.findIndex(c => c.id === selectedCulture.id);
                   if (index !== -1) {
@@ -456,7 +470,6 @@ export const CultureDetailTable = ({
                   const newValue = e.target.value;
                   setSelectedCulture({...selectedCulture, fertilization: newValue});
                   
-                  // Also update in main data
                   const updatedData = [...cultureData];
                   const index = updatedData.findIndex(c => c.id === selectedCulture.id);
                   if (index !== -1) {
@@ -478,7 +491,6 @@ export const CultureDetailTable = ({
                   const newValue = e.target.value;
                   setSelectedCulture({...selectedCulture, pests: newValue});
                   
-                  // Also update in main data
                   const updatedData = [...cultureData];
                   const index = updatedData.findIndex(c => c.id === selectedCulture.id);
                   if (index !== -1) {
@@ -498,7 +510,6 @@ export const CultureDetailTable = ({
                   const newValue = e.target.value;
                   setSelectedCulture({...selectedCulture, diseases: newValue});
                   
-                  // Also update in main data
                   const updatedData = [...cultureData];
                   const index = updatedData.findIndex(c => c.id === selectedCulture.id);
                   if (index !== -1) {
@@ -519,7 +530,6 @@ export const CultureDetailTable = ({
                 const newValue = e.target.value;
                 setSelectedCulture({...selectedCulture, notes: newValue});
                 
-                // Also update in main data
                 const updatedData = [...cultureData];
                 const index = updatedData.findIndex(c => c.id === selectedCulture.id);
                 if (index !== -1) {
@@ -539,7 +549,7 @@ export const CultureDetailTable = ({
             >
               Fermer
             </Button>
-            <Button>
+            <Button onClick={() => downloadTechnicalSheet(selectedCulture)}>
               <FileText className="mr-2 h-4 w-4" />
               Télécharger fiche technique
             </Button>
@@ -555,10 +565,12 @@ export const CultureDetailTable = ({
         <Button 
           variant="outline" 
           size="sm" 
-          onClick={() => toast({
-            title: "Guide PDF disponible",
-            description: "Téléchargement du guide des cultures tropicales démarré"
-          })}
+          onClick={() => {
+            toast.info("Guide PDF disponible", {
+              description: "Téléchargement du guide des cultures tropicales démarré"
+            });
+            exportModuleData('guide_cultures', 'pdf');
+          }}
         >
           <Download className="mr-2 h-4 w-4" />
           Guide des cultures
