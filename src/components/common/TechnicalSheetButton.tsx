@@ -41,12 +41,17 @@ const TechnicalSheetButton: React.FC<TechnicalSheetButtonProps> = ({
       rendementHectare: data.yieldPerHectare || data.rendementHectare
     }];
     
-    const success = await exportModuleData('fiche_technique', 'pdf', techSheetData);
-    
-    if (success) {
-      toast.success("Fiche technique générée", {
-        description: `La fiche technique a été téléchargée`
-      });
+    try {
+      const success = await exportModuleData('fiche_technique', 'pdf', techSheetData);
+      
+      if (success) {
+        toast.success("Fiche technique générée", {
+          description: `La fiche technique est prête à être imprimée`
+        });
+      }
+    } catch (error) {
+      console.error("Error generating technical sheet:", error);
+      toast.error("Erreur lors de la génération de la fiche technique");
     }
   };
   

@@ -50,24 +50,44 @@ export const exportToExcel = (data: any[], fileName: string): boolean => {
  */
 export const exportToPDF = async (data: any[], fileName: string, options: any = {}): Promise<boolean> => {
   try {
-    // Simulate PDF generation
+    // Show toast notification
     toast.success("Génération du PDF en cours...");
     
-    // Simulate processing time
-    await new Promise(resolve => setTimeout(resolve, 1500));
+    // Create HTML content based on template type
+    let htmlContent = '';
     
-    toast.success("PDF généré avec succès");
-    toast.info("Téléchargement du PDF...");
+    if (options.template === 'technical_sheet' && data.length > 0) {
+      // Create technical sheet layout
+      const item = data[0];
+      htmlContent = createTechnicalSheetHTML(item, options.title || 'Fiche Technique');
+    } else {
+      // Create standard table-based layout
+      htmlContent = createTableBasedHTML(data, options.title || fileName, options.columns || []);
+    }
     
-    // Create a fake download
-    const link = document.createElement('a');
-    link.setAttribute('href', '#');
-    link.setAttribute('download', `${fileName}_${new Date().toISOString().split('T')[0]}.pdf`);
-    link.style.visibility = 'hidden';
+    // Create and open print window
+    const printWindow = window.open('', '_blank');
     
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+    if (!printWindow) {
+      toast.error("Impossible d'ouvrir la fenêtre d'impression");
+      return false;
+    }
+    
+    // Write content and trigger print
+    printWindow.document.open();
+    printWindow.document.write(htmlContent);
+    printWindow.document.close();
+    
+    // Wait a moment for styles to load then print
+    setTimeout(() => {
+      try {
+        printWindow.print();
+        toast.success("PDF généré avec succès");
+      } catch (printError) {
+        console.error("Print error:", printError);
+        toast.error("Erreur lors de l'impression du PDF");
+      }
+    }, 1000);
     
     return true;
   } catch (error) {
@@ -75,6 +95,166 @@ export const exportToPDF = async (data: any[], fileName: string, options: any = 
     toast.error("Erreur lors de la génération du PDF");
     return false;
   }
+};
+
+// Helper function to create technical sheet HTML
+const createTechnicalSheetHTML = (item: any, title: string): string => {
+  return `
+    <!DOCTYPE html>
+    <html>
+      <head>
+        <title>${title}</title>
+        <meta charset="UTF-8">
+        <style>
+          body { font-family: Arial, sans-serif; margin: 0; padding: 20px; }
+          .technical-sheet { max-width: 800px; margin: 0 auto; border: 1px solid #ddd; padding: 20px; }
+          .technical-sheet-header { text-align: center; margin-bottom: 30px; }
+          h1 { color: #2e7d32; }
+          .section { margin-bottom: 20px; }
+          .section h2 { color: #1565c0; border-bottom: 1px solid #eee; padding-bottom: 5px; }
+          .property-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px; }
+          .property { margin-bottom: 10px; }
+          .property-label { font-weight: bold; display: block; }
+          .notes { background: #f5f5f5; padding: 15px; border-radius: 5px; }
+          @media print {
+            body { padding: 0; }
+            .technical-sheet { border: none; }
+          }
+        </style>
+      </head>
+      <body>
+        <div class="technical-sheet">
+          <div class="technical-sheet-header">
+            <h1>${item.nom || 'Culture'}</h1>
+            <p><em>${item.nomScientifique || ''}</em></p>
+          </div>
+          
+          <div class="section">
+            <h2>Informations générales</h2>
+            <div class="property-grid">
+              <div class="property">
+                <span class="property-label">Famille:</span>
+                ${item.famille || ''}
+              </div>
+              <div class="property">
+                <span class="property-label">Origine:</span>
+                ${item.origine || ''}
+              </div>
+              <div class="property">
+                <span class="property-label">Type:</span>
+                ${item.type || ''}
+              </div>
+              <div class="property">
+                <span class="property-label">Saison de culture:</span>
+                ${item.saisonCulture || ''}
+              </div>
+            </div>
+          </div>
+          
+          <div class="section">
+            <h2>Conditions de culture</h2>
+            <div class="property-grid">
+              <div class="property">
+                <span class="property-label">Type de sol:</span>
+                ${item.typeSol || ''}
+              </div>
+              <div class="property">
+                <span class="property-label">Besoin en eau:</span>
+                ${item.besoinEau || ''}
+              </div>
+              <div class="property">
+                <span class="property-label">Fertilisation:</span>
+                ${item.fertilisation || ''}
+              </div>
+              <div class="property">
+                <span class="property-label">Période de récolte:</span>
+                ${item.periodeRecolte || ''}
+              </div>
+              <div class="property">
+                <span class="property-label">Rendement par hectare:</span>
+                ${item.rendementHectare || ''}
+              </div>
+            </div>
+          </div>
+          
+          <div class="section">
+            <h2>Problèmes phytosanitaires</h2>
+            <div class="property-grid">
+              <div class="property">
+                <span class="property-label">Ravageurs:</span>
+                ${item.ravageurs || ''}
+              </div>
+              <div class="property">
+                <span class="property-label">Maladies:</span>
+                ${item.maladies || ''}
+              </div>
+            </div>
+          </div>
+          
+          <div class="section">
+            <h2>Notes</h2>
+            <div class="notes">
+              ${item.notes || 'Aucune note disponible'}
+            </div>
+          </div>
+        </div>
+      </body>
+    </html>
+  `;
+};
+
+// Helper function to create table-based HTML
+const createTableBasedHTML = (data: any[], title: string, columns: { key: string, header: string }[]): string => {
+  // Generate table headers
+  const tableHeaders = columns
+    .map(col => `<th>${col.header}</th>`)
+    .join('');
+    
+  // Generate table rows
+  const tableRows = data.map((row) => {
+    const cells = columns.map((column) => 
+      `<td>${typeof row[column.key] === 'object' ? JSON.stringify(row[column.key]) : row[column.key] || ''}</td>`
+    ).join('');
+    return `<tr>${cells}</tr>`;
+  }).join('');
+  
+  return `
+    <!DOCTYPE html>
+    <html>
+      <head>
+        <title>${title}</title>
+        <meta charset="UTF-8">
+        <style>
+          body { font-family: Arial, sans-serif; margin: 0; padding: 20px; }
+          h1 { text-align: center; margin-bottom: 20px; }
+          table { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
+          th, td { padding: 8px; text-align: left; border-bottom: 1px solid #ddd; }
+          th { background-color: #f2f2f2; }
+          .print-header { display: flex; justify-content: space-between; margin-bottom: 20px; }
+          .print-date { text-align: right; font-size: 0.9em; color: #666; }
+          @media print {
+            body { padding: 0; }
+          }
+        </style>
+      </head>
+      <body>
+        <div class="print-header">
+          <h1>${title}</h1>
+          <div class="print-date">
+            <p>Date: ${new Date().toLocaleDateString()}</p>
+          </div>
+        </div>
+        <table>
+          <thead>
+            <tr>${tableHeaders}</tr>
+          </thead>
+          <tbody>
+            ${tableRows}
+          </tbody>
+        </table>
+      </body>
+    </html>
+  `;
 };
 
 /**
@@ -116,6 +296,17 @@ export const printData = (
 ): Promise<boolean> => {
   return new Promise((resolve) => {
     try {
+      let htmlContent;
+      
+      // For technical sheet template
+      if (options.template === 'technical_sheet' && data.length > 0) {
+        // For technical sheet
+        htmlContent = createTechnicalSheetHTML(data[0], title);
+      } else {
+        // Default table-based print template
+        htmlContent = createTableBasedHTML(data, title, columns);
+      }
+      
       // Create print window
       const printWindow = window.open('', '_blank');
       
@@ -125,196 +316,24 @@ export const printData = (
         return;
       }
       
-      // Generate table HTML
-      const tableRows = data.map((row) => {
-        const cells = columns.map((column) => 
-          `<td>${typeof row[column.key] === 'object' ? JSON.stringify(row[column.key]) : row[column.key] || ''}</td>`
-        ).join('');
-        return `<tr>${cells}</tr>`;
-      }).join('');
-      
-      // Generate table headers
-      const tableHeaders = columns
-        .map(col => `<th>${col.header}</th>`)
-        .join('');
-      
-      // For technical sheet template
-      let htmlContent = '';
-      
-      if (options.template === 'technical_sheet') {
-        // Assuming first item is the technical sheet data
-        const item = data[0];
-        htmlContent = `
-          <!DOCTYPE html>
-          <html>
-            <head>
-              <title>${title || 'Fiche Technique'}</title>
-              <style>
-                body { font-family: Arial, sans-serif; margin: 0; padding: 20px; }
-                .technical-sheet { max-width: 800px; margin: 0 auto; border: 1px solid #ddd; padding: 20px; }
-                .technical-sheet-header { text-align: center; margin-bottom: 30px; }
-                h1 { color: #2e7d32; }
-                .section { margin-bottom: 20px; }
-                .section h2 { color: #1565c0; border-bottom: 1px solid #eee; padding-bottom: 5px; }
-                .property-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px; }
-                .property { margin-bottom: 10px; }
-                .property-label { font-weight: bold; display: block; }
-                .notes { background: #f5f5f5; padding: 15px; border-radius: 5px; }
-                .print-button { text-align: center; margin-top: 30px; }
-                @media print {
-                  .print-button { display: none; }
-                  body { padding: 0; }
-                }
-              </style>
-            </head>
-            <body>
-              <div class="technical-sheet">
-                <div class="technical-sheet-header">
-                  <h1>${item.nom || 'Culture'}</h1>
-                  <p><em>${item.nomScientifique || ''}</em></p>
-                </div>
-                
-                <div class="section">
-                  <h2>Informations générales</h2>
-                  <div class="property-grid">
-                    <div class="property">
-                      <span class="property-label">Famille:</span>
-                      ${item.famille || ''}
-                    </div>
-                    <div class="property">
-                      <span class="property-label">Origine:</span>
-                      ${item.origine || ''}
-                    </div>
-                    <div class="property">
-                      <span class="property-label">Type:</span>
-                      ${item.type || ''}
-                    </div>
-                    <div class="property">
-                      <span class="property-label">Saison de culture:</span>
-                      ${item.saisonCulture || ''}
-                    </div>
-                  </div>
-                </div>
-                
-                <div class="section">
-                  <h2>Conditions de culture</h2>
-                  <div class="property-grid">
-                    <div class="property">
-                      <span class="property-label">Type de sol:</span>
-                      ${item.typeSol || ''}
-                    </div>
-                    <div class="property">
-                      <span class="property-label">Besoin en eau:</span>
-                      ${item.besoinEau || ''}
-                    </div>
-                    <div class="property">
-                      <span class="property-label">Fertilisation:</span>
-                      ${item.fertilisation || ''}
-                    </div>
-                    <div class="property">
-                      <span class="property-label">Période de récolte:</span>
-                      ${item.periodeRecolte || ''}
-                    </div>
-                    <div class="property">
-                      <span class="property-label">Rendement par hectare:</span>
-                      ${item.rendementHectare || ''}
-                    </div>
-                  </div>
-                </div>
-                
-                <div class="section">
-                  <h2>Problèmes phytosanitaires</h2>
-                  <div class="property-grid">
-                    <div class="property">
-                      <span class="property-label">Ravageurs:</span>
-                      ${item.ravageurs || ''}
-                    </div>
-                    <div class="property">
-                      <span class="property-label">Maladies:</span>
-                      ${item.maladies || ''}
-                    </div>
-                  </div>
-                </div>
-                
-                <div class="section">
-                  <h2>Notes</h2>
-                  <div class="notes">
-                    ${item.notes || 'Aucune note disponible'}
-                  </div>
-                </div>
-                
-                <div class="print-button">
-                  <button onclick="window.print();return false;" style="padding: 10px 20px; background-color: #4CAF50; color: white; border: none; border-radius: 4px; cursor: pointer;">
-                    Imprimer la fiche
-                  </button>
-                </div>
-              </div>
-              <script>
-                setTimeout(() => {
-                  window.print();
-                }, 500);
-              </script>
-            </body>
-          </html>
-        `;
-      } else {
-        // Default table-based print template
-        htmlContent = `
-          <!DOCTYPE html>
-          <html>
-            <head>
-              <title>${title}</title>
-              <style>
-                body { font-family: Arial, sans-serif; margin: 0; padding: 20px; }
-                h1 { text-align: center; margin-bottom: 20px; }
-                table { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
-                th, td { padding: 8px; text-align: left; border-bottom: 1px solid #ddd; }
-                th { background-color: #f2f2f2; }
-                .print-header { display: flex; justify-content: space-between; margin-bottom: 20px; }
-                .print-date { text-align: right; font-size: 0.9em; color: #666; }
-                @media print {
-                  body { padding: 0; }
-                  button { display: none; }
-                }
-              </style>
-            </head>
-            <body>
-              <div class="print-header">
-                <h1>${title}</h1>
-                <div class="print-date">
-                  <p>Agri Dom - CRM</p>
-                  <p>Date: ${new Date().toLocaleDateString()}</p>
-                </div>
-              </div>
-              <table>
-                <thead>
-                  <tr>${tableHeaders}</tr>
-                </thead>
-                <tbody>
-                  ${tableRows}
-                </tbody>
-              </table>
-              <button onclick="window.print();return false;" style="padding: 10px 20px; margin: 20px auto; display: block;">
-                Imprimer
-              </button>
-              <script>
-                // Auto print after a short delay
-                setTimeout(() => {
-                  window.print();
-                }, 500);
-              </script>
-            </body>
-          </html>
-        `;
-      }
-      
       // Write to print window
       printWindow.document.open();
       printWindow.document.write(htmlContent);
       printWindow.document.close();
       
-      toast.success("Document prêt pour impression");
-      resolve(true);
+      // Auto print after a short delay
+      setTimeout(() => {
+        try {
+          printWindow.print();
+          toast.success("Document prêt pour impression");
+          resolve(true);
+        } catch (printError) {
+          console.error("Print error:", printError);
+          toast.error("Erreur lors de l'impression");
+          resolve(false);
+        }
+      }, 1000);
+      
     } catch (error) {
       console.error("Print error:", error);
       toast.error("Erreur lors de la préparation de l'impression");

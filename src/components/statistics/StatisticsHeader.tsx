@@ -17,12 +17,17 @@ const StatisticsHeader = () => {
       description: "Vos statistiques sont en cours d'exportation au format CSV"
     });
     
-    const success = await exportModuleData('statistiques', 'csv');
-    
-    if (success) {
-      toast.success("Export terminé", {
-        description: "Votre fichier a été téléchargé avec succès"
-      });
+    try {
+      const success = await exportModuleData('statistiques', 'csv');
+      
+      if (success) {
+        toast.success("Export terminé", {
+          description: "Votre fichier a été téléchargé avec succès"
+        });
+      }
+    } catch (error) {
+      console.error("Error exporting statistics:", error);
+      toast.error("Erreur lors de l'exportation des statistiques");
     }
   };
 
@@ -31,12 +36,17 @@ const StatisticsHeader = () => {
       description: "Préparation du document pour impression"
     });
     
-    const success = await printModuleData('statistiques');
-    
-    if (success) {
-      shadowToast({
-        description: "Le document est prêt à être imprimé"
-      });
+    try {
+      const success = await printModuleData('statistiques');
+      
+      if (success) {
+        shadowToast({
+          description: "Le document est prêt à être imprimé"
+        });
+      }
+    } catch (error) {
+      console.error("Error printing statistics:", error);
+      toast.error("Erreur lors de l'impression des statistiques");
     }
   };
 
@@ -56,15 +66,20 @@ const StatisticsHeader = () => {
       description: "Votre rapport PDF est en cours de génération"
     });
     
-    const success = await exportModuleData('statistiques', 'pdf');
-    
-    if (success) {
-      toast.success("PDF généré", {
-        description: "Le rapport a été généré et téléchargé"
-      });
+    try {
+      const success = await exportModuleData('statistiques', 'pdf');
+      
+      if (success) {
+        toast.success("PDF généré", {
+          description: "Le rapport a été généré et téléchargé"
+        });
+      }
+      setShareDialogOpen(false);
+    } catch (error) {
+      console.error("Error generating PDF:", error);
+      toast.error("Erreur lors de la génération du PDF");
+      setShareDialogOpen(false);
     }
-    
-    setShareDialogOpen(false);
   };
 
   return (
