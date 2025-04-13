@@ -33,14 +33,16 @@ const ReportGenerationButton: React.FC<ReportGenerationButtonProps> = ({
       }
     } catch (error) {
       console.error("Error generating report:", error);
-      toast.error("Erreur lors de la génération du rapport");
+      toast.error("Erreur lors de la génération du rapport", {
+        description: "Veuillez réessayer ou contacter le support technique"
+      });
     }
   };
 
   return (
     <Button
       variant={variant}
-      className={`bg-green-600 hover:bg-green-700 text-white ${className}`}
+      className={className || `bg-green-600 hover:bg-green-700 text-white`}
       onClick={generateReport}
     >
       <FileText className="mr-2 h-4 w-4" />

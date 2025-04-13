@@ -1,9 +1,10 @@
 
 import React from 'react';
 import { Button } from '@/components/ui/button';
-import { Map, Download, Upload, AlertTriangle } from 'lucide-react';
+import { Map, Download, Upload, AlertTriangle, FileText } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import ReportGenerationButton from "../common/ReportGenerationButton";
 
 interface ParcelAlert {
   id: number;
@@ -77,6 +78,12 @@ const ParcelActionButtons = ({
           </PopoverContent>
         </Popover>
       )}
+      
+      <ReportGenerationButton 
+        moduleName="parcelles" 
+        variant="outline" 
+        className="bg-transparent hover:bg-muted/20 text-foreground"
+      />
       
       <Button variant="outline" onClick={onExportData}>
         <Download className="mr-2 h-4 w-4" />
