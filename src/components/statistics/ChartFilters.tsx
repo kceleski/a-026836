@@ -1,6 +1,15 @@
 
 import React from 'react';
-import { Calendar, Filter } from 'lucide-react';
+import { Calendar, Filter, RefreshCcw } from 'lucide-react';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Button } from '@/components/ui/button';
+import { toast } from 'sonner';
 
 interface ChartFiltersProps {
   period: string;
@@ -10,35 +19,59 @@ interface ChartFiltersProps {
 }
 
 const ChartFilters = ({ period, setPeriod, cropFilter, setCropFilter }: ChartFiltersProps) => {
+  const handleResetFilters = () => {
+    setPeriod('year');
+    setCropFilter('all');
+    toast.info("Filtres réinitialisés", {
+      description: "Affichage de toutes les cultures sur une période annuelle"
+    });
+  };
+  
   return (
-    <div className="flex items-center space-x-3">
-      <div className="relative">
-        <select 
-          className="appearance-none pl-3 pr-8 py-1.5 border border-input rounded-lg focus:outline-none focus:ring-2 focus:ring-ring bg-white text-sm"
-          value={period}
-          onChange={(e) => setPeriod(e.target.value)}
-        >
-          <option value="year">Annuel</option>
-          <option value="month">Mensuel</option>
-          <option value="week">Hebdomadaire</option>
-        </select>
-        <Calendar className="absolute right-2 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
-      </div>
-      <div className="relative">
-        <select 
-          className="appearance-none pl-3 pr-8 py-1.5 border border-input rounded-lg focus:outline-none focus:ring-2 focus:ring-ring bg-white text-sm"
-          value={cropFilter}
-          onChange={(e) => setCropFilter(e.target.value)}
-        >
-          <option value="all">Toutes cultures</option>
-          <option value="wheat">Blé</option>
-          <option value="corn">Maïs</option>
-          <option value="sunflower">Tournesol</option>
-          <option value="barley">Orge</option>
-          <option value="rapeseed">Colza</option>
-        </select>
-        <Filter className="absolute right-2 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
-      </div>
+    <div className="flex flex-wrap items-center gap-3">
+      <Select 
+        value={period}
+        onValueChange={(value) => setPeriod(value)}
+      >
+        <SelectTrigger className="w-[140px]">
+          <Calendar className="h-4 w-4 mr-2 text-muted-foreground" />
+          <SelectValue placeholder="Période" />
+        </SelectTrigger>
+        <SelectContent>
+          <SelectItem value="year">Annuel</SelectItem>
+          <SelectItem value="month">Mensuel</SelectItem>
+          <SelectItem value="week">Hebdomadaire</SelectItem>
+          <SelectItem value="day">Journalier</SelectItem>
+        </SelectContent>
+      </Select>
+
+      <Select 
+        value={cropFilter}
+        onValueChange={(value) => setCropFilter(value)}
+      >
+        <SelectTrigger className="w-[160px]">
+          <Filter className="h-4 w-4 mr-2 text-muted-foreground" />
+          <SelectValue placeholder="Culture" />
+        </SelectTrigger>
+        <SelectContent>
+          <SelectItem value="all">Toutes cultures</SelectItem>
+          <SelectItem value="Canne à Sucre">Canne à Sucre</SelectItem>
+          <SelectItem value="Banane">Banane</SelectItem>
+          <SelectItem value="Ananas">Ananas</SelectItem>
+          <SelectItem value="Igname">Igname</SelectItem>
+          <SelectItem value="Madère">Madère</SelectItem>
+        </SelectContent>
+      </Select>
+
+      <Button 
+        variant="outline" 
+        size="sm" 
+        onClick={handleResetFilters}
+        className="flex items-center gap-1"
+      >
+        <RefreshCcw className="h-3.5 w-3.5" />
+        Réinitialiser
+      </Button>
     </div>
   );
 };

@@ -100,7 +100,7 @@ const StatisticsHeader = () => {
           onClick={handleExport}
         >
           <Download className="h-4 w-4 mr-2" />
-          Exporter
+          Exporter CSV
         </button>
         <button 
           className="inline-flex items-center px-4 py-2 border border-input bg-white rounded-lg hover:bg-muted/30 transition-colors"

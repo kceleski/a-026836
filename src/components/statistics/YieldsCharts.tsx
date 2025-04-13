@@ -1,11 +1,16 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, LineChart, Line } from 'recharts';
 import { useStatistics } from '../../contexts/StatisticsContext';
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Button } from '@/components/ui/button';
+import { Download, Camera, Share2 } from 'lucide-react';
+import { toast } from 'sonner';
+import TechnicalSheetButton from '../common/TechnicalSheetButton';
 
 const YieldsCharts = () => {
   const { yieldData, period } = useStatistics();
+  const [chartType, setChartType] = useState<'bar' | 'line'>('bar');
 
   // Formater les données pour le graphique comparatif
   const comparativeData = yieldData.map(item => ({
@@ -35,42 +40,118 @@ const YieldsCharts = () => {
     'Madère': '#2196F3'
   };
 
+  // Capture et export du graphique (simulation)
+  const handleExportChart = (chartName: string) => {
+    toast.success(`Graphique exporté`, {
+      description: `Le graphique "${chartName}" a été téléchargé au format PNG`
+    });
+  };
+
+  // Partage du graphique (simulation)
+  const handleShareChart = (chartName: string) => {
+    toast.success(`Graphique partagé`, {
+      description: `Le lien vers le graphique "${chartName}" a été copié dans le presse-papier`
+    });
+  };
+
   return (
     <div className="space-y-6">
       <Card>
-        <CardHeader>
-          <CardTitle>Rendements actuels vs précédents</CardTitle>
+        <CardHeader className="flex flex-row items-center justify-between pb-2">
+          <div>
+            <CardTitle>Rendements actuels vs précédents</CardTitle>
+            <CardDescription>Comparaison des rendements actuels avec la période précédente</CardDescription>
+          </div>
+          <div className="flex items-center space-x-2">
+            <div className="flex rounded-md border overflow-hidden">
+              <Button
+                variant={chartType === 'bar' ? 'default' : 'ghost'}
+                size="sm"
+                onClick={() => setChartType('bar')}
+                className={chartType === 'bar' ? 'rounded-none' : 'rounded-none hover:bg-muted/50'}
+              >
+                Barres
+              </Button>
+              <Button
+                variant={chartType === 'line' ? 'default' : 'ghost'}
+                size="sm"
+                onClick={() => setChartType('line')}
+                className={chartType === 'line' ? 'rounded-none' : 'rounded-none hover:bg-muted/50'}
+              >
+                Lignes
+              </Button>
+            </div>
+            <Button variant="outline" size="icon" onClick={() => handleExportChart('Rendements comparatifs')}>
+              <Download className="h-4 w-4" />
+            </Button>
+            <Button variant="outline" size="icon" onClick={() => handleShareChart('Rendements comparatifs')}>
+              <Share2 className="h-4 w-4" />
+            </Button>
+          </div>
         </CardHeader>
         <CardContent>
           <div className="h-[400px]">
             <ResponsiveContainer width="100%" height="100%">
-              <BarChart
-                data={comparativeData}
-                margin={{ top: 20, right: 30, left: 20, bottom: 5 }}
-              >
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="name" />
-                <YAxis />
-                <Tooltip 
-                  formatter={(value, name, props) => {
-                    if (name === 'différence') {
-                      return [`${Number(value) > 0 ? '+' : ''}${value} ${props.payload.unité}`, 'Évolution'];
-                    }
-                    return [`${value} ${props.payload.unité}`, name];
-                  }}
-                />
-                <Legend />
-                <Bar name="Rendement actuel" dataKey="actuel" fill="#4CAF50" />
-                <Bar name="Rendement précédent" dataKey="précédent" fill="#8D6E63" />
-              </BarChart>
+              {chartType === 'bar' ? (
+                <BarChart
+                  data={comparativeData}
+                  margin={{ top: 20, right: 30, left: 20, bottom: 5 }}
+                >
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis dataKey="name" />
+                  <YAxis />
+                  <Tooltip 
+                    formatter={(value, name, props) => {
+                      if (name === 'différence') {
+                        return [`${Number(value) > 0 ? '+' : ''}${value} ${props.payload.unité}`, 'Évolution'];
+                      }
+                      return [`${value} ${props.payload.unité}`, name];
+                    }}
+                  />
+                  <Legend />
+                  <Bar name="Rendement actuel" dataKey="actuel" fill="#4CAF50" />
+                  <Bar name="Rendement précédent" dataKey="précédent" fill="#8D6E63" />
+                </BarChart>
+              ) : (
+                <LineChart
+                  data={comparativeData}
+                  margin={{ top: 20, right: 30, left: 20, bottom: 5 }}
+                >
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis dataKey="name" />
+                  <YAxis />
+                  <Tooltip 
+                    formatter={(value, name, props) => {
+                      if (name === 'différence') {
+                        return [`${Number(value) > 0 ? '+' : ''}${value} ${props.payload.unité}`, 'Évolution'];
+                      }
+                      return [`${value} ${props.payload.unité}`, name];
+                    }}
+                  />
+                  <Legend />
+                  <Line type="monotone" name="Rendement actuel" dataKey="actuel" stroke="#4CAF50" strokeWidth={2} />
+                  <Line type="monotone" name="Rendement précédent" dataKey="précédent" stroke="#8D6E63" strokeWidth={2} />
+                </LineChart>
+              )}
             </ResponsiveContainer>
           </div>
         </CardContent>
       </Card>
 
       <Card>
-        <CardHeader>
-          <CardTitle>Évolution historique des rendements ({period === 'year' ? 'annuelle' : 'mensuelle'})</CardTitle>
+        <CardHeader className="flex flex-row items-center justify-between pb-2">
+          <div>
+            <CardTitle>Évolution historique des rendements ({period === 'year' ? 'annuelle' : 'mensuelle'})</CardTitle>
+            <CardDescription>Tendance des rendements sur plusieurs années</CardDescription>
+          </div>
+          <div className="flex items-center space-x-2">
+            <Button variant="outline" size="icon" onClick={() => handleExportChart('Évolution historique')}>
+              <Download className="h-4 w-4" />
+            </Button>
+            <Button variant="outline" size="icon" onClick={() => handleShareChart('Évolution historique')}>
+              <Share2 className="h-4 w-4" />
+            </Button>
+          </div>
         </CardHeader>
         <CardContent>
           <div className="h-[400px]">
@@ -91,6 +172,7 @@ const YieldsCharts = () => {
                     dataKey={crop}
                     stroke={colors[crop as keyof typeof colors]}
                     activeDot={{ r: 8 }}
+                    strokeWidth={2}
                   />
                 ))}
               </LineChart>
@@ -107,11 +189,27 @@ const YieldsCharts = () => {
           
           return (
             <Card key={item.name}>
-              <CardContent className="p-4">
-                <h3 className="font-medium mb-1 flex items-center">
-                  <span className="w-3 h-3 rounded-full mr-2" style={{ backgroundColor: colors[item.name as keyof typeof colors] || '#4CAF50' }}></span>
-                  {item.name}
-                </h3>
+              <CardHeader className="pb-2">
+                <div className="flex justify-between">
+                  <CardTitle className="text-base flex items-center">
+                    <span className="w-3 h-3 rounded-full mr-2" style={{ backgroundColor: colors[item.name as keyof typeof colors] || '#4CAF50' }}></span>
+                    {item.name}
+                  </CardTitle>
+                  <TechnicalSheetButton 
+                    data={{ 
+                      name: item.name,
+                      currentYield: item.current,
+                      previousYield: item.previous,
+                      unit: item.unit
+                    }} 
+                    variant="outline"
+                    className="h-8 w-8 p-0"
+                  >
+                    <Camera className="h-4 w-4" />
+                  </TechnicalSheetButton>
+                </div>
+              </CardHeader>
+              <CardContent className="pt-0">
                 <div className="text-2xl font-bold">{item.current} {item.unit}</div>
                 <div className={`text-sm flex items-center ${isPositive ? 'text-green-600' : 'text-red-600'}`}>
                   {isPositive ? (
