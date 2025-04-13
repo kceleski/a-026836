@@ -16,13 +16,17 @@ interface ReportGenerationButtonProps {
   className?: string;
   variant?: "default" | "destructive" | "outline" | "secondary" | "ghost" | "link";
   children?: React.ReactNode;
+  onlyFormats?: Array<'pdf' | 'excel' | 'csv'>;
+  withAnimation?: boolean;
 }
 
 const ReportGenerationButton: React.FC<ReportGenerationButtonProps> = ({
   moduleName,
   className = "",
   variant = "default",
-  children
+  children,
+  onlyFormats,
+  withAnimation = true
 }) => {
   const { exportModuleData } = useCRM();
   const [isGenerating, setIsGenerating] = useState(false);
@@ -58,6 +62,21 @@ const ReportGenerationButton: React.FC<ReportGenerationButtonProps> = ({
     }
   };
 
+  // Déterminer quels formats afficher
+  const formats = onlyFormats || ['pdf', 'excel', 'csv'];
+
+  const formatIcons = {
+    pdf: FileText,
+    excel: FileSpreadsheet,
+    csv: FileBarChart2
+  };
+
+  const formatLabels = {
+    pdf: 'Format PDF',
+    excel: 'Format Excel',
+    csv: 'Format CSV'
+  };
+
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
@@ -68,7 +87,7 @@ const ReportGenerationButton: React.FC<ReportGenerationButtonProps> = ({
         >
           {isGenerating ? (
             <>
-              <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+              <svg className={`${withAnimation ? 'animate-spin' : ''} -ml-1 mr-2 h-4 w-4 text-white`} xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                 <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                 <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
               </svg>
@@ -83,19 +102,18 @@ const ReportGenerationButton: React.FC<ReportGenerationButtonProps> = ({
           )}
         </Button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="end">
-        <DropdownMenuItem onClick={() => generateReport('pdf')} disabled={isGenerating}>
-          <FileText className="mr-2 h-4 w-4" />
-          <span>Format PDF</span>
-        </DropdownMenuItem>
-        <DropdownMenuItem onClick={() => generateReport('excel')} disabled={isGenerating}>
-          <FileSpreadsheet className="mr-2 h-4 w-4" />
-          <span>Format Excel</span>
-        </DropdownMenuItem>
-        <DropdownMenuItem onClick={() => generateReport('csv')} disabled={isGenerating}>
-          <FileBarChart2 className="mr-2 h-4 w-4" />
-          <span>Format CSV</span>
-        </DropdownMenuItem>
+      <DropdownMenuContent align="end" className="animate-fade-in">
+        {formats.map(format => (
+          <DropdownMenuItem 
+            key={format}
+            onClick={() => generateReport(format)} 
+            disabled={isGenerating}
+            className="hover:bg-muted transition-colors"
+          >
+            {React.createElement(formatIcons[format], { className: "mr-2 h-4 w-4" })}
+            <span>{formatLabels[format]}</span>
+          </DropdownMenuItem>
+        ))}
       </DropdownMenuContent>
     </DropdownMenu>
   );
