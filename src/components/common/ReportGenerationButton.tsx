@@ -30,9 +30,11 @@ const ReportGenerationButton: React.FC<ReportGenerationButtonProps> = ({
 }) => {
   const { exportModuleData } = useCRM();
   const [isGenerating, setIsGenerating] = useState(false);
+  const [lastGeneratedFormat, setLastGeneratedFormat] = useState<'pdf' | 'excel' | 'csv' | null>(null);
 
   const generateReport = async (format: 'pdf' | 'excel' | 'csv') => {
     setIsGenerating(true);
+    setLastGeneratedFormat(format);
     
     const formatNames = {
       pdf: 'PDF',
@@ -77,6 +79,11 @@ const ReportGenerationButton: React.FC<ReportGenerationButtonProps> = ({
     csv: 'Format CSV'
   };
 
+  // If we have a last generated format and it's in our available formats, put it first
+  const sortedFormats = lastGeneratedFormat && formats.includes(lastGeneratedFormat)
+    ? [lastGeneratedFormat, ...formats.filter(f => f !== lastGeneratedFormat)]
+    : formats;
+
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
@@ -103,15 +110,18 @@ const ReportGenerationButton: React.FC<ReportGenerationButtonProps> = ({
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="animate-fade-in">
-        {formats.map(format => (
+        {sortedFormats.map(format => (
           <DropdownMenuItem 
             key={format}
             onClick={() => generateReport(format)} 
             disabled={isGenerating}
-            className="hover:bg-muted transition-colors"
+            className={`hover:bg-muted transition-colors ${lastGeneratedFormat === format ? 'font-medium' : ''}`}
           >
             {React.createElement(formatIcons[format], { className: "mr-2 h-4 w-4" })}
             <span>{formatLabels[format]}</span>
+            {lastGeneratedFormat === format && (
+              <span className="ml-2 text-xs text-muted-foreground">(Récent)</span>
+            )}
           </DropdownMenuItem>
         ))}
       </DropdownMenuContent>
