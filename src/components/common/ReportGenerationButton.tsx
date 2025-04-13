@@ -27,14 +27,13 @@ const ReportGenerationButton: React.FC<ReportGenerationButtonProps> = ({
   const { exportModuleData } = useCRM();
   const [isGenerating, setIsGenerating] = useState(false);
 
-  const generateReport = async (format: 'pdf' | 'excel' | 'csv' | 'image') => {
+  const generateReport = async (format: 'pdf' | 'excel' | 'csv') => {
     setIsGenerating(true);
     
     const formatNames = {
       pdf: 'PDF',
       excel: 'Excel',
-      csv: 'CSV',
-      image: 'Image'
+      csv: 'CSV'
     };
     
     toast.info("Génération du rapport", {
@@ -96,10 +95,6 @@ const ReportGenerationButton: React.FC<ReportGenerationButtonProps> = ({
         <DropdownMenuItem onClick={() => generateReport('csv')} disabled={isGenerating}>
           <FileBarChart2 className="mr-2 h-4 w-4" />
           <span>Format CSV</span>
-        </DropdownMenuItem>
-        <DropdownMenuItem onClick={() => generateReport('image')} disabled={isGenerating}>
-          <FileImage className="mr-2 h-4 w-4" />
-          <span>Format Image</span>
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
