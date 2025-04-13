@@ -1,3 +1,4 @@
+
 import React, { useState, useRef } from 'react';
 import PageLayout from '../components/layout/PageLayout';
 import PageHeader from '../components/layout/PageHeader';
@@ -7,15 +8,29 @@ import GuadeloupeSpecificCrops from '../components/GuadeloupeSpecificCrops';
 import GuadeloupeHarvestTracking from '../components/GuadeloupeHarvestTracking';
 import GuadeloupeWeatherAlerts from '../components/GuadeloupeWeatherAlerts';
 import { Button } from '../components/ui/button';
-import { Download, Plus, Upload } from 'lucide-react';
+import { Download, Plus, Upload, FileUp, FileDown, BarChart2, Calendar, Package } from 'lucide-react';
+import { DatePickerWithRange } from '../components/ui/date-range-picker';
+import { DateRange } from 'react-day-picker';
 import { useToast } from "@/hooks/use-toast";
 import { toast } from 'sonner';
 import usePageMetadata from '../hooks/use-page-metadata';
+import { downloadInventoryTemplate } from '../components/inventory/ImportExportFunctions';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger
+} from '@/components/ui/dropdown-menu';
+import { Input } from '@/components/ui/input';
+import { motion } from 'framer-motion';
 
 const InventoryPage = () => {
   const { toast: shadowToast } = useToast();
   const [activeTab, setActiveTab] = useState<string>('inventory');
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const [dateRange, setDateRange] = useState<DateRange | undefined>();
+  const [searchTerm, setSearchTerm] = useState('');
   
   const { 
     title, 
@@ -73,26 +88,65 @@ const InventoryPage = () => {
     toast.info(`Fonctionnalité d'ajout de ${actionText} activée`);
   };
 
+  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setSearchTerm(e.target.value);
+    // Pass the search term to the active component using context or props
+  };
+
+  const handleDownloadTemplate = () => {
+    downloadInventoryTemplate();
+  };
+
   const renderTabActions = () => {
     return (
       <div className="flex flex-wrap gap-2">
-        <Button variant="outline" onClick={handleExportData} className="whitespace-nowrap">
-          <Download className="mr-2 h-4 w-4" />
-          Exporter
-        </Button>
-        <div className="relative">
-          <Button variant="outline" onClick={handleImportClick} className="whitespace-nowrap">
-            <Upload className="mr-2 h-4 w-4" />
-            Importer
-          </Button>
-          <input 
-            type="file" 
-            ref={fileInputRef} 
-            onChange={handleFileChange} 
-            accept=".csv"
-            className="hidden" 
-          />
-        </div>
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="outline" className="whitespace-nowrap">
+              <Download className="mr-2 h-4 w-4" />
+              Exporter
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end">
+            <DropdownMenuItem onClick={handleExportData}>
+              <FileDown className="mr-2 h-4 w-4" />
+              Exporter CSV
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={handleExportData}>
+              <BarChart2 className="mr-2 h-4 w-4" />
+              Exporter PDF
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+        
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="outline" className="whitespace-nowrap">
+              <Upload className="mr-2 h-4 w-4" />
+              Importer
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end">
+            <DropdownMenuItem onClick={handleImportClick}>
+              <FileUp className="mr-2 h-4 w-4" />
+              Importer un fichier
+            </DropdownMenuItem>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem onClick={handleDownloadTemplate}>
+              <Package className="mr-2 h-4 w-4" />
+              Télécharger modèle
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+        
+        <input 
+          type="file" 
+          ref={fileInputRef} 
+          onChange={handleFileChange} 
+          accept=".csv"
+          className="hidden" 
+        />
+        
         <Button onClick={handleAddItem} className="whitespace-nowrap">
           <Plus className="mr-2 h-4 w-4" />
           {activeTab === 'inventory' ? 'Ajouter un stock' : 
@@ -103,11 +157,47 @@ const InventoryPage = () => {
     );
   };
 
+  const renderFilterArea = () => {
+    return (
+      <motion.div 
+        initial={{ opacity: 0, y: -10 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="flex flex-col md:flex-row gap-3 w-full"
+      >
+        <div className="relative flex-grow">
+          <Input 
+            placeholder={`Rechercher dans ${activeTab === 'inventory' ? 'l\'inventaire' : activeTab === 'crops' ? 'les cultures' : 'les alertes'}`} 
+            value={searchTerm}
+            onChange={handleSearchChange}
+            className="pl-8"
+          />
+          <svg 
+            xmlns="http://www.w3.org/2000/svg" 
+            className="absolute left-2 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground"
+            fill="none" 
+            viewBox="0 0 24 24" 
+            stroke="currentColor"
+          >
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+          </svg>
+        </div>
+        <div className="w-full md:w-[300px]">
+          <DatePickerWithRange
+            date={dateRange}
+            setDate={setDateRange}
+            placeholderText="Filtrer par date"
+            align="end"
+          />
+        </div>
+      </motion.div>
+    );
+  };
+
   const tabs: TabItem[] = [
     {
       value: 'inventory',
       label: 'Inventaire',
-      content: <Inventory />
+      content: <Inventory dateRange={dateRange} searchTerm={searchTerm} />
     },
     {
       value: 'crops',
@@ -141,15 +231,15 @@ const InventoryPage = () => {
   return (
     <PageLayout>
       <div className="p-6 animate-enter">
-        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">
-          <PageHeader 
-            title={title}
-            description={description}
-            onTitleChange={handleTitleChange}
-            onDescriptionChange={handleDescriptionChange}
-          />
-          {renderTabActions()}
-        </div>
+        <PageHeader 
+          title={title}
+          description={description}
+          onTitleChange={handleTitleChange}
+          onDescriptionChange={handleDescriptionChange}
+          actions={renderTabActions()}
+          icon={<Package className="h-6 w-6" />}
+          filterArea={renderFilterArea()}
+        />
 
         <TabContainer 
           tabs={tabs} 

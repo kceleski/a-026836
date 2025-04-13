@@ -1,39 +1,35 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
+import { DateRange } from 'react-day-picker';
 import { 
   Package, 
   Plus, 
-  Search, 
-  Filter, 
-  ChevronDown, 
-  AlertTriangle, 
-  AlertCircle, 
   ArrowUp, 
   ArrowDown,
-  Edit,
-  Trash2,
   ChevronRight,
   X,
   Check,
-  BarChart2,
   Save,
-  Upload,
-  Download,
   FileUp,
-  FileDown
+  FileDown,
+  BarChart2
 } from 'lucide-react';
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
-import { EditableField } from './ui/editable-field';
 import { EditableTable, Column } from './ui/editable-table';
 import { Button } from './ui/button';
 import { Input } from './ui/input';
 import { Label } from './ui/label';
-import { Textarea } from './ui/textarea';
-import { useToast } from "@/hooks/use-toast";
 import { toast } from 'sonner';
 import ConfirmDialog from './inventory/ConfirmDialog';
-import { exportInventoryToCSV, importInventoryFromCSV } from './inventory/ImportExportFunctions';
+import { 
+  exportInventoryToCSV, 
+  importInventoryFromCSV,
+  exportInventoryToPDF,
+  downloadInventoryTemplate,
+  InventoryItem 
+} from './inventory/ImportExportFunctions';
+import InventoryFilters from './inventory/InventoryFilters';
+import InventoryStats from './inventory/InventoryStats';
+import InventoryAlerts from './inventory/InventoryAlerts';
 
-// Mock data for inventory items
 const initialInventoryData = [
   { 
     id: 1, 
@@ -114,7 +110,6 @@ const initialInventoryData = [
   }
 ];
 
-// Transaction history data
 const initialTransactionHistory = [
   { id: 1, itemId: 1, type: 'out', quantity: 50, date: '2023-08-20', user: 'Jean Dupont', notes: 'Semis parcelle nord' },
   { id: 2, itemId: 2, type: 'out', quantity: 200, date: '2023-08-18', user: 'Jean Dupont', notes: 'Application parcelle est' },
@@ -124,7 +119,6 @@ const initialTransactionHistory = [
   { id: 6, itemId: 6, type: 'out', quantity: 5, date: '2023-08-05', user: 'Pierre Leroy', notes: 'Vidange tracteur' },
 ];
 
-// Stock statistics for visualization
 const initialCategoryStats = [
   { name: 'Semences', value: 580, fill: '#4CAF50' },
   { name: 'Engrais', value: 800, fill: '#8D6E63' },
@@ -134,16 +128,20 @@ const initialCategoryStats = [
   { name: 'Consommables', value: 15, fill: '#9C27B0' }
 ];
 
-const Inventory = () => {
-  const { toast: shadowToast } = useToast();
+interface InventoryProps {
+  dateRange?: DateRange;
+  searchTerm?: string;
+}
+
+const Inventory: React.FC<InventoryProps> = ({ dateRange, searchTerm: externalSearchTerm }) => {
   const [inventoryData, setInventoryData] = useState(initialInventoryData);
   const [transactionHistory, setTransactionHistory] = useState(initialTransactionHistory);
   const [categoryStats, setCategoryStats] = useState(initialCategoryStats);
   
-  const [searchTerm, setSearchTerm] = useState('');
+  const [searchTerm, setSearchTerm] = useState(externalSearchTerm || '');
   const [categoryFilter, setCategoryFilter] = useState('all');
   const [sortBy, setSortBy] = useState('name');
-  const [sortOrder, setSortOrder] = useState('asc');
+  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
   const [showAddForm, setShowAddForm] = useState(false);
   const [newItem, setNewItem] = useState({
     name: '',
@@ -155,7 +153,7 @@ const Inventory = () => {
     location: '',
     notes: ''
   });
-  const [selectedItem, setSelectedItem] = useState<any>(null);
+  const [selectedItem, setSelectedItem] = useState<InventoryItem | null>(null);
   const [view, setView] = useState<'list' | 'detail' | 'stats'>('list');
   const [showTransactionForm, setShowTransactionForm] = useState<'in' | 'out' | null>(null);
   const [newTransaction, setNewTransaction] = useState({
@@ -164,16 +162,19 @@ const Inventory = () => {
     date: new Date().toISOString().split('T')[0]
   });
   
-  // New state for confirmation dialogs
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
   const [itemToDelete, setItemToDelete] = useState<number | null>(null);
   const [transactionToDelete, setTransactionToDelete] = useState<number | null>(null);
   const [transactionDeleteConfirmOpen, setTransactionDeleteConfirmOpen] = useState(false);
   
-  // File input ref for CSV import
   const fileInputRef = useRef<HTMLInputElement>(null);
   
-  // Alerts based on inventory levels
+  useEffect(() => {
+    if (externalSearchTerm !== undefined) {
+      setSearchTerm(externalSearchTerm);
+    }
+  }, [externalSearchTerm]);
+  
   const generateAlerts = () => {
     return inventoryData
       .filter(item => item.quantity <= item.minQuantity)
@@ -188,7 +189,6 @@ const Inventory = () => {
   
   const alerts = generateAlerts();
   
-  // Filter and sort inventory items
   const filteredItems = inventoryData
     .filter(item => {
       const matchesSearch = item.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -210,28 +210,22 @@ const Inventory = () => {
         return sortOrder === 'asc' 
           ? a.price - b.price
           : b.price - a.price;
+      } else if (sortBy === 'lastUpdated') {
+        return sortOrder === 'asc'
+          ? new Date(a.lastUpdated).getTime() - new Date(b.lastUpdated).getTime()
+          : new Date(b.lastUpdated).getTime() - new Date(a.lastUpdated).getTime();
       }
       return 0;
     });
   
-  // Get unique categories for the filter
   const categories = ['all', ...new Set(inventoryData.map(item => item.category))];
   
-  // Toggle sort order
-  const toggleSort = (field: string) => {
-    if (!field) return;
-    
-    if (sortBy === field) {
-      setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc');
-    } else {
-      setSortBy(field);
-      setSortOrder('asc');
-    }
-  };
-  
-  // Add new import/export handlers
   const handleExportData = () => {
-    exportInventoryToCSV(inventoryData);
+    if (view === 'list') {
+      exportInventoryToCSV(inventoryData);
+    } else if (view === 'stats') {
+      exportInventoryToPDF(inventoryData);
+    }
   };
   
   const handleImportClick = () => {
@@ -245,28 +239,26 @@ const Inventory = () => {
     if (!file) return;
     
     importInventoryFromCSV(file, (importedData) => {
-      // Option 1: Replace all inventory data
-      // setInventoryData(importedData);
-      
-      // Option 2: Merge with existing data (avoiding duplicates by ID)
       const existingIds = new Set(inventoryData.map(item => item.id));
       const newItems = importedData.filter(item => !existingIds.has(item.id));
       const updatedItems = importedData.filter(item => existingIds.has(item.id));
       
-      // Update existing items
       const updatedInventory = inventoryData.map(item => {
         const updatedItem = updatedItems.find(update => update.id === item.id);
         return updatedItem || item;
       });
       
-      // Add new items
       setInventoryData([...updatedInventory, ...newItems]);
       
-      // Update category stats
       updateCategoryStats([...updatedInventory, ...newItems]);
+    }, {
+      onProgress: (progress) => {
+        if (progress === 100) {
+          toast.success("Import terminé avec succès");
+        }
+      }
     });
     
-    // Reset file input
     if (fileInputRef.current) {
       fileInputRef.current.value = '';
     }
@@ -276,12 +268,10 @@ const Inventory = () => {
     const categories: Record<string, number> = {};
     const colors: Record<string, string> = {};
     
-    // Get existing colors
     categoryStats.forEach(stat => {
       colors[stat.name] = stat.fill;
     });
     
-    // Calculate new quantities by category
     items.forEach(item => {
       if (!categories[item.category]) {
         categories[item.category] = 0;
@@ -292,7 +282,6 @@ const Inventory = () => {
       categories[item.category] += item.quantity;
     });
     
-    // Create new stats array
     const newStats = Object.entries(categories).map(([name, value]) => ({
       name,
       value,
@@ -302,7 +291,6 @@ const Inventory = () => {
     setCategoryStats(newStats);
   };
   
-  // Modified delete handlers to use confirmation dialog
   const confirmDeleteItem = (id: number) => {
     setItemToDelete(id);
     setDeleteConfirmOpen(true);
@@ -316,14 +304,12 @@ const Inventory = () => {
     
     setInventoryData(inventoryData.filter(item => item.id !== itemToDelete));
     
-    // Update category stats
     setCategoryStats(categoryStats.map(stat => 
       stat.name === itemToDeleteObj.category 
         ? { ...stat, value: Math.max(0, stat.value - itemToDeleteObj.quantity) }
         : stat
     ));
     
-    // If the deleted item is selected, clear selection
     if (selectedItem && selectedItem.id === itemToDelete) {
       setSelectedItem(null);
     }
@@ -344,11 +330,9 @@ const Inventory = () => {
     const transaction = transactionHistory.find(t => t.id === transactionToDelete);
     if (!transaction) return;
     
-    // Remove transaction
     const updatedTransactions = transactionHistory.filter(t => t.id !== transactionToDelete);
     setTransactionHistory(updatedTransactions);
     
-    // Adjust item quantity
     const quantityChange = transaction.type === 'in' 
       ? -transaction.quantity 
       : transaction.quantity;
@@ -364,7 +348,6 @@ const Inventory = () => {
     setTransactionDeleteConfirmOpen(false);
   };
   
-  // Add new inventory item
   const handleAddItem = () => {
     if (!newItem.name || !newItem.category || !newItem.unit) {
       toast.error("Veuillez remplir tous les champs obligatoires");
@@ -383,7 +366,6 @@ const Inventory = () => {
     
     setInventoryData([...inventoryData, itemToAdd]);
     
-    // Update category stats
     const existingCategoryStat = categoryStats.find(stat => stat.name === newItem.category);
     if (existingCategoryStat) {
       setCategoryStats(categoryStats.map(stat => 
@@ -414,13 +396,11 @@ const Inventory = () => {
     toast.success(`${newItem.name} a été ajouté à l'inventaire`);
   };
   
-  // Generate a random color for new categories
   const getRandomColor = () => {
     const colors = ['#4CAF50', '#8D6E63', '#F44336', '#2196F3', '#FFC107', '#9C27B0', '#FF5722', '#3F51B5'];
     return colors[Math.floor(Math.random() * colors.length)];
   };
   
-  // Update an inventory item
   const handleUpdateItem = (id: number, field: string, value: any) => {
     setInventoryData(inventoryData.map(item => {
       if (item.id !== id) return item;
@@ -431,7 +411,6 @@ const Inventory = () => {
         lastUpdated: new Date().toISOString().split('T')[0] 
       };
       
-      // If the updated item is selected, update selection
       if (selectedItem && selectedItem.id === id) {
         setSelectedItem(updatedItem);
       }
@@ -439,7 +418,6 @@ const Inventory = () => {
       return updatedItem;
     }));
     
-    // If quantity field is updated, update category stats
     if (field === 'quantity') {
       const item = inventoryData.find(item => item.id === id);
       if (item) {
@@ -456,19 +434,16 @@ const Inventory = () => {
     }
   };
   
-  // Add transaction
   const handleAddTransaction = (type: 'in' | 'out') => {
     setShowTransactionForm(type);
   };
   
-  // Submit transaction
   const handleSubmitTransaction = () => {
     if (!selectedItem || !showTransactionForm || newTransaction.quantity <= 0) {
       toast.error("Veuillez spécifier une quantité valide");
       return;
     }
     
-    // Create new transaction
     const newId = Math.max(...transactionHistory.map(t => t.id), 0) + 1;
     const transaction = {
       id: newId,
@@ -476,13 +451,12 @@ const Inventory = () => {
       type: showTransactionForm,
       quantity: newTransaction.quantity,
       date: newTransaction.date,
-      user: 'Utilisateur actuel', // In a real app, this would be the current user
+      user: 'Utilisateur actuel',
       notes: newTransaction.notes
     };
     
     setTransactionHistory([transaction, ...transactionHistory]);
     
-    // Update item quantity
     const updatedQuantity = showTransactionForm === 'in' 
       ? selectedItem.quantity + newTransaction.quantity 
       : Math.max(0, selectedItem.quantity - newTransaction.quantity);
@@ -499,14 +473,12 @@ const Inventory = () => {
     toast.success(`${newTransaction.quantity} ${selectedItem.unit} ${showTransactionForm === 'in' ? 'ajoutés' : 'retirés'} de l'inventaire`);
   };
   
-  // Get transactions for the selected item
   const itemTransactions = selectedItem 
     ? transactionHistory.filter(t => t.itemId === selectedItem.id).sort((a, b) => 
         new Date(b.date).getTime() - new Date(a.date).getTime()
       )
     : [];
 
-  // Column definitions for the inventory table
   const inventoryColumns: Column[] = [
     { id: 'name', header: 'Article', accessorKey: 'name', isEditable: true },
     { id: 'category', header: 'Catégorie', accessorKey: 'category', isEditable: true },
@@ -516,7 +488,6 @@ const Inventory = () => {
     { id: 'status', header: 'Statut', accessorKey: 'status', type: 'text', isEditable: false },
   ];
 
-  // Prepare data for EditableTable
   const tableData = filteredItems.map(item => ({
     ...item,
     value: `${(item.quantity * item.price).toFixed(2)} €`,
@@ -525,7 +496,6 @@ const Inventory = () => {
       : 'normal'
   }));
 
-  // Handle row updates in the EditableTable
   const handleTableUpdate = (rowIndex: number, columnId: string, value: any) => {
     const item = filteredItems[rowIndex];
     if (!item) return;
@@ -533,14 +503,13 @@ const Inventory = () => {
     handleUpdateItem(item.id, columnId, value);
   };
   
-  // Add keyboard accessibility handling
   const handleKeyDown = (e: React.KeyboardEvent, action: Function) => {
     if (e.key === 'Enter' || e.key === ' ') {
       e.preventDefault();
       action();
     }
   };
-  
+
   return (
     <div className="animate-enter">
       <header className="flex flex-col md:flex-row md:justify-between md:items-center mb-6 gap-4">
@@ -599,56 +568,10 @@ const Inventory = () => {
         </div>
       </header>
 
-      {alerts.length > 0 && (
-        <div className="mb-6 border border-agri-warning/30 bg-agri-warning/5 rounded-xl p-4">
-          <div className="flex items-center mb-3">
-            <AlertTriangle className="h-5 w-5 text-agri-warning mr-2" />
-            <h3 className="font-medium">Alertes de stock bas</h3>
-          </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-            {alerts.map(alert => (
-              <div 
-                key={alert.id} 
-                className={`p-3 rounded-lg border ${
-                  alert.status === 'critical' 
-                    ? 'border-agri-danger/30 bg-agri-danger/5' 
-                    : 'border-agri-warning/30 bg-agri-warning/5'
-                }`}
-              >
-                <div className="flex justify-between items-center">
-                  <p className="font-medium">{alert.name}</p>
-                  <span 
-                    className={`text-xs px-2 py-0.5 rounded-full ${
-                      alert.status === 'critical' 
-                        ? 'bg-agri-danger/10 text-agri-danger' 
-                        : 'bg-agri-warning/10 text-agri-warning'
-                    }`}
-                  >
-                    {alert.status === 'critical' ? 'Critique' : 'Attention'}
-                  </span>
-                </div>
-                <div className="mt-2 text-sm">
-                  <span>Stock actuel: </span>
-                  <EditableField
-                    value={alert.current}
-                    type="number"
-                    onSave={(value) => handleUpdateItem(alert.id, 'quantity', Number(value))}
-                    className="inline-block"
-                  />
-                  <span className="mx-1">|</span>
-                  <span>Minimum: </span>
-                  <EditableField
-                    value={alert.min}
-                    type="number"
-                    onSave={(value) => handleUpdateItem(alert.id, 'minQuantity', Number(value))}
-                    className="inline-block"
-                  />
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
+      <InventoryAlerts 
+        alerts={alerts} 
+        onQuantityChange={handleUpdateItem} 
+      />
 
       {view === 'list' ? (
         selectedItem ? (
@@ -989,181 +912,137 @@ const Inventory = () => {
           </>
         )
       ) : (
-        <div className="space-y-6">
-          <div className="bg-white rounded-xl border p-6">
-            <h3 className="text-lg font-medium mb-4">Répartition par catégorie</h3>
-            <div className="h-[300px]">
-              <ResponsiveContainer width="100%" height="100%">
-                <BarChart
-                  data={categoryStats}
-                  margin={{ top: 10, right: 30, left: 20, bottom: 40 }}
-                >
-                  <CartesianGrid strokeDasharray="3 3" vertical={false} />
-                  <XAxis 
-                    dataKey="name" 
-                    angle={-45} 
-                    textAnchor="end"
-                    tick={{ fontSize: 12 }}
-                    height={70}
-                  />
-                  <YAxis />
-                  <Tooltip />
-                  <Bar dataKey="value" fill="#4CAF50" radius={[4, 4, 0, 0]} fillOpacity={1} />
-                </BarChart>
-              </ResponsiveContainer>
-            </div>
-          </div>
-          
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            <div className="bg-white rounded-xl border p-6">
-              <h3 className="text-lg font-medium mb-4">Valeur totale de l'inventaire</h3>
-              <p className="text-3xl font-bold">
-                {inventoryData.reduce((sum, item) => sum + (item.quantity * item.price), 0).toFixed(2)} €
-              </p>
-            </div>
-            
-            <div className="bg-white rounded-xl border p-6">
-              <h3 className="text-lg font-medium mb-4">Nombre d'articles</h3>
-              <p className="text-3xl font-bold">{inventoryData.length}</p>
-            </div>
-            
-            <div className="bg-white rounded-xl border p-6">
-              <h3 className="text-lg font-medium mb-4">Articles à réapprovisionner</h3>
-              <p className="text-3xl font-bold">{alerts.length}</p>
-            </div>
-          </div>
-        </div>
+        <InventoryStats 
+          inventoryData={inventoryData}
+          categoryStats={categoryStats}
+        />
       )}
       
-      {/* Add Form Modal */}
-      {showAddForm && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
-            <div className="p-6">
-              <div className="flex justify-between items-center mb-4">
-                <h2 className="text-xl font-semibold">Ajouter un nouvel article</h2>
-                <Button 
-                  variant="ghost" 
-                  size="sm" 
-                  onClick={() => setShowAddForm(false)}
-                >
-                  <X className="h-4 w-4" />
-                </Button>
-              </div>
-              
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-                <div>
-                  <Label htmlFor="name" className="mb-1">Nom de l'article*</Label>
-                  <Input
-                    id="name"
-                    value={newItem.name}
-                    onChange={(e) => setNewItem({...newItem, name: e.target.value})}
-                    placeholder="Nom de l'article"
-                  />
-                </div>
-                
-                <div>
-                  <Label htmlFor="category" className="mb-1">Catégorie*</Label>
-                  <Input
-                    id="category"
-                    value={newItem.category}
-                    onChange={(e) => setNewItem({...newItem, category: e.target.value})}
-                    placeholder="Catégorie"
-                    list="categories"
-                  />
-                  <datalist id="categories">
-                    {[...new Set(inventoryData.map(item => item.category))].map((category) => (
-                      <option key={category} value={category} />
-                    ))}
-                  </datalist>
-                </div>
-                
-                <div>
-                  <Label htmlFor="quantity" className="mb-1">Quantité</Label>
-                  <Input
-                    id="quantity"
-                    type="number"
-                    value={newItem.quantity}
-                    onChange={(e) => setNewItem({...newItem, quantity: Number(e.target.value)})}
-                    min="0"
-                  />
-                </div>
-                
-                <div>
-                  <Label htmlFor="unit" className="mb-1">Unité*</Label>
-                  <Input
-                    id="unit"
-                    value={newItem.unit}
-                    onChange={(e) => setNewItem({...newItem, unit: e.target.value})}
-                    placeholder="kg, L, pièces..."
-                  />
-                </div>
-                
-                <div>
-                  <Label htmlFor="minQuantity" className="mb-1">Quantité minimale</Label>
-                  <Input
-                    id="minQuantity"
-                    type="number"
-                    value={newItem.minQuantity}
-                    onChange={(e) => setNewItem({...newItem, minQuantity: Number(e.target.value)})}
-                    min="0"
-                  />
-                </div>
-                
-                <div>
-                  <Label htmlFor="price" className="mb-1">Prix unitaire</Label>
-                  <Input
-                    id="price"
-                    type="number"
-                    value={newItem.price}
-                    onChange={(e) => setNewItem({...newItem, price: Number(e.target.value)})}
-                    min="0"
-                    step="0.01"
-                  />
-                </div>
-                
-                <div>
-                  <Label htmlFor="location" className="mb-1">Emplacement</Label>
-                  <Input
-                    id="location"
-                    value={newItem.location}
-                    onChange={(e) => setNewItem({...newItem, location: e.target.value})}
-                    placeholder="Emplacement de stockage"
-                  />
-                </div>
-              </div>
-              
-              <div className="mb-4">
-                <Label htmlFor="notes" className="mb-1">Notes</Label>
-                <Textarea
-                  id="notes"
-                  value={newItem.notes}
-                  onChange={(e) => setNewItem({...newItem, notes: e.target.value})}
-                  placeholder="Notes supplémentaires..."
-                  rows={3}
+      <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+        <div className="bg-white rounded-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+          <div className="p-6">
+            <div className="flex justify-between items-center mb-4">
+              <h2 className="text-xl font-semibold">Ajouter un nouvel article</h2>
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                onClick={() => setShowAddForm(false)}
+              >
+                <X className="h-4 w-4" />
+              </Button>
+            </div>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+              <div>
+                <Label htmlFor="name" className="mb-1">Nom de l'article*</Label>
+                <Input
+                  id="name"
+                  value={newItem.name}
+                  onChange={(e) => setNewItem({...newItem, name: e.target.value})}
+                  placeholder="Nom de l'article"
                 />
               </div>
               
-              <div className="flex justify-end gap-2">
-                <Button 
-                  variant="outline" 
-                  onClick={() => setShowAddForm(false)}
-                >
-                  Annuler
-                </Button>
-                <Button 
-                  onClick={handleAddItem}
-                >
-                  <Check className="mr-2 h-4 w-4" />
-                  Ajouter
-                </Button>
+              <div>
+                <Label htmlFor="category" className="mb-1">Catégorie*</Label>
+                <Input
+                  id="category"
+                  value={newItem.category}
+                  onChange={(e) => setNewItem({...newItem, category: e.target.value})}
+                  placeholder="Catégorie"
+                  list="categories"
+                />
+                <datalist id="categories">
+                  {[...new Set(inventoryData.map(item => item.category))].map((category) => (
+                    <option key={category} value={category} />
+                  ))}
+                </datalist>
               </div>
+              
+              <div>
+                <Label htmlFor="quantity" className="mb-1">Quantité</Label>
+                <Input
+                  id="quantity"
+                  type="number"
+                  value={newItem.quantity}
+                  onChange={(e) => setNewItem({...newItem, quantity: Number(e.target.value)})}
+                  min="0"
+                />
+              </div>
+              
+              <div>
+                <Label htmlFor="unit" className="mb-1">Unité*</Label>
+                <Input
+                  id="unit"
+                  value={newItem.unit}
+                  onChange={(e) => setNewItem({...newItem, unit: e.target.value})}
+                  placeholder="kg, L, pièces..."
+                />
+              </div>
+              
+              <div>
+                <Label htmlFor="minQuantity" className="mb-1">Quantité minimale</Label>
+                <Input
+                  id="minQuantity"
+                  type="number"
+                  value={newItem.minQuantity}
+                  onChange={(e) => setNewItem({...newItem, minQuantity: Number(e.target.value)})}
+                  min="0"
+                />
+              </div>
+              
+              <div>
+                <Label htmlFor="price" className="mb-1">Prix unitaire</Label>
+                <Input
+                  id="price"
+                  type="number"
+                  value={newItem.price}
+                  onChange={(e) => setNewItem({...newItem, price: Number(e.target.value)})}
+                  min="0"
+                  step="0.01"
+                />
+              </div>
+              
+              <div>
+                <Label htmlFor="location" className="mb-1">Emplacement</Label>
+                <Input
+                  id="location"
+                  value={newItem.location}
+                  onChange={(e) => setNewItem({...newItem, location: e.target.value})}
+                  placeholder="Emplacement de stockage"
+                />
+              </div>
+            </div>
+            
+            <div className="mb-4">
+              <Label htmlFor="notes" className="mb-1">Notes</Label>
+              <Textarea
+                id="notes"
+                value={newItem.notes}
+                onChange={(e) => setNewItem({...newItem, notes: e.target.value})}
+                placeholder="Notes supplémentaires..."
+                rows={3}
+              />
+            </div>
+            
+            <div className="flex justify-end gap-2">
+              <Button 
+                variant="outline" 
+                onClick={() => setShowAddForm(false)}
+              >
+                Annuler
+              </Button>
+              <Button 
+                onClick={handleAddItem}
+              >
+                <Check className="mr-2 h-4 w-4" />
+                Ajouter
+              </Button>
             </div>
           </div>
         </div>
-      )}
+      </div>
       
-      {/* Confirmation Dialogs */}
       <ConfirmDialog
         open={deleteConfirmOpen}
         onOpenChange={setDeleteConfirmOpen}
@@ -1171,6 +1050,7 @@ const Inventory = () => {
         description="Êtes-vous sûr de vouloir supprimer cet article de l'inventaire ? Cette action ne peut pas être annulée."
         onConfirm={handleDeleteItem}
         variant="destructive"
+        icon={true}
       />
       
       <ConfirmDialog
@@ -1180,6 +1060,7 @@ const Inventory = () => {
         description="Êtes-vous sûr de vouloir supprimer cette transaction ? Le stock sera ajusté en conséquence."
         onConfirm={handleDeleteTransaction}
         variant="destructive"
+        icon={true}
       />
     </div>
   );

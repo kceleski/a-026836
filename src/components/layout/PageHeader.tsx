@@ -14,6 +14,8 @@ interface PageHeaderProps {
   icon?: React.ReactNode;
   variant?: 'default' | 'centered' | 'compact';
   badge?: React.ReactNode;
+  stats?: React.ReactNode;
+  filterArea?: React.ReactNode;
 }
 
 const PageHeader = ({ 
@@ -25,7 +27,9 @@ const PageHeader = ({
   className = '',
   icon,
   variant = 'default',
-  badge
+  badge,
+  stats,
+  filterArea
 }: PageHeaderProps) => {
   // Animation variants
   const contentVariants = {
@@ -50,73 +54,85 @@ const PageHeader = ({
       initial="hidden"
       animate="visible"
       variants={contentVariants}
-      className={`flex ${variant === 'centered' ? 'flex-col items-center text-center' : 
+      className={`${variant === 'centered' ? 'flex-col items-center text-center' : 
         variant === 'compact' ? 'flex-row items-center' : 
-        'flex-col md:flex-row md:justify-between md:items-center'} mb-6 gap-4 ${className}`}
+        'flex-col md:flex-row md:justify-between md:items-center'} mb-6 ${className}`}
     >
-      <div className={`flex ${variant === 'compact' ? 'items-center gap-3' : 'flex-col'}`}>
-        {variant === 'compact' ? (
-          <div className="flex items-center gap-3">
-            {icon && <span className="text-primary">{icon}</span>}
-            
-            <div>
-              <motion.h1 variants={itemVariants} className={`text-2xl font-bold ${variant === 'compact' ? 'mb-0' : 'mb-1'}`}>
-                <EditableField
-                  value={title}
-                  onSave={onTitleChange}
-                  className="inline-block"
-                  showEditIcon
-                />
-                {badge && <span className="ml-2">{badge}</span>}
-              </motion.h1>
+      <div className="flex flex-col space-y-2 flex-grow">
+        <div className={`flex ${variant === 'compact' ? 'items-center gap-3' : 'flex-col'}`}>
+          {variant === 'compact' ? (
+            <div className="flex items-center gap-3">
+              {icon && <span className="text-primary">{icon}</span>}
               
-              {variant === 'compact' && (
-                <motion.p variants={itemVariants} className="text-muted-foreground">
+              <div>
+                <motion.h1 variants={itemVariants} className={`text-2xl font-bold ${variant === 'compact' ? 'mb-0' : 'mb-1'}`}>
                   <EditableField
-                    value={description}
-                    onSave={onDescriptionChange}
+                    value={title}
+                    onSave={onTitleChange}
                     className="inline-block"
                     showEditIcon
                   />
-                </motion.p>
-              )}
+                  {badge && <span className="ml-2">{badge}</span>}
+                </motion.h1>
+                
+                {variant === 'compact' && (
+                  <motion.p variants={itemVariants} className="text-muted-foreground">
+                    <EditableField
+                      value={description}
+                      onSave={onDescriptionChange}
+                      className="inline-block"
+                      showEditIcon
+                    />
+                  </motion.p>
+                )}
+              </div>
             </div>
-          </div>
-        ) : (
-          <>
-            <motion.div variants={itemVariants} className="flex items-center gap-2">
-              {icon && <span className="text-primary">{icon}</span>}
-              <h1 className="text-2xl font-bold mb-1">
+          ) : (
+            <>
+              <motion.div variants={itemVariants} className="flex items-center gap-2">
+                {icon && <span className="text-primary">{icon}</span>}
+                <h1 className="text-2xl font-bold mb-1">
+                  <EditableField
+                    value={title}
+                    onSave={onTitleChange}
+                    className="inline-block"
+                    showEditIcon
+                  />
+                  {badge && <span className="ml-2">{badge}</span>}
+                </h1>
+              </motion.div>
+              
+              <motion.p variants={itemVariants} className="text-muted-foreground">
                 <EditableField
-                  value={title}
-                  onSave={onTitleChange}
+                  value={description}
+                  onSave={onDescriptionChange}
                   className="inline-block"
                   showEditIcon
                 />
-                {badge && <span className="ml-2">{badge}</span>}
-              </h1>
-            </motion.div>
-            
-            <motion.p variants={itemVariants} className="text-muted-foreground">
-              <EditableField
-                value={description}
-                onSave={onDescriptionChange}
-                className="inline-block"
-                showEditIcon
-              />
-            </motion.p>
-          </>
-        )}
+              </motion.p>
+            </>
+          )}
+        </div>
+        
+        {stats && <motion.div variants={itemVariants} className="mt-2">{stats}</motion.div>}
       </div>
       
-      {actions && (
-        <motion.div 
-          variants={itemVariants}
-          className={`flex flex-wrap items-center gap-2 ${variant === 'centered' ? 'justify-center mt-2' : ''}`}
-        >
-          {actions}
-        </motion.div>
-      )}
+      <div className="flex flex-col space-y-4 mt-4 md:mt-0">
+        {actions && (
+          <motion.div 
+            variants={itemVariants}
+            className={`flex flex-wrap items-center gap-2 ${variant === 'centered' ? 'justify-center' : 'justify-end'}`}
+          >
+            {actions}
+          </motion.div>
+        )}
+        
+        {filterArea && (
+          <motion.div variants={itemVariants} className="w-full mt-4">
+            {filterArea}
+          </motion.div>
+        )}
+      </div>
     </motion.header>
   );
 };

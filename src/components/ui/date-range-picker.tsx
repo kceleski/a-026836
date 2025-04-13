@@ -19,6 +19,8 @@ interface DatePickerWithRangeProps {
   setDate: (date: DateRange | undefined) => void
   className?: string
   align?: "center" | "start" | "end"
+  placeholderText?: string
+  presets?: { label: string; days: number }[]
 }
 
 export function DatePickerWithRange({
@@ -26,6 +28,12 @@ export function DatePickerWithRange({
   setDate,
   className,
   align = "start",
+  placeholderText = "Sélectionner des dates",
+  presets = [
+    { label: "7 jours", days: 7 },
+    { label: "30 jours", days: 30 },
+    { label: "90 jours", days: 90 }
+  ]
 }: DatePickerWithRangeProps) {
   return (
     <div className={cn("grid gap-2", className)}>
@@ -50,7 +58,7 @@ export function DatePickerWithRange({
                 format(date.from, "dd/MM/yyyy", { locale: fr })
               )
             ) : (
-              <span>Sélectionner des dates</span>
+              <span>{placeholderText}</span>
             )}
           </Button>
         </PopoverTrigger>
@@ -73,36 +81,23 @@ export function DatePickerWithRange({
             >
               Effacer
             </Button>
-            <Button 
-              variant="outline" 
-              size="sm"
-              onClick={() => {
-                // Last 7 days
-                const today = new Date()
-                setDate({
-                  from: addDays(today, -7),
-                  to: today,
-                })
-              }}
-              className="text-xs"
-            >
-              7 jours
-            </Button>
-            <Button 
-              variant="outline" 
-              size="sm"
-              onClick={() => {
-                // Last 30 days
-                const today = new Date()
-                setDate({
-                  from: addDays(today, -30),
-                  to: today,
-                })
-              }}
-              className="text-xs"
-            >
-              30 jours
-            </Button>
+            {presets.map((preset, i) => (
+              <Button 
+                key={i}
+                variant="outline" 
+                size="sm"
+                onClick={() => {
+                  const today = new Date()
+                  setDate({
+                    from: addDays(today, -preset.days),
+                    to: today,
+                  })
+                }}
+                className="text-xs"
+              >
+                {preset.label}
+              </Button>
+            ))}
           </div>
         </PopoverContent>
       </Popover>
