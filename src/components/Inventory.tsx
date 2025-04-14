@@ -11,13 +11,18 @@ import {
   Save,
   FileUp,
   FileDown,
-  BarChart2
+  BarChart2,
+  Search,
+  Filter,
+  Trash2
 } from 'lucide-react';
 import { EditableTable, Column } from './ui/editable-table';
 import { Button } from './ui/button';
 import { Input } from './ui/input';
 import { Label } from './ui/label';
+import { Textarea } from './ui/textarea';
 import { toast } from 'sonner';
+import { EditableField } from './ui/editable-field';
 import ConfirmDialog from './inventory/ConfirmDialog';
 import { 
   exportInventoryToCSV, 
@@ -29,6 +34,15 @@ import {
 import InventoryFilters from './inventory/InventoryFilters';
 import InventoryStats from './inventory/InventoryStats';
 import InventoryAlerts from './inventory/InventoryAlerts';
+import { 
+  BarChart, 
+  Bar, 
+  XAxis, 
+  YAxis, 
+  CartesianGrid, 
+  Tooltip as RechartsTooltip,
+  ResponsiveContainer 
+} from 'recharts';
 
 const initialInventoryData = [
   { 
@@ -183,7 +197,7 @@ const Inventory: React.FC<InventoryProps> = ({ dateRange, searchTerm: externalSe
         name: item.name,
         current: item.quantity,
         min: item.minQuantity,
-        status: item.quantity < item.minQuantity * 0.5 ? 'critical' : 'warning'
+        status: item.quantity < item.minQuantity * 0.5 ? 'critical' as const : 'warning' as const
       }));
   };
   
@@ -701,7 +715,7 @@ const Inventory: React.FC<InventoryProps> = ({ dateRange, searchTerm: externalSe
                         <CartesianGrid strokeDasharray="3 3" vertical={false} />
                         <XAxis dataKey="name" />
                         <YAxis />
-                        <Tooltip formatter={(value) => [`${value} ${selectedItem.unit}`, '']} />
+                        <Tooltip as={RechartsTooltip} formatter={(value) => [`${value} ${selectedItem.unit}`, '']} />
                         <Bar 
                           dataKey="value" 
                           fill="#4CAF50" 

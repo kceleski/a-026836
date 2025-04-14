@@ -1,4 +1,3 @@
-
 import { toast } from 'sonner';
 import Papa from 'papaparse';
 
@@ -119,7 +118,7 @@ export const importInventoryFromCSV = (
         const totalCount = parsedData.length;
         
         // Validate and transform data
-        const validData = parsedData
+        const validData: InventoryItem[] = parsedData
           .filter(item => {
             if (!validateFields) return true;
             
@@ -181,7 +180,6 @@ export const importInventoryFromCSV = (
   }
 };
 
-// New function to export inventory as PDF
 export const exportInventoryToPDF = (inventoryData: InventoryItem[], fileName?: string) => {
   toast.info("Préparation du PDF en cours...");
   // In a real app, you would use a library like jsPDF, pdfmake, or react-pdf
@@ -194,7 +192,6 @@ export const exportInventoryToPDF = (inventoryData: InventoryItem[], fileName?: 
   return true;
 };
 
-// New function to create an inventory template for download
 export const downloadInventoryTemplate = () => {
   const templateData = [
     {
