@@ -36,18 +36,18 @@ const StatCards: React.FC<StatCardsProps> = ({
 }) => {
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-      <div className="stat-card card-hover animate-enter">
-        <p className="stat-label">Revenu mensuel</p>
+      <div className="stat-card bg-white rounded-xl shadow-sm p-6 border border-gray-100 hover:shadow-md transition-shadow">
+        <p className="text-gray-500 font-medium text-sm">Revenu mensuel</p>
         <div className="flex items-baseline justify-between mt-2">
-          <p className="stat-value">
+          <p className="text-3xl font-bold text-gray-800">
             <EditableField
               value={monthlyRevenue}
               type="number"
               onSave={handleRevenueChange}
-              className="inline-block font-bold"
+              className="inline-block"
             /> €
           </p>
-          <span className="text-agri-success text-sm font-medium flex items-center">
+          <span className="text-green-600 text-sm font-medium flex items-center">
             <TrendingUp className="h-4 w-4 mr-1" /> +
             <EditableField
               value={revenueGrowth}
@@ -59,15 +59,15 @@ const StatCards: React.FC<StatCardsProps> = ({
         </div>
       </div>
       
-      <div className="stat-card card-hover animate-enter" style={{ animationDelay: '100ms' }}>
-        <p className="stat-label">Superficie cultivée</p>
+      <div className="stat-card bg-white rounded-xl shadow-sm p-6 border border-gray-100 hover:shadow-md transition-shadow">
+        <p className="text-gray-500 font-medium text-sm">Superficie cultivée</p>
         <div className="flex items-baseline justify-between mt-2">
-          <p className="stat-value">
+          <p className="text-3xl font-bold text-gray-800">
             <EditableField
               value={cultivatedArea}
               type="number"
               onSave={handleAreaChange}
-              className="inline-block font-bold"
+              className="inline-block"
             /> ha
           </p>
           <span className="text-agri-primary text-sm font-medium">
@@ -81,18 +81,18 @@ const StatCards: React.FC<StatCardsProps> = ({
         </div>
       </div>
       
-      <div className="stat-card card-hover animate-enter" style={{ animationDelay: '200ms' }}>
-        <p className="stat-label">Rendement moyen</p>
+      <div className="stat-card bg-white rounded-xl shadow-sm p-6 border border-gray-100 hover:shadow-md transition-shadow">
+        <p className="text-gray-500 font-medium text-sm">Rendement moyen</p>
         <div className="flex items-baseline justify-between mt-2">
-          <p className="stat-value">
+          <p className="text-3xl font-bold text-gray-800">
             <EditableField
               value={averageYield}
               type="number"
               onSave={handleYieldChange}
-              className="inline-block font-bold"
+              className="inline-block"
             /> t/ha
           </p>
-          <span className="text-agri-success text-sm font-medium flex items-center">
+          <span className="text-green-600 text-sm font-medium flex items-center">
             <TrendingUp className="h-4 w-4 mr-1" /> +
             <EditableField
               value={yieldGrowth}
@@ -104,11 +104,11 @@ const StatCards: React.FC<StatCardsProps> = ({
         </div>
       </div>
       
-      <div className="stat-card card-hover animate-enter" style={{ animationDelay: '300ms' }}>
-        <p className="stat-label">Alertes</p>
+      <div className="stat-card bg-white rounded-xl shadow-sm p-6 border border-gray-100 hover:shadow-md transition-shadow">
+        <p className="text-gray-500 font-medium text-sm">Alertes</p>
         <div className="flex items-baseline justify-between mt-2">
-          <p className="stat-value">{alertsCount}</p>
-          <span className="text-agri-warning text-sm font-medium flex items-center">
+          <p className="text-3xl font-bold text-gray-800">{alertsCount}</p>
+          <span className="text-amber-500 text-sm font-medium flex items-center">
             <AlertTriangle className="h-4 w-4 mr-1" /> Récent
           </span>
         </div>

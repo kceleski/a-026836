@@ -20,6 +20,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { useToast } from "@/hooks/use-toast";
 
 interface ParcelAlert {
   id: number;
@@ -53,13 +54,19 @@ const ParcelActionButtons = ({
   setWeatherAlertsOpen,
   getSeverityColor
 }: ParcelActionButtonsProps) => {
+  const { toast } = useToast();
+
   return (
-    <div className="flex flex-wrap gap-2">
+    <div className="flex flex-wrap gap-3">
       <TooltipProvider>
         <Tooltip>
           <TooltipTrigger asChild>
-            <Button variant="outline" onClick={onOpenMap}>
-              <Map className="mr-2 h-4 w-4" />
+            <Button 
+              variant="outline" 
+              onClick={onOpenMap}
+              className="bg-white border-gray-200 hover:bg-gray-50"
+            >
+              <Map className="mr-2 h-4 w-4 text-gray-600" />
               Carte
             </Button>
           </TooltipTrigger>
@@ -72,7 +79,10 @@ const ParcelActionButtons = ({
       {activeParcelAlerts.length > 0 && (
         <Popover open={weatherAlertsOpen} onOpenChange={setWeatherAlertsOpen}>
           <PopoverTrigger asChild>
-            <Button variant="outline" className="relative">
+            <Button 
+              variant="outline" 
+              className="relative bg-white border-gray-200 hover:bg-gray-50"
+            >
               <AlertTriangle className="mr-2 h-4 w-4 text-orange-500" />
               Alertes
               <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
@@ -112,15 +122,19 @@ const ParcelActionButtons = ({
       <ReportGenerationButton 
         moduleName="parcelles" 
         variant="outline" 
-        className="bg-transparent hover:bg-muted/20 text-foreground"
+        className="bg-white border-gray-200 hover:bg-gray-50 text-gray-800"
       />
 
       {onGenerateStatistics && (
         <TooltipProvider>
           <Tooltip>
             <TooltipTrigger asChild>
-              <Button variant="outline" onClick={onGenerateStatistics}>
-                <FileBarChart className="mr-2 h-4 w-4" />
+              <Button 
+                variant="outline" 
+                onClick={onGenerateStatistics}
+                className="bg-white border-gray-200 hover:bg-gray-50"
+              >
+                <FileBarChart className="mr-2 h-4 w-4 text-gray-600" />
                 Statistiques
               </Button>
             </TooltipTrigger>
@@ -135,8 +149,12 @@ const ParcelActionButtons = ({
         <TooltipProvider>
           <Tooltip>
             <TooltipTrigger asChild>
-              <Button variant="outline" onClick={onOpenLayerManager}>
-                <Layers className="mr-2 h-4 w-4" />
+              <Button 
+                variant="outline" 
+                onClick={onOpenLayerManager}
+                className="bg-white border-gray-200 hover:bg-gray-50"
+              >
+                <Layers className="mr-2 h-4 w-4 text-gray-600" />
                 Couches
               </Button>
             </TooltipTrigger>
@@ -147,13 +165,21 @@ const ParcelActionButtons = ({
         </TooltipProvider>
       )}
       
-      <Button variant="outline" onClick={onExportData}>
-        <Download className="mr-2 h-4 w-4" />
+      <Button 
+        variant="outline" 
+        onClick={onExportData}
+        className="bg-white border-gray-200 hover:bg-gray-50"
+      >
+        <Download className="mr-2 h-4 w-4 text-gray-600" />
         Exporter
       </Button>
       
-      <Button variant="outline" onClick={onImportData}>
-        <Upload className="mr-2 h-4 w-4" />
+      <Button 
+        variant="outline" 
+        onClick={onImportData}
+        className="bg-white border-gray-200 hover:bg-gray-50"
+      >
+        <Upload className="mr-2 h-4 w-4 text-gray-600" />
         Importer
       </Button>
 
@@ -161,7 +187,10 @@ const ParcelActionButtons = ({
         <TooltipProvider>
           <Tooltip>
             <TooltipTrigger asChild>
-              <Button className="bg-agri-primary hover:bg-agri-primary-dark text-white" onClick={onAddParcel}>
+              <Button 
+                className="bg-green-600 hover:bg-green-700 text-white" 
+                onClick={onAddParcel}
+              >
                 <Plus className="mr-2 h-4 w-4" />
                 Ajouter une parcelle
               </Button>

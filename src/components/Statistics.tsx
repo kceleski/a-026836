@@ -7,7 +7,6 @@ import YieldsCharts from './statistics/YieldsCharts';
 import FinancialCharts from './statistics/FinancialCharts';
 import EnvironmentalCharts from './statistics/EnvironmentalCharts';
 import { useStatistics } from '../contexts/StatisticsContext';
-import { toast } from 'sonner';
 
 const Statistics = () => {
   const { 
@@ -44,11 +43,6 @@ const Statistics = () => {
     
     // Mettre à jour les données avec les nouveaux filtres
     updateDataWithFilters(newPeriod, newCropFilter);
-    
-    // Notification pour l'utilisateur
-    toast.success("Filtres appliqués", {
-      description: `Affichage des données pour la période: ${newPeriod}, culture: ${newCropFilter === 'all' ? 'Toutes' : newCropFilter}`
-    });
   };
   
   return (
@@ -60,21 +54,25 @@ const Statistics = () => {
         setCurrentChart={setCurrentChart} 
       />
 
-      <div className="flex justify-between items-center mb-6">
-        <h2 className="text-xl font-semibold">{getChartTitle()}</h2>
-        <ChartFilters 
-          period={period}
-          setPeriod={(newPeriod) => handleFilterChange(newPeriod, cropFilter)}
-          cropFilter={cropFilter}
-          setCropFilter={(newCropFilter) => handleFilterChange(period, newCropFilter)}
-        />
+      <div className="bg-white rounded-xl border border-gray-100 p-6 mb-6 shadow-sm">
+        <div className="flex justify-between items-center mb-4">
+          <h2 className="text-xl font-semibold text-gray-800">{getChartTitle()}</h2>
+          <ChartFilters 
+            period={period}
+            setPeriod={(newPeriod) => handleFilterChange(newPeriod, cropFilter)}
+            cropFilter={cropFilter}
+            setCropFilter={(newCropFilter) => handleFilterChange(period, newCropFilter)}
+          />
+        </div>
+
+        <p className="text-gray-500 mb-6">{getChartDescription()}</p>
+
+        <div className="bg-gray-50 rounded-lg p-4">
+          {currentChart === 'yields' && <YieldsCharts />}
+          {currentChart === 'financial' && <FinancialCharts />}
+          {currentChart === 'environmental' && <EnvironmentalCharts />}
+        </div>
       </div>
-
-      <p className="text-muted-foreground mb-6">{getChartDescription()}</p>
-
-      {currentChart === 'yields' && <YieldsCharts />}
-      {currentChart === 'financial' && <FinancialCharts />}
-      {currentChart === 'environmental' && <EnvironmentalCharts />}
     </div>
   );
 };

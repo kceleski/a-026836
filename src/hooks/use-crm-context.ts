@@ -1,6 +1,4 @@
-
 import { useState, useEffect, useCallback } from 'react';
-import { toast } from 'sonner';
 import { exportToCSV, exportToExcel, exportToPDF, importFromCSV, printData } from '../utils/crm-data-operations';
 
 // Types pour le contexte CRM global
@@ -113,10 +111,6 @@ export const useCRMContext = (): CRMContextState => {
     setTimeout(() => {
       setLastSync(new Date());
       setIsRefreshing(false);
-      
-      toast.success('Synchronisation terminée', {
-        description: 'Toutes les données ont été synchronisées entre les modules'
-      });
     }, 1500);
   }, []);
 
@@ -132,11 +126,6 @@ export const useCRMContext = (): CRMContextState => {
     
     // Mettre à jour la date de dernière synchronisation
     setLastSync(new Date());
-    
-    // Notification optionnelle
-    toast.success(`Module ${moduleName} mis à jour`, {
-      description: 'Les changements sont maintenant visibles dans tous les modules liés'
-    });
   }, []);
 
   // Récupérer les données d'un module spécifique
@@ -154,7 +143,6 @@ export const useCRMContext = (): CRMContextState => {
     const data = customData || getModuleData(moduleName)?.items;
     
     if (!data || !Array.isArray(data) || data.length === 0) {
-      toast.error(`Aucune donnée à exporter dans le module ${moduleName}`);
       return false;
     }
     
@@ -169,9 +157,6 @@ export const useCRMContext = (): CRMContextState => {
           template: 'technical_sheet'
         });
       } else if (moduleName === 'guide_cultures') {
-        toast.success("Guide téléchargé", {
-          description: "Le guide des cultures tropicales a été téléchargé"
-        });
         return true;
       }
       
@@ -193,7 +178,6 @@ export const useCRMContext = (): CRMContextState => {
       return success;
     } catch (error) {
       console.error(`Error exporting ${moduleName} data:`, error);
-      toast.error(`Erreur lors de l'export des données ${moduleName}`);
       return false;
     }
   }, [getModuleData, companyName]);
@@ -208,17 +192,12 @@ export const useCRMContext = (): CRMContextState => {
           items: importedData
         });
         
-        toast.success(`Données importées avec succès dans le module ${moduleName}`, {
-          description: `${importedData.length} enregistrements ont été ajoutés ou mis à jour`
-        });
-        
         return true;
       }
       
       return false;
     } catch (error) {
       console.error(`Error importing ${moduleName} data:`, error);
-      toast.error(`Erreur lors de l'import des données ${moduleName}`);
       return false;
     }
   }, [updateModuleData]);
@@ -228,7 +207,6 @@ export const useCRMContext = (): CRMContextState => {
     const data = getModuleData(moduleName);
     
     if (!data || !data.items || !Array.isArray(data.items) || data.items.length === 0) {
-      toast.error(`Aucune donnée à imprimer dans le module ${moduleName}`);
       return false;
     }
     
@@ -252,7 +230,6 @@ export const useCRMContext = (): CRMContextState => {
       );
     } catch (error) {
       console.error(`Error printing ${moduleName} data:`, error);
-      toast.error(`Erreur lors de l'impression des données ${moduleName}`);
       return false;
     }
   }, [getModuleData, companyName]);

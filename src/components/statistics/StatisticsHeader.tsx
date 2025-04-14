@@ -1,53 +1,28 @@
 
 import React, { useState } from 'react';
 import { Download, Printer, Share2 } from 'lucide-react';
-import { useToast } from '@/hooks/use-toast';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { useCRM } from '../../contexts/CRMContext';
-import { toast } from 'sonner';
 import ReportGenerationButton from '../common/ReportGenerationButton';
 
 const StatisticsHeader = () => {
-  const { toast: shadowToast } = useToast();
   const [shareDialogOpen, setShareDialogOpen] = useState(false);
   const { exportModuleData, printModuleData } = useCRM();
 
   const handleExport = async () => {
-    toast.info("Export des statistiques", {
-      description: "Vos statistiques sont en cours d'exportation au format CSV"
-    });
-    
     try {
-      const success = await exportModuleData('statistiques', 'csv');
-      
-      if (success) {
-        toast.success("Export terminé", {
-          description: "Votre fichier a été téléchargé avec succès"
-        });
-      }
+      await exportModuleData('statistiques', 'csv');
     } catch (error) {
       console.error("Error exporting statistics:", error);
-      toast.error("Erreur lors de l'exportation des statistiques");
     }
   };
 
   const handlePrint = async () => {
-    toast.info("Impression des statistiques", {
-      description: "Préparation du document pour impression"
-    });
-    
     try {
-      const success = await printModuleData('statistiques');
-      
-      if (success) {
-        shadowToast({
-          description: "Le document est prêt à être imprimé"
-        });
-      }
+      await printModuleData('statistiques');
     } catch (error) {
       console.error("Error printing statistics:", error);
-      toast.error("Erreur lors de l'impression des statistiques");
     }
   };
 
@@ -56,29 +31,15 @@ const StatisticsHeader = () => {
   };
   
   const handleShareByEmail = () => {
-    toast.success("Partage par email", {
-      description: "Un lien vers vos statistiques a été envoyé par email"
-    });
     setShareDialogOpen(false);
   };
   
   const handleShareByPDF = async () => {
-    toast.info("Génération du PDF", {
-      description: "Votre rapport PDF est en cours de génération"
-    });
-    
     try {
-      const success = await exportModuleData('statistiques', 'pdf');
-      
-      if (success) {
-        toast.success("PDF généré", {
-          description: "Le rapport a été généré et téléchargé"
-        });
-      }
+      await exportModuleData('statistiques', 'pdf');
       setShareDialogOpen(false);
     } catch (error) {
       console.error("Error generating PDF:", error);
-      toast.error("Erreur lors de la génération du PDF");
       setShareDialogOpen(false);
     }
   };
@@ -86,36 +47,39 @@ const StatisticsHeader = () => {
   return (
     <header className="flex flex-col md:flex-row md:justify-between md:items-center mb-6 gap-4">
       <div>
-        <h1 className="text-2xl font-bold mb-1">Statistiques et Analyses</h1>
-        <p className="text-muted-foreground">Visualisez et analysez les données de votre exploitation</p>
+        <h1 className="text-2xl font-bold mb-1 text-gray-800">Statistiques et Analyses</h1>
+        <p className="text-gray-500">Visualisez et analysez les données de votre exploitation</p>
       </div>
-      <div className="flex flex-wrap gap-2">
+      <div className="flex flex-wrap gap-3">
         <ReportGenerationButton 
           moduleName="statistiques" 
-          className="mr-2"
+          className="bg-green-600 hover:bg-green-700 text-white"
         />
         
-        <button 
-          className="inline-flex items-center px-4 py-2 border border-input bg-white rounded-lg hover:bg-muted/30 transition-colors"
+        <Button 
+          variant="outline" 
           onClick={handleExport}
+          className="bg-white border-gray-200 hover:bg-gray-50"
         >
-          <Download className="h-4 w-4 mr-2" />
+          <Download className="h-4 w-4 mr-2 text-gray-600" />
           Exporter CSV
-        </button>
-        <button 
-          className="inline-flex items-center px-4 py-2 border border-input bg-white rounded-lg hover:bg-muted/30 transition-colors"
+        </Button>
+        <Button 
+          variant="outline" 
           onClick={handlePrint}
+          className="bg-white border-gray-200 hover:bg-gray-50"
         >
-          <Printer className="h-4 w-4 mr-2" />
+          <Printer className="h-4 w-4 mr-2 text-gray-600" />
           Imprimer
-        </button>
-        <button 
-          className="inline-flex items-center px-4 py-2 border border-input bg-white rounded-lg hover:bg-muted/30 transition-colors"
+        </Button>
+        <Button 
+          variant="outline" 
           onClick={handleShare}
+          className="bg-white border-gray-200 hover:bg-gray-50"
         >
-          <Share2 className="h-4 w-4 mr-2" />
+          <Share2 className="h-4 w-4 mr-2 text-gray-600" />
           Partager
-        </button>
+        </Button>
       </div>
       
       <Dialog open={shareDialogOpen} onOpenChange={setShareDialogOpen}>
@@ -131,7 +95,7 @@ const StatisticsHeader = () => {
               <Button onClick={handleShareByEmail} variant="outline">
                 Envoyer par email
               </Button>
-              <Button onClick={handleShareByPDF}>
+              <Button onClick={handleShareByPDF} className="bg-green-600 hover:bg-green-700">
                 Générer un PDF
               </Button>
             </div>
