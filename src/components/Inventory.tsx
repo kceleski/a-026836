@@ -1,3 +1,4 @@
+
 import React, { useState, useRef, useEffect } from 'react';
 import { DateRange } from 'react-day-picker';
 import { 
@@ -848,4 +849,221 @@ const Inventory: React.FC<InventoryProps> = ({ dateRange, searchTerm: externalSe
                               value={transaction.notes}
                               onSave={(value) => {
                                 const updatedTransactions = [...transactionHistory];
-                                const index = updated
+                                const index = updatedTransactions.findIndex(t => t.id === transaction.id);
+                                if (index !== -1) {
+                                  updatedTransactions[index] = {
+                                    ...updatedTransactions[index],
+                                    notes: value.toString()
+                                  };
+                                  setTransactionHistory(updatedTransactions);
+                                }
+                              }}
+                            />
+                          </td>
+                          <td className="px-4 py-3">
+                            <button
+                              onClick={() => confirmDeleteTransaction(transaction.id)}
+                              className="p-1.5 hover:bg-agri-danger/10 text-agri-danger rounded"
+                              title="Supprimer la transaction"
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </button>
+                          </td>
+                        </tr>
+                      ))}
+                      {itemTransactions.length === 0 && (
+                        <tr>
+                          <td colSpan={6} className="px-4 py-4 text-center text-muted-foreground">
+                            Aucune transaction enregistrée
+                          </td>
+                        </tr>
+                      )}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+          </div>
+        ) : (
+          <div>
+            <div className="mb-6">
+              <InventoryFilters 
+                searchTerm={searchTerm}
+                setSearchTerm={setSearchTerm}
+                categoryFilter={categoryFilter}
+                setCategoryFilter={setCategoryFilter}
+                categories={categories}
+                sortBy={sortBy}
+                setSortBy={setSortBy}
+                sortOrder={sortOrder}
+                setSortOrder={setSortOrder as (order: 'asc' | 'desc') => void}
+              />
+            </div>
+            
+            <EditableTable
+              data={tableData}
+              columns={inventoryColumns}
+              onUpdate={handleTableUpdate}
+              onDelete={(rowIndex) => confirmDeleteItem(filteredItems[rowIndex].id)}
+              actions={[
+                { 
+                  icon: <ChevronRight className="h-4 w-4" />,
+                  label: "Voir détails",
+                  onClick: (rowIndex) => setSelectedItem(filteredItems[rowIndex])
+                }
+              ]}
+              className="mb-6"
+              sortable={true}
+            />
+            
+            {showAddForm && (
+              <div className="border rounded-xl p-6 bg-muted/5 animate-enter">
+                <div className="flex justify-between items-center mb-4">
+                  <h3 className="text-lg font-medium">Ajouter un nouvel article</h3>
+                  <Button 
+                    variant="ghost" 
+                    size="sm" 
+                    onClick={() => setShowAddForm(false)}
+                  >
+                    <X className="h-4 w-4" />
+                  </Button>
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  <div>
+                    <Label htmlFor="name">Nom de l'article*</Label>
+                    <Input
+                      id="name"
+                      value={newItem.name}
+                      onChange={(e) => setNewItem({ ...newItem, name: e.target.value })}
+                      className="mt-1"
+                      placeholder="Ex: Semences de blé"
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="category">Catégorie*</Label>
+                    <Input
+                      id="category"
+                      value={newItem.category}
+                      onChange={(e) => setNewItem({ ...newItem, category: e.target.value })}
+                      className="mt-1"
+                      list="categories-list"
+                      placeholder="Ex: Semences"
+                    />
+                    <datalist id="categories-list">
+                      {categories
+                        .filter(cat => cat !== 'all')
+                        .map((category) => (
+                          <option key={category} value={category} />
+                        ))}
+                    </datalist>
+                  </div>
+                  <div>
+                    <Label htmlFor="quantity">Quantité initiale*</Label>
+                    <div className="flex mt-1">
+                      <Input
+                        id="quantity"
+                        type="number"
+                        value={newItem.quantity}
+                        onChange={(e) => setNewItem({ ...newItem, quantity: Number(e.target.value) })}
+                        min={0}
+                      />
+                      <Input
+                        className="w-24 ml-2"
+                        placeholder="Unité"
+                        value={newItem.unit}
+                        onChange={(e) => setNewItem({ ...newItem, unit: e.target.value })}
+                      />
+                    </div>
+                  </div>
+                  <div>
+                    <Label htmlFor="minQuantity">Seuil minimal d'alerte</Label>
+                    <Input
+                      id="minQuantity"
+                      type="number"
+                      value={newItem.minQuantity}
+                      onChange={(e) => setNewItem({ ...newItem, minQuantity: Number(e.target.value) })}
+                      className="mt-1"
+                      min={0}
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="price">Prix unitaire (€)</Label>
+                    <Input
+                      id="price"
+                      type="number"
+                      value={newItem.price}
+                      onChange={(e) => setNewItem({ ...newItem, price: Number(e.target.value) })}
+                      className="mt-1"
+                      min={0}
+                      step="0.01"
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="location">Emplacement</Label>
+                    <Input
+                      id="location"
+                      value={newItem.location}
+                      onChange={(e) => setNewItem({ ...newItem, location: e.target.value })}
+                      className="mt-1"
+                      placeholder="Ex: Hangar principal"
+                    />
+                  </div>
+                  <div className="md:col-span-2 lg:col-span-3">
+                    <Label htmlFor="notes">Notes additionnelles</Label>
+                    <Textarea
+                      id="notes"
+                      value={newItem.notes || ''}
+                      onChange={(e) => setNewItem({ ...newItem, notes: e.target.value })}
+                      className="mt-1"
+                      placeholder="Informations complémentaires sur l'article..."
+                    />
+                  </div>
+                </div>
+                <div className="mt-6 flex justify-end">
+                  <Button 
+                    variant="outline" 
+                    onClick={() => setShowAddForm(false)} 
+                    className="mr-2"
+                  >
+                    Annuler
+                  </Button>
+                  <Button onClick={handleAddItem}>
+                    <Plus className="mr-2 h-4 w-4" />
+                    Ajouter l'article
+                  </Button>
+                </div>
+              </div>
+            )}
+          </div>
+        )
+      ) : (
+        <InventoryStats 
+          inventoryData={inventoryData} 
+          categoryStats={categoryStats} 
+        />
+      )}
+
+      <ConfirmDialog 
+        isOpen={deleteConfirmOpen} 
+        title="Supprimer l'article" 
+        message="Êtes-vous sûr de vouloir supprimer cet article ? Cette action est irréversible."
+        confirmLabel="Supprimer"
+        cancelLabel="Annuler"
+        onConfirm={handleDeleteItem}
+        onCancel={() => setDeleteConfirmOpen(false)}
+      />
+
+      <ConfirmDialog 
+        isOpen={transactionDeleteConfirmOpen} 
+        title="Supprimer la transaction" 
+        message="Êtes-vous sûr de vouloir supprimer cette transaction ? Le stock sera ajusté en conséquence."
+        confirmLabel="Supprimer"
+        cancelLabel="Annuler"
+        onConfirm={handleDeleteTransaction}
+        onCancel={() => setTransactionDeleteConfirmOpen(false)}
+      />
+    </div>
+  );
+};
+
+export default Inventory;

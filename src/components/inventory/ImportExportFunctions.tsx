@@ -58,7 +58,7 @@ export const exportInventoryToCSV = (
       });
     }
 
-    const csv = Papa.unparse(dataToExport);
+    const csv = Papa.unparse(dataToExport as any[]);
     const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
     const link = document.createElement('a');
     const url = URL.createObjectURL(blob);
