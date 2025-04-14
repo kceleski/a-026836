@@ -1,3 +1,4 @@
+
 import { toast } from 'sonner';
 import Papa from 'papaparse';
 
@@ -43,7 +44,7 @@ export const exportInventoryToCSV = (
             filteredItem[field] = item[field];
           }
         });
-        return filteredItem;
+        return filteredItem as unknown as InventoryItem;
       });
     } else if (options.excludeFields?.length) {
       dataToExport = dataToExport.map(item => {
@@ -53,7 +54,7 @@ export const exportInventoryToCSV = (
             filteredItem[key] = item[key];
           }
         });
-        return filteredItem;
+        return filteredItem as unknown as InventoryItem;
       });
     }
 
