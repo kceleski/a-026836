@@ -5,10 +5,12 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, Di
 import { Button } from '@/components/ui/button';
 import { useCRM } from '../../contexts/CRMContext';
 import ReportGenerationButton from '../common/ReportGenerationButton';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 const StatisticsHeader = () => {
   const [shareDialogOpen, setShareDialogOpen] = useState(false);
   const { exportModuleData, printModuleData } = useCRM();
+  const isMobile = useIsMobile();
 
   const handleExport = async () => {
     try {
@@ -45,45 +47,52 @@ const StatisticsHeader = () => {
   };
 
   return (
-    <header className="flex flex-col md:flex-row md:justify-between md:items-center mb-6 gap-4">
+    <header className="flex flex-col mb-6 gap-4">
       <div>
-        <h1 className="text-2xl font-bold mb-1 text-gray-800">Statistiques et Analyses</h1>
-        <p className="text-gray-500">Visualisez et analysez les données de votre exploitation</p>
+        <h1 className="text-xl md:text-2xl font-bold mb-1 text-gray-800">Statistiques et Analyses</h1>
+        <p className="text-sm md:text-base text-gray-500">Visualisez et analysez les données de votre exploitation</p>
       </div>
-      <div className="flex flex-wrap gap-3">
+      <div className="flex flex-wrap gap-2 md:gap-3 justify-start md:justify-end">
         <ReportGenerationButton 
           moduleName="statistiques" 
-          className="bg-green-600 hover:bg-green-700 text-white"
+          className="bg-green-600 hover:bg-green-700 text-white text-xs md:text-sm px-2 md:px-4 py-1.5 md:py-2"
         />
         
-        <Button 
-          variant="outline" 
-          onClick={handleExport}
-          className="bg-white border-gray-200 hover:bg-gray-50"
-        >
-          <Download className="h-4 w-4 mr-2 text-gray-600" />
-          Exporter CSV
-        </Button>
-        <Button 
-          variant="outline" 
-          onClick={handlePrint}
-          className="bg-white border-gray-200 hover:bg-gray-50"
-        >
-          <Printer className="h-4 w-4 mr-2 text-gray-600" />
-          Imprimer
-        </Button>
+        {!isMobile ? (
+          <>
+            <Button 
+              variant="outline" 
+              onClick={handleExport}
+              className="bg-white border-gray-200 hover:bg-gray-50 text-xs md:text-sm h-auto py-1.5 md:py-2"
+              size={isMobile ? "sm" : "default"}
+            >
+              <Download className="h-3.5 w-3.5 md:h-4 md:w-4 mr-1.5 md:mr-2 text-gray-600" />
+              {isMobile ? "CSV" : "Exporter CSV"}
+            </Button>
+            <Button 
+              variant="outline" 
+              onClick={handlePrint}
+              className="bg-white border-gray-200 hover:bg-gray-50 text-xs md:text-sm h-auto py-1.5 md:py-2"
+              size={isMobile ? "sm" : "default"}
+            >
+              <Printer className="h-3.5 w-3.5 md:h-4 md:w-4 mr-1.5 md:mr-2 text-gray-600" />
+              {isMobile ? "Print" : "Imprimer"}
+            </Button>
+          </>
+        ) : null}
         <Button 
           variant="outline" 
           onClick={handleShare}
-          className="bg-white border-gray-200 hover:bg-gray-50"
+          className="bg-white border-gray-200 hover:bg-gray-50 text-xs md:text-sm h-auto py-1.5 md:py-2"
+          size={isMobile ? "sm" : "default"}
         >
-          <Share2 className="h-4 w-4 mr-2 text-gray-600" />
-          Partager
+          <Share2 className="h-3.5 w-3.5 md:h-4 md:w-4 mr-1.5 md:mr-2 text-gray-600" />
+          {isMobile ? "Partager" : "Partager"}
         </Button>
       </div>
       
       <Dialog open={shareDialogOpen} onOpenChange={setShareDialogOpen}>
-        <DialogContent className="sm:max-w-md">
+        <DialogContent className="sm:max-w-md max-w-[90%]">
           <DialogHeader>
             <DialogTitle>Partager les statistiques</DialogTitle>
             <DialogDescription>

@@ -7,6 +7,7 @@ import YieldsCharts from './statistics/YieldsCharts';
 import FinancialCharts from './statistics/FinancialCharts';
 import EnvironmentalCharts from './statistics/EnvironmentalCharts';
 import { useStatistics } from '../contexts/StatisticsContext';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 const Statistics = () => {
   const { 
@@ -17,6 +18,7 @@ const Statistics = () => {
     updateDataWithFilters
   } = useStatistics();
   
+  const isMobile = useIsMobile();
   const [currentChart, setCurrentChart] = React.useState<'yields' | 'financial' | 'environmental'>('yields');
   
   const getChartTitle = () => {
@@ -46,7 +48,7 @@ const Statistics = () => {
   };
   
   return (
-    <div className="p-6 animate-enter">
+    <div className="p-3 md:p-6 animate-enter">
       <StatisticsHeader />
 
       <ChartSelector 
@@ -54,9 +56,9 @@ const Statistics = () => {
         setCurrentChart={setCurrentChart} 
       />
 
-      <div className="bg-white rounded-xl border border-gray-100 p-6 mb-6 shadow-sm">
-        <div className="flex justify-between items-center mb-4">
-          <h2 className="text-xl font-semibold text-gray-800">{getChartTitle()}</h2>
+      <div className="bg-white rounded-xl border border-gray-100 p-3 md:p-6 mb-6 shadow-sm">
+        <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-3 mb-4">
+          <h2 className="text-lg md:text-xl font-semibold text-gray-800">{getChartTitle()}</h2>
           <ChartFilters 
             period={period}
             setPeriod={(newPeriod) => handleFilterChange(newPeriod, cropFilter)}
@@ -65,12 +67,14 @@ const Statistics = () => {
           />
         </div>
 
-        <p className="text-gray-500 mb-6">{getChartDescription()}</p>
+        <p className="text-sm md:text-base text-gray-500 mb-4 md:mb-6">{getChartDescription()}</p>
 
-        <div className="bg-gray-50 rounded-lg p-4">
-          {currentChart === 'yields' && <YieldsCharts />}
-          {currentChart === 'financial' && <FinancialCharts />}
-          {currentChart === 'environmental' && <EnvironmentalCharts />}
+        <div className="bg-gray-50 rounded-lg p-2 md:p-4 overflow-x-auto">
+          <div className={`min-w-full ${isMobile ? 'min-w-[500px]' : ''}`}>
+            {currentChart === 'yields' && <YieldsCharts />}
+            {currentChart === 'financial' && <FinancialCharts />}
+            {currentChart === 'environmental' && <EnvironmentalCharts />}
+          </div>
         </div>
       </div>
     </div>
