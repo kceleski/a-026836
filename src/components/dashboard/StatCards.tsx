@@ -35,82 +35,84 @@ const StatCards: React.FC<StatCardsProps> = ({
   handleYieldGrowthChange
 }) => {
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+    <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-3 gap-6">
       <div className="stat-card bg-white rounded-xl shadow-sm p-6 border border-gray-100 hover:shadow-md transition-shadow">
-        <p className="text-gray-500 font-medium text-sm">Revenu mensuel</p>
-        <div className="flex items-baseline justify-between mt-2">
-          <p className="text-3xl font-bold text-gray-800">
-            <EditableField
-              value={monthlyRevenue}
-              type="number"
-              onSave={handleRevenueChange}
-              className="inline-block"
-            /> €
-          </p>
-          <span className="text-green-600 text-sm font-medium flex items-center">
-            <TrendingUp className="h-4 w-4 mr-1" /> +
-            <EditableField
-              value={revenueGrowth}
-              type="number"
-              onSave={handleRevenueGrowthChange}
-              className="inline-block"
-            />%
-          </span>
+        <div className="flex flex-row items-center justify-between">
+          <div>
+            <p className="text-gray-500 font-medium text-sm mb-1">Revenu mensuel</p>
+            <div className="flex items-baseline">
+              <p className="text-3xl font-bold text-gray-800">
+                <EditableField
+                  value={monthlyRevenue}
+                  type="number"
+                  onSave={handleRevenueChange}
+                  className="inline-block"
+                /> €
+              </p>
+              <span className="text-green-600 text-sm font-medium flex items-center ml-3">
+                <TrendingUp className="h-4 w-4 mr-1" /> +
+                <EditableField
+                  value={revenueGrowth}
+                  type="number"
+                  onSave={handleRevenueGrowthChange}
+                  className="inline-block"
+                />%
+              </span>
+            </div>
+          </div>
         </div>
       </div>
       
       <div className="stat-card bg-white rounded-xl shadow-sm p-6 border border-gray-100 hover:shadow-md transition-shadow">
-        <p className="text-gray-500 font-medium text-sm">Superficie cultivée</p>
-        <div className="flex items-baseline justify-between mt-2">
-          <p className="text-3xl font-bold text-gray-800">
-            <EditableField
-              value={cultivatedArea}
-              type="number"
-              onSave={handleAreaChange}
-              className="inline-block"
-            /> ha
-          </p>
-          <span className="text-agri-primary text-sm font-medium">
-            <EditableField
-              value={parcelsCount}
-              type="number"
-              onSave={handleParcelsCountChange}
-              className="inline-block"
-            /> parcelles
-          </span>
+        <div className="flex flex-row items-center justify-between">
+          <div>
+            <p className="text-gray-500 font-medium text-sm mb-1">Superficie cultivée</p>
+            <div className="flex items-baseline">
+              <p className="text-3xl font-bold text-gray-800">
+                <EditableField
+                  value={cultivatedArea}
+                  type="number"
+                  onSave={handleAreaChange}
+                  className="inline-block"
+                /> ha
+              </p>
+              <span className="text-agri-primary text-sm font-medium ml-3">
+                <EditableField
+                  value={parcelsCount}
+                  type="number"
+                  onSave={handleParcelsCountChange}
+                  className="inline-block"
+                /> parcelles
+              </span>
+            </div>
+          </div>
         </div>
       </div>
       
       <div className="stat-card bg-white rounded-xl shadow-sm p-6 border border-gray-100 hover:shadow-md transition-shadow">
-        <p className="text-gray-500 font-medium text-sm">Rendement moyen</p>
-        <div className="flex items-baseline justify-between mt-2">
-          <p className="text-3xl font-bold text-gray-800">
-            <EditableField
-              value={averageYield}
-              type="number"
-              onSave={handleYieldChange}
-              className="inline-block"
-            /> t/ha
-          </p>
-          <span className="text-green-600 text-sm font-medium flex items-center">
-            <TrendingUp className="h-4 w-4 mr-1" /> +
-            <EditableField
-              value={yieldGrowth}
-              type="number"
-              onSave={handleYieldGrowthChange}
-              className="inline-block"
-            />%
-          </span>
-        </div>
-      </div>
-      
-      <div className="stat-card bg-white rounded-xl shadow-sm p-6 border border-gray-100 hover:shadow-md transition-shadow">
-        <p className="text-gray-500 font-medium text-sm">Alertes</p>
-        <div className="flex items-baseline justify-between mt-2">
-          <p className="text-3xl font-bold text-gray-800">{alertsCount}</p>
-          <span className="text-amber-500 text-sm font-medium flex items-center">
-            <AlertTriangle className="h-4 w-4 mr-1" /> Récent
-          </span>
+        <div className="flex flex-row items-center justify-between">
+          <div>
+            <p className="text-gray-500 font-medium text-sm mb-1">Rendement moyen</p>
+            <div className="flex items-baseline">
+              <p className="text-3xl font-bold text-gray-800">
+                <EditableField
+                  value={averageYield}
+                  type="number"
+                  onSave={handleYieldChange}
+                  className="inline-block"
+                /> t/ha
+              </p>
+              <span className="text-green-600 text-sm font-medium flex items-center ml-3">
+                <TrendingUp className="h-4 w-4 mr-1" /> +
+                <EditableField
+                  value={yieldGrowth}
+                  type="number"
+                  onSave={handleYieldGrowthChange}
+                  className="inline-block"
+                />%
+              </span>
+            </div>
+          </div>
         </div>
       </div>
     </div>

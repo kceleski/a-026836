@@ -42,8 +42,6 @@ const Statistics = () => {
   const handleFilterChange = (newPeriod: any, newCropFilter: string) => {
     setPeriod(newPeriod);
     setCropFilter(newCropFilter);
-    
-    // Mettre à jour les données avec les nouveaux filtres
     updateDataWithFilters(newPeriod, newCropFilter);
   };
   

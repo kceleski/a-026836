@@ -1,6 +1,5 @@
 
 import React, { ReactNode } from 'react';
-import { Toaster } from 'sonner';
 import Navbar from '../Navbar';
 import { useIsMobile } from '@/hooks/use-mobile';
 
@@ -19,20 +18,6 @@ const PageLayout = ({ children }: PageLayoutProps) => {
           {children}
         </div>
       </div>
-      <Toaster 
-        position={isMobile ? "bottom-center" : "top-right"}
-        toastOptions={{
-          style: {
-            background: 'white',
-            border: '1px solid #e2e8f0',
-            borderRadius: '0.5rem',
-            boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)',
-            padding: isMobile ? '0.75rem' : '1rem',
-            maxWidth: isMobile ? '90%' : 'auto',
-          },
-          className: 'md:min-w-[300px]'
-        }} 
-      />
     </div>
   );
 };
