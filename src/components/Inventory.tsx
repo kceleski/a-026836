@@ -1,5 +1,4 @@
-
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState } from 'react';
 import { DateRange } from 'react-day-picker';
 import { 
   Package, 
@@ -1044,23 +1043,23 @@ const Inventory: React.FC<InventoryProps> = ({ dateRange, searchTerm: externalSe
       )}
 
       <ConfirmDialog 
-        isOpen={deleteConfirmOpen} 
+        open={deleteConfirmOpen} 
         title="Supprimer l'article" 
-        message="Êtes-vous sûr de vouloir supprimer cet article ? Cette action est irréversible."
-        confirmLabel="Supprimer"
-        cancelLabel="Annuler"
+        description="Êtes-vous sûr de vouloir supprimer cet article ? Cette action est irréversible."
+        confirmText="Supprimer"
+        cancelText="Annuler"
         onConfirm={handleDeleteItem}
-        onCancel={() => setDeleteConfirmOpen(false)}
+        onOpenChange={() => setDeleteConfirmOpen(false)}
       />
 
       <ConfirmDialog 
-        isOpen={transactionDeleteConfirmOpen} 
+        open={transactionDeleteConfirmOpen} 
         title="Supprimer la transaction" 
-        message="Êtes-vous sûr de vouloir supprimer cette transaction ? Le stock sera ajusté en conséquence."
-        confirmLabel="Supprimer"
-        cancelLabel="Annuler"
+        description="Êtes-vous sûr de vouloir supprimer cette transaction ? Le stock sera ajusté en conséquence."
+        confirmText="Supprimer"
+        cancelText="Annuler"
         onConfirm={handleDeleteTransaction}
-        onCancel={() => setTransactionDeleteConfirmOpen(false)}
+        onOpenChange={() => setTransactionDeleteConfirmOpen(false)}
       />
     </div>
   );
