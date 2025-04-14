@@ -5,8 +5,6 @@ import { Download, Upload, Printer, FileText } from 'lucide-react';
 import { useCRM } from '../../contexts/CRMContext';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
-import { toast } from 'sonner';
-import { useToast } from '@/hooks/use-toast';
 import ReportGenerationButton from './ReportGenerationButton';
 
 interface ImportExportButtonsProps {
@@ -31,7 +29,6 @@ const ImportExportButtons: React.FC<ImportExportButtonsProps> = ({
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [exportFormat, setExportFormat] = useState<'csv' | 'excel' | 'pdf'>('csv');
   
-  const { toast: shadowToast } = useToast();
   const { exportModuleData, importModuleData, printModuleData } = useCRM();
   
   const handleExportClick = () => {
@@ -39,14 +36,10 @@ const ImportExportButtons: React.FC<ImportExportButtonsProps> = ({
   };
   
   const handleExportConfirm = async () => {
-    toast.info(`Export au format ${exportFormat.toUpperCase()} en cours...`);
-    
-    const success = await exportModuleData(moduleName, exportFormat);
-    
-    if (success) {
-      shadowToast({
-        description: `Les données ont été exportées avec succès au format ${exportFormat.toUpperCase()}`
-      });
+    try {
+      await exportModuleData(moduleName, exportFormat);
+    } catch (error) {
+      console.error(`Error exporting ${moduleName}:`, error);
     }
     
     setExportDialogOpen(false);
@@ -58,18 +51,18 @@ const ImportExportButtons: React.FC<ImportExportButtonsProps> = ({
   
   const handleImportConfirm = async () => {
     if (!selectedFile) {
-      toast.error("Erreur", {
-        description: "Aucun fichier sélectionné"
-      });
+      console.error("Aucun fichier sélectionné");
       return;
     }
     
-    toast.info(`Import ${selectedFile.name} en cours...`);
-    
-    const success = await importModuleData(moduleName, selectedFile);
-    
-    if (success && onImportComplete) {
-      onImportComplete();
+    try {
+      const success = await importModuleData(moduleName, selectedFile);
+      
+      if (success && onImportComplete) {
+        onImportComplete();
+      }
+    } catch (error) {
+      console.error(`Error importing ${moduleName}:`, error);
     }
     
     setImportDialogOpen(false);
@@ -77,24 +70,18 @@ const ImportExportButtons: React.FC<ImportExportButtonsProps> = ({
   };
   
   const handlePrintClick = async () => {
-    toast.info(`Préparation de l'impression...`);
-    
-    const success = await printModuleData(moduleName);
-    
-    if (success) {
-      shadowToast({
-        description: `Le document est prêt pour impression`
-      });
+    try {
+      await printModuleData(moduleName);
+    } catch (error) {
+      console.error(`Error printing ${moduleName}:`, error);
     }
   };
   
   const handleTechnicalSheetClick = async () => {
-    const success = await exportModuleData('guide_cultures', 'pdf');
-    
-    if (success) {
-      toast.success("Guide téléchargé", {
-        description: "Guide technique téléchargé avec succès"
-      });
+    try {
+      await exportModuleData('guide_cultures', 'pdf');
+    } catch (error) {
+      console.error("Error generating technical guide:", error);
     }
   };
   

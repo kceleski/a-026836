@@ -1,9 +1,8 @@
 
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { FileText, ChevronDown, FileSpreadsheet, FileBarChart2, FileImage } from 'lucide-react';
+import { FileText, ChevronDown, FileSpreadsheet, FileBarChart2 } from 'lucide-react';
 import { useCRM } from '../../contexts/CRMContext';
-import { toast } from 'sonner';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -36,29 +35,10 @@ const ReportGenerationButton: React.FC<ReportGenerationButtonProps> = ({
     setIsGenerating(true);
     setLastGeneratedFormat(format);
     
-    const formatNames = {
-      pdf: 'PDF',
-      excel: 'Excel',
-      csv: 'CSV'
-    };
-    
-    toast.info("Génération du rapport", {
-      description: `Préparation du rapport ${moduleName} au format ${formatNames[format]}`
-    });
-    
     try {
-      const success = await exportModuleData(moduleName, format);
-      
-      if (success) {
-        toast.success("Rapport généré", {
-          description: `Le rapport a été généré avec succès au format ${formatNames[format]}`
-        });
-      }
+      await exportModuleData(moduleName, format);
     } catch (error) {
       console.error("Error generating report:", error);
-      toast.error("Erreur lors de la génération du rapport", {
-        description: "Veuillez réessayer ou contacter le support technique"
-      });
     } finally {
       setIsGenerating(false);
     }

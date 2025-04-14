@@ -3,7 +3,6 @@ import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { FileText, Loader2 } from 'lucide-react';
 import { useCRM } from '../../contexts/CRMContext';
-import { toast } from 'sonner';
 import {
   Tooltip,
   TooltipContent,
@@ -29,16 +28,11 @@ const TechnicalSheetButton: React.FC<TechnicalSheetButtonProps> = ({
   
   const downloadTechnicalSheet = async () => {
     if (!data || Object.keys(data).length === 0) {
-      toast.error("Données insuffisantes", {
-        description: "Impossible de générer la fiche technique avec les données disponibles"
-      });
+      console.error("Données insuffisantes pour générer la fiche technique");
       return;
     }
 
     setIsGenerating(true);
-    toast.info("Génération de la fiche technique", {
-      description: `Préparation de la fiche ${data.name || data.nom || ""}`
-    });
     
     // Create a specific format for the technical sheet
     const techSheetData = [{
@@ -59,18 +53,9 @@ const TechnicalSheetButton: React.FC<TechnicalSheetButtonProps> = ({
     }];
     
     try {
-      const success = await exportModuleData('fiche_technique', 'pdf', techSheetData);
-      
-      if (success) {
-        toast.success("Fiche technique générée", {
-          description: `La fiche technique est prête à être imprimée`
-        });
-      }
+      await exportModuleData('fiche_technique', 'pdf', techSheetData);
     } catch (error) {
       console.error("Error generating technical sheet:", error);
-      toast.error("Erreur lors de la génération de la fiche technique", {
-        description: "Veuillez vérifier les données ou contacter le support technique"
-      });
     } finally {
       setIsGenerating(false);
     }

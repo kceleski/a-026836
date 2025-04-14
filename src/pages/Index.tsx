@@ -159,7 +159,11 @@ const Index = () => {
     
     const format = tab === 'dashboard' ? 'excel' : 'csv';
     
-    await exportModuleData(module, format as 'csv' | 'excel' | 'pdf');
+    try {
+      await exportModuleData(module, format as 'csv' | 'excel' | 'pdf');
+    } catch (error) {
+      console.error(`Error exporting ${module}:`, error);
+    }
   };
 
   const handleImportData = () => {
@@ -168,6 +172,7 @@ const Index = () => {
 
   const handleImportConfirm = async () => {
     if (!selectedFile) {
+      console.error("Aucun fichier sélectionné");
       return;
     }
     
@@ -180,7 +185,11 @@ const Index = () => {
     
     const module = moduleMapping[activeTab] || 'statistiques';
     
-    await importModuleData(module, selectedFile);
+    try {
+      await importModuleData(module, selectedFile);
+    } catch (error) {
+      console.error(`Error importing ${module}:`, error);
+    }
     
     setImportDialogOpen(false);
     setSelectedFile(null);
@@ -196,7 +205,11 @@ const Index = () => {
     
     const module = moduleMapping[tab] || 'statistiques';
     
-    await printModuleData(module);
+    try {
+      await printModuleData(module);
+    } catch (error) {
+      console.error(`Error printing ${module}:`, error);
+    }
   };
 
   const tabs: TabItem[] = [

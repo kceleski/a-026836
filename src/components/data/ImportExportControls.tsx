@@ -3,7 +3,6 @@ import React, { useState, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
-import { toast } from 'sonner';
 import { Download, Upload, Printer } from 'lucide-react';
 import { useCRM } from '../../contexts/CRMContext';
 
@@ -32,16 +31,18 @@ const ImportExportControls: React.FC<ImportExportControlsProps> = ({
   
   const handleImportConfirm = async () => {
     if (!selectedFile) {
-      toast.error("Aucun fichier sélectionné");
+      console.error("Aucun fichier sélectionné");
       return;
     }
     
-    toast.info(`Import ${selectedFile.name} en cours...`);
-    
-    const success = await importModuleData(moduleName, selectedFile);
-    
-    if (success && onImportComplete) {
-      onImportComplete();
+    try {
+      const success = await importModuleData(moduleName, selectedFile);
+      
+      if (success && onImportComplete) {
+        onImportComplete();
+      }
+    } catch (error) {
+      console.error(`Error importing ${moduleName}:`, error);
     }
     
     setImportDialogOpen(false);
@@ -53,17 +54,21 @@ const ImportExportControls: React.FC<ImportExportControlsProps> = ({
   };
   
   const handleExportConfirm = async () => {
-    toast.info(`Export au format ${exportFormat.toUpperCase()} en cours...`);
-    
-    const success = await exportModuleData(moduleName, exportFormat);
+    try {
+      await exportModuleData(moduleName, exportFormat);
+    } catch (error) {
+      console.error(`Error exporting ${moduleName}:`, error);
+    }
     
     setExportDialogOpen(false);
   };
   
   const handlePrintClick = async () => {
-    toast.info(`Préparation de l'impression...`);
-    
-    const success = await printModuleData(moduleName);
+    try {
+      await printModuleData(moduleName);
+    } catch (error) {
+      console.error(`Error printing ${moduleName}:`, error);
+    }
   };
   
   return (

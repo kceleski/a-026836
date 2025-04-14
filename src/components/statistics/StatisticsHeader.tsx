@@ -56,6 +56,7 @@ const StatisticsHeader = () => {
         <ReportGenerationButton 
           moduleName="statistiques" 
           className="bg-green-600 hover:bg-green-700 text-white text-xs md:text-sm px-2 md:px-4 py-1.5 md:py-2"
+          withAnimation={false}
         />
         
         {!isMobile ? (
