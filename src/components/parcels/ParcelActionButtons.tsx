@@ -1,10 +1,25 @@
 
 import React from 'react';
 import { Button } from '@/components/ui/button';
-import { Map, Download, Upload, AlertTriangle, FileText } from 'lucide-react';
+import { 
+  Map, 
+  Download, 
+  Upload, 
+  AlertTriangle, 
+  FileText,
+  Plus,
+  FileBarChart,
+  Layers 
+} from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import ReportGenerationButton from "../common/ReportGenerationButton";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 interface ParcelAlert {
   id: number;
@@ -17,6 +32,9 @@ interface ParcelActionButtonsProps {
   onExportData: () => void;
   onImportData: () => void;
   onOpenMap: () => void;
+  onAddParcel?: () => void;
+  onGenerateStatistics?: () => void;
+  onOpenLayerManager?: () => void;
   activeParcelAlerts: ParcelAlert[];
   weatherAlertsOpen: boolean;
   setWeatherAlertsOpen: (isOpen: boolean) => void;
@@ -27,6 +45,9 @@ const ParcelActionButtons = ({
   onExportData,
   onImportData,
   onOpenMap,
+  onAddParcel,
+  onGenerateStatistics,
+  onOpenLayerManager,
   activeParcelAlerts,
   weatherAlertsOpen,
   setWeatherAlertsOpen,
@@ -34,10 +55,19 @@ const ParcelActionButtons = ({
 }: ParcelActionButtonsProps) => {
   return (
     <div className="flex flex-wrap gap-2">
-      <Button variant="outline" onClick={onOpenMap}>
-        <Map className="mr-2 h-4 w-4" />
-        Carte
-      </Button>
+      <TooltipProvider>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Button variant="outline" onClick={onOpenMap}>
+              <Map className="mr-2 h-4 w-4" />
+              Carte
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent>
+            <p>Afficher la carte des parcelles</p>
+          </TooltipContent>
+        </Tooltip>
+      </TooltipProvider>
       
       {activeParcelAlerts.length > 0 && (
         <Popover open={weatherAlertsOpen} onOpenChange={setWeatherAlertsOpen}>
@@ -84,6 +114,38 @@ const ParcelActionButtons = ({
         variant="outline" 
         className="bg-transparent hover:bg-muted/20 text-foreground"
       />
+
+      {onGenerateStatistics && (
+        <TooltipProvider>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button variant="outline" onClick={onGenerateStatistics}>
+                <FileBarChart className="mr-2 h-4 w-4" />
+                Statistiques
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>
+              <p>Générer des statistiques sur vos parcelles</p>
+            </TooltipContent>
+          </Tooltip>
+        </TooltipProvider>
+      )}
+
+      {onOpenLayerManager && (
+        <TooltipProvider>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button variant="outline" onClick={onOpenLayerManager}>
+                <Layers className="mr-2 h-4 w-4" />
+                Couches
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>
+              <p>Gérer les couches de la carte</p>
+            </TooltipContent>
+          </Tooltip>
+        </TooltipProvider>
+      )}
       
       <Button variant="outline" onClick={onExportData}>
         <Download className="mr-2 h-4 w-4" />
@@ -94,6 +156,22 @@ const ParcelActionButtons = ({
         <Upload className="mr-2 h-4 w-4" />
         Importer
       </Button>
+
+      {onAddParcel && (
+        <TooltipProvider>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button className="bg-agri-primary hover:bg-agri-primary-dark text-white" onClick={onAddParcel}>
+                <Plus className="mr-2 h-4 w-4" />
+                Ajouter une parcelle
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>
+              <p>Créer une nouvelle parcelle</p>
+            </TooltipContent>
+          </Tooltip>
+        </TooltipProvider>
+      )}
     </div>
   );
 };

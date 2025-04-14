@@ -1,5 +1,7 @@
 
 import React, { useState, useEffect } from 'react';
+import { DateRange } from 'react-day-picker';
+import { addDays, subDays } from 'date-fns';
 import PageLayout from '../components/layout/PageLayout';
 import ParcelManagement from '../components/ParcelManagement';
 import PageHeader from '../components/layout/PageHeader';
@@ -12,6 +14,7 @@ import ParcelImportDialog from '../components/parcels/ParcelImportDialog';
 import GuadeloupeParcelManagement from '../components/GuadeloupeParcelManagement';
 import { toast } from 'sonner';
 import { useCRM } from '../contexts/CRMContext';
+import { FileSpreadsheet, FileBarChart2 } from 'lucide-react';
 
 const ParcelsPage = () => {
   const { toast: shadowToast } = useToast();
@@ -30,10 +33,17 @@ const ParcelsPage = () => {
   const [filterType, setFilterType] = useState('all');
   const [mapPreviewOpen, setMapPreviewOpen] = useState(false);
   const [importDialogOpen, setImportDialogOpen] = useState(false);
+  const [statsDialogOpen, setStatsDialogOpen] = useState(false);
+  const [layersDialogOpen, setLayersDialogOpen] = useState(false);
   const [weatherAlertsOpen, setWeatherAlertsOpen] = useState(false);
   const [showGuadeloupeView, setShowGuadeloupeView] = useState(true);
   const [lastSyncDate, setLastSyncDate] = useState<Date>(new Date());
   const { syncDataAcrossCRM } = useCRM();
+  const [areaRange, setAreaRange] = useState<[number, number]>([0, 50]);
+  const [dateRange, setDateRange] = useState<DateRange | undefined>({
+    from: subDays(new Date(), 30),
+    to: new Date(),
+  });
   
   const [activeParcelAlerts, setActiveParcelAlerts] = useState([
     { id: 1, parcel: 'Parcelle A12', type: 'Pluie intense', severity: 'Haute' },
@@ -125,6 +135,26 @@ const ParcelsPage = () => {
     });
   };
 
+  const handleGenerateStatistics = () => {
+    setStatsDialogOpen(true);
+    toast.success("Statistiques générées", {
+      description: "Les statistiques de vos parcelles ont été générées"
+    });
+  };
+
+  const handleOpenLayerManager = () => {
+    setLayersDialogOpen(true);
+    toast.info("Gestionnaire de couches", {
+      description: "Vous pouvez maintenant gérer les couches de la carte"
+    });
+  };
+
+  const handleAddParcel = () => {
+    toast.info("Création de parcelle", {
+      description: "Formulaire de création de parcelle ouvert"
+    });
+  };
+
   return (
     <PageLayout>
       <div className="p-6 animate-enter">
@@ -150,12 +180,19 @@ const ParcelsPage = () => {
               filterType={filterType}
               setFilterType={setFilterType}
               onSearch={handleSearch}
+              dateRange={dateRange}
+              setDateRange={setDateRange}
+              areaRange={areaRange}
+              setAreaRange={setAreaRange}
             />
             
             <ParcelActionButtons 
               onExportData={handleExportData}
               onImportData={handleImportData}
               onOpenMap={() => setMapPreviewOpen(true)}
+              onAddParcel={handleAddParcel}
+              onGenerateStatistics={handleGenerateStatistics}
+              onOpenLayerManager={handleOpenLayerManager}
               activeParcelAlerts={activeParcelAlerts}
               weatherAlertsOpen={weatherAlertsOpen}
               setWeatherAlertsOpen={setWeatherAlertsOpen}
@@ -168,6 +205,31 @@ const ParcelsPage = () => {
             >
               {showGuadeloupeView ? 'Vue Standard' : 'Vue Guadeloupe'}
             </button>
+          </div>
+        </div>
+
+        <div className="mb-6 p-4 bg-white rounded-xl border border-muted">
+          <div className="flex items-center mb-2">
+            <FileSpreadsheet className="h-5 w-5 mr-2 text-agri-primary" />
+            <h2 className="text-lg font-medium">Aperçu des statistiques parcellaires</h2>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div className="p-3 bg-muted/20 rounded-lg">
+              <p className="text-sm text-muted-foreground">Surface totale</p>
+              <p className="text-2xl font-semibold">128.5 ha</p>
+            </div>
+            <div className="p-3 bg-muted/20 rounded-lg">
+              <p className="text-sm text-muted-foreground">Parcelles actives</p>
+              <p className="text-2xl font-semibold">42</p>
+            </div>
+            <div className="p-3 bg-muted/20 rounded-lg">
+              <p className="text-sm text-muted-foreground">Rendement moyen</p>
+              <p className="text-2xl font-semibold">7.2 t/ha</p>
+            </div>
+            <div className="p-3 bg-muted/20 rounded-lg">
+              <p className="text-sm text-muted-foreground">Cultures principales</p>
+              <p className="text-xl font-semibold">Maïs, Blé, Colza</p>
+            </div>
           </div>
         </div>
 
