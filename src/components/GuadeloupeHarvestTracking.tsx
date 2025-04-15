@@ -3,9 +3,9 @@ import React, { useState } from 'react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from 'recharts';
 import { EditableField } from './ui/editable-field';
 import { EditableTable, Column } from './ui/editable-table';
-import { toast } from 'sonner';
 import { Tractor, Carrot, ArrowUp, ArrowDown } from 'lucide-react';
 import { useStatistics } from '../contexts/StatisticsContext';
+import PreviewPrintButton from './common/PreviewPrintButton';
 
 interface HarvestData {
   crop: string;
@@ -68,14 +68,14 @@ const GuadeloupeHarvestTracking = () => {
     
     newData[rowIndex] = updatedRow as HarvestData;
     setHarvestData(newData);
-    toast.success('Données de récolte mises à jour');
+    console.log('Données de récolte mises à jour');
   };
   
   const handleDeleteRow = (rowIndex: number) => {
     const newData = [...harvestData];
     newData.splice(rowIndex, 1);
     setHarvestData(newData);
-    toast.success('Culture supprimée du suivi');
+    console.log('Culture supprimée du suivi');
   };
   
   const handleAddRow = (newRow: Record<string, any>) => {
@@ -88,7 +88,7 @@ const GuadeloupeHarvestTracking = () => {
       quality: (newRow.quality as HarvestData['quality']) || 'Moyenne'
     };
     setHarvestData([...harvestData, typedRow]);
-    toast.success('Nouvelle culture ajoutée au suivi');
+    console.log('Nouvelle culture ajoutée au suivi');
   };
   
   // Données pour le graphique comparatif
@@ -99,26 +99,56 @@ const GuadeloupeHarvestTracking = () => {
     différence: item.currentYield - item.previousYield,
     unité: item.unit
   }));
+
+  // Prepare data for preview/print
+  const printData = harvestData.map(item => ({
+    culture: item.crop,
+    rendement_actuel: `${item.currentYield} ${item.unit}`,
+    rendement_precedent: `${item.previousYield} ${item.unit}`,
+    surface: `${item.harvestArea} ha`,
+    qualite: item.quality,
+    evolution: `${item.currentYield > item.previousYield ? '+' : ''}${(item.currentYield - item.previousYield)} ${item.unit}`
+  }));
+  
+  // Columns for preview/print
+  const printColumns = [
+    { key: "culture", header: "Culture" },
+    { key: "rendement_actuel", header: "Rendement actuel" },
+    { key: "rendement_precedent", header: "Rendement précédent" },
+    { key: "surface", header: "Surface (ha)" },
+    { key: "qualite", header: "Qualité" },
+    { key: "evolution", header: "Évolution" }
+  ];
   
   return (
     <div className="space-y-6">
       <div className="bg-white rounded-xl border p-6">
-        <div className="mb-4">
-          <h2 className="text-xl font-bold flex items-center">
-            <Tractor className="h-6 w-6 mr-2 text-agri-primary" />
-            <EditableField
-              value={title}
-              onSave={handleTitleChange}
-              className="inline-block"
-            />
-          </h2>
-          <p className="text-muted-foreground">
-            <EditableField
-              value={description}
-              onSave={handleDescriptionChange}
-              className="inline-block"
-            />
-          </p>
+        <div className="mb-4 flex justify-between items-start">
+          <div>
+            <h2 className="text-xl font-bold flex items-center">
+              <Tractor className="h-6 w-6 mr-2 text-agri-primary" />
+              <EditableField
+                value={title}
+                onSave={handleTitleChange}
+                className="inline-block"
+              />
+            </h2>
+            <p className="text-muted-foreground">
+              <EditableField
+                value={description}
+                onSave={handleDescriptionChange}
+                className="inline-block"
+              />
+            </p>
+          </div>
+          
+          <PreviewPrintButton 
+            data={printData} 
+            moduleName="harvest_data"
+            title={title}
+            columns={printColumns}
+            variant="outline"
+          />
         </div>
         
         <div className="h-80 mb-6">

@@ -6,11 +6,15 @@ import { Button } from '@/components/ui/button';
 import { useCRM } from '../../contexts/CRMContext';
 import ReportGenerationButton from '../common/ReportGenerationButton';
 import { useIsMobile } from '@/hooks/use-mobile';
+import PreviewPrintButton from '../common/PreviewPrintButton';
 
 const StatisticsHeader = () => {
   const [shareDialogOpen, setShareDialogOpen] = useState(false);
-  const { exportModuleData, printModuleData } = useCRM();
+  const { exportModuleData, printModuleData, getModuleData } = useCRM();
   const isMobile = useIsMobile();
+  
+  // Get statistics data for preview/print
+  const statisticsData = getModuleData('statistiques').items || [];
 
   const handleExport = async () => {
     try {
@@ -61,6 +65,20 @@ const StatisticsHeader = () => {
         
         {!isMobile ? (
           <>
+            <PreviewPrintButton 
+              data={statisticsData}
+              moduleName="statistiques"
+              title="Statistiques et Analyses"
+              className="bg-white border-gray-200 hover:bg-gray-50 text-xs md:text-sm h-auto py-1.5 md:py-2"
+              variant="outline"
+              columns={[
+                { key: "periode", header: "Période" },
+                { key: "rendement", header: "Rendement (t/ha)" },
+                { key: "revenus", header: "Revenus (€)" },
+                { key: "couts", header: "Coûts (€)" }
+              ]}
+            />
+            
             <Button 
               variant="outline" 
               onClick={handleExport}
@@ -69,15 +87,6 @@ const StatisticsHeader = () => {
             >
               <Download className="h-3.5 w-3.5 md:h-4 md:w-4 mr-1.5 md:mr-2 text-gray-600" />
               {isMobile ? "CSV" : "Exporter CSV"}
-            </Button>
-            <Button 
-              variant="outline" 
-              onClick={handlePrint}
-              className="bg-white border-gray-200 hover:bg-gray-50 text-xs md:text-sm h-auto py-1.5 md:py-2"
-              size={isMobile ? "sm" : "default"}
-            >
-              <Printer className="h-3.5 w-3.5 md:h-4 md:w-4 mr-1.5 md:mr-2 text-gray-600" />
-              {isMobile ? "Print" : "Imprimer"}
             </Button>
           </>
         ) : null}

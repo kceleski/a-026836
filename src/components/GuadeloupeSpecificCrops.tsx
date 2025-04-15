@@ -2,7 +2,7 @@
 import React, { useState } from 'react';
 import { CultureDetailTable } from './CultureDetailTable';
 import { Button } from './ui/button';
-import { Plus, Download, Upload, Filter, Search, FileUp } from 'lucide-react';
+import { Plus, Download, Upload, Filter, Search, FileUp, Eye, Printer } from 'lucide-react';
 import { Input } from './ui/input';
 import { useCRM } from '../contexts/CRMContext';
 import { cn } from '@/lib/utils';
@@ -13,13 +13,17 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { motion } from 'framer-motion';
+import PreviewPrintButton from './common/PreviewPrintButton';
 
 const GuadeloupeSpecificCrops = () => {
   const [showAddForm, setShowAddForm] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [filterType, setFilterType] = useState('all');
-  const { exportModuleData, importModuleData } = useCRM();
+  const { exportModuleData, importModuleData, getModuleData } = useCRM();
   const fileInputRef = React.useRef<HTMLInputElement>(null);
+  
+  // Get cultures data for preview/print
+  const culturesData = getModuleData('cultures').items || [];
 
   const handleAddCulture = () => {
     setShowAddForm(true);
@@ -74,6 +78,18 @@ const GuadeloupeSpecificCrops = () => {
           <p className="text-muted-foreground">Gérez les informations sur vos cultures locales</p>
         </div>
         <div className="flex space-x-2">
+          <PreviewPrintButton 
+            data={culturesData}
+            moduleName="cultures"
+            title="Cultures Spécifiques de Guadeloupe"
+            columns={[
+              { key: "nom", header: "Nom" },
+              { key: "variete", header: "Variété" },
+              { key: "dateDebut", header: "Date de début" },
+              { key: "dateFin", header: "Date de fin" }
+            ]}
+          />
+          
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="outline" className="transition-colors hover:bg-gray-100">

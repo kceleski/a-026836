@@ -6,7 +6,7 @@ import GuadeloupeSpecificCrops from '../components/GuadeloupeSpecificCrops';
 import CropPlanning from '../components/CropPlanning';
 import TabContainer, { TabItem } from '../components/layout/TabContainer';
 import { Button } from '@/components/ui/button';
-import { Download, Plus, Upload, Filter, RefreshCw, CalendarRange } from 'lucide-react';
+import { Download, Plus, Upload, Filter, RefreshCw, CalendarRange, Eye, Printer } from 'lucide-react';
 import { StatisticsProvider } from '../contexts/StatisticsContext';
 import { CRMProvider } from '../contexts/CRMContext';
 import { motion } from 'framer-motion';
@@ -16,9 +16,38 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import PreviewPrintButton from '@/components/common/PreviewPrintButton';
+import { useCRM } from '@/contexts/CRMContext';
 
 const CropsPage = () => {
   const [activeTab, setActiveTab] = useState<string>('harvest');
+  const { getModuleData } = useCRM();
+  
+  // Get harvest data for preview/print
+  const harvestData = getModuleData('cultures').items || [];
+  
+  // Print columns for different tabs
+  const printColumns = {
+    harvest: [
+      { key: "nom", header: "Culture" },
+      { key: "rendement", header: "Rendement (t/ha)" },
+      { key: "surface", header: "Surface (ha)" },
+      { key: "date", header: "Date de récolte" }
+    ],
+    specific: [
+      { key: "nom", header: "Nom" },
+      { key: "variete", header: "Variété" },
+      { key: "dateDebut", header: "Date de début" },
+      { key: "dateFin", header: "Date de fin" }
+    ],
+    planning: [
+      { key: "nom", header: "Culture" },
+      { key: "activite", header: "Activité" },
+      { key: "dateDebut", header: "Date de début" },
+      { key: "dateFin", header: "Date de fin" },
+      { key: "statut", header: "Statut" }
+    ]
+  };
 
   // Actions based on the active tab
   const getTabActions = () => {
@@ -26,6 +55,14 @@ const CropsPage = () => {
       case 'harvest':
         return (
           <div className="flex flex-wrap gap-2">
+            <PreviewPrintButton 
+              data={harvestData}
+              moduleName="harvest"
+              title="Suivi des Récoltes"
+              columns={printColumns.harvest}
+              variant="outline"
+            />
+            
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button variant="outline" className="flex items-center gap-2 transition-colors">
@@ -80,6 +117,14 @@ const CropsPage = () => {
       case 'specific':
         return (
           <div className="flex flex-wrap gap-2">
+            <PreviewPrintButton 
+              data={getModuleData('cultures').items || []}
+              moduleName="cultures"
+              title="Cultures Spécifiques"
+              columns={printColumns.specific}
+              variant="outline"
+            />
+            
             <Button 
               className="flex items-center gap-2 bg-agri-primary hover:bg-agri-primary-dark transition-colors"
               onClick={() => {
@@ -104,6 +149,14 @@ const CropsPage = () => {
       case 'planning':
         return (
           <div className="flex flex-wrap gap-2">
+            <PreviewPrintButton 
+              data={[]}
+              moduleName="planning"
+              title="Planification des Cultures"
+              columns={printColumns.planning}
+              variant="outline"
+            />
+            
             <Button 
               variant="outline" 
               className="flex items-center gap-2 transition-colors"
