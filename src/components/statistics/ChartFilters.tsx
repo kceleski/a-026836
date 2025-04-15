@@ -36,6 +36,7 @@ const ChartFilters = ({
     setPeriod('year');
     setCropFilter('all');
     if (setSearchTerm) setSearchTerm('');
+    console.log("Filtres réinitialisés - Affichage de toutes les cultures sur une période annuelle");
     toast.info("Filtres réinitialisés", {
       description: "Affichage de toutes les cultures sur une période annuelle"
     });

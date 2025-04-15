@@ -7,18 +7,26 @@ import { useCRM } from '../../contexts/CRMContext';
 import ReportGenerationButton from '../common/ReportGenerationButton';
 import { useIsMobile } from '@/hooks/use-mobile';
 import PreviewPrintButton from '../common/PreviewPrintButton';
+import { useStatistics } from '@/contexts/StatisticsContext';
 
 const StatisticsHeader = () => {
   const [shareDialogOpen, setShareDialogOpen] = useState(false);
   const { exportModuleData, printModuleData, getModuleData } = useCRM();
+  const { yieldData, financialData, environmentalData } = useStatistics();
   const isMobile = useIsMobile();
   
-  // Get statistics data for preview/print
-  const statisticsData = getModuleData('statistiques').items || [];
+  // Combine all statistics data for preview/print
+  const statisticsData = [
+    ...(yieldData || []).map(item => ({ ...item, type: 'rendement' })),
+    ...(financialData.profitabilityByParcel || []).map(item => ({ ...item, type: 'financier' })),
+    ...(environmentalData.indicators || []).map(item => ({ ...item, type: 'environnement' }))
+  ];
 
   const handleExport = async () => {
     try {
+      console.log("Exportation des statistiques au format CSV...");
       await exportModuleData('statistiques', 'csv');
+      console.log("Exportation réussie!");
     } catch (error) {
       console.error("Error exporting statistics:", error);
     }
@@ -26,7 +34,9 @@ const StatisticsHeader = () => {
 
   const handlePrint = async () => {
     try {
+      console.log("Préparation de l'impression des statistiques...");
       await printModuleData('statistiques');
+      console.log("Document envoyé à l'impression");
     } catch (error) {
       console.error("Error printing statistics:", error);
     }
@@ -34,16 +44,21 @@ const StatisticsHeader = () => {
 
   const handleShare = () => {
     setShareDialogOpen(true);
+    console.log("Ouverture de la boîte de dialogue de partage");
   };
   
   const handleShareByEmail = () => {
+    console.log("Préparation du partage par email...");
     setShareDialogOpen(false);
+    console.log("Email de partage préparé");
   };
   
   const handleShareByPDF = async () => {
     try {
+      console.log("Génération du PDF pour partage...");
       await exportModuleData('statistiques', 'pdf');
       setShareDialogOpen(false);
+      console.log("PDF généré avec succès pour partage");
     } catch (error) {
       console.error("Error generating PDF:", error);
       setShareDialogOpen(false);
@@ -72,10 +87,11 @@ const StatisticsHeader = () => {
               className="bg-white border-gray-200 hover:bg-gray-50 text-xs md:text-sm h-auto py-1.5 md:py-2"
               variant="outline"
               columns={[
-                { key: "periode", header: "Période" },
-                { key: "rendement", header: "Rendement (t/ha)" },
-                { key: "revenus", header: "Revenus (€)" },
-                { key: "couts", header: "Coûts (€)" }
+                { key: "type", header: "Type" },
+                { key: "name", header: "Nom" },
+                { key: "current", header: "Valeur actuelle" },
+                { key: "previous", header: "Valeur précédente" },
+                { key: "unit", header: "Unité" }
               ]}
             />
             

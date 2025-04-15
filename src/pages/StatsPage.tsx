@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import Navbar from '../components/Navbar';
 import Statistics from '../components/Statistics';
@@ -7,8 +6,10 @@ import { ChartConfig } from '../components/ui/chart-config';
 import { EditableTable, Column } from '../components/ui/editable-table';
 import { EditableField } from '../components/ui/editable-field';
 import { StatisticsProvider } from '../contexts/StatisticsContext';
-import { BarChart, PieChart, TrendingUp, Download, Filter, RefreshCw, Bell } from 'lucide-react';
+import { BarChart, PieChart, TrendingUp, Download, Filter, RefreshCw, Bell, Printer, Eye } from 'lucide-react';
 import { motion } from 'framer-motion';
+import { Button } from '@/components/ui/button';
+import PreviewPrintButton from '@/components/common/PreviewPrintButton';
 
 interface PerformanceData {
   name: string;
@@ -25,7 +26,6 @@ const StatsPage = () => {
   const [isSyncing, setIsSyncing] = useState<boolean>(false);
   const [connectedModules, setConnectedModules] = useState<string[]>(['parcelles', 'cultures', 'finances']);
   
-  // Exemple de données adaptées à l'agriculture guadeloupéenne
   const [performanceData, setPerformanceData] = useState<PerformanceData[]>([
     { name: 'Rendement Canne à Sucre', current: 75, target: 85, unit: 't/ha' },
     { name: 'Qualité Banane Export', current: 88, target: 95, unit: '%' },
@@ -34,7 +34,6 @@ const StatsPage = () => {
     { name: 'Innovation Igname', current: 60, target: 75, unit: '%' },
   ]);
   
-  // Simuler la synchronisation des données avec les autres modules
   useEffect(() => {
     const initialSync = setTimeout(() => {
       console.log('Les modules Parcelles, Cultures et Finances sont maintenant connectés aux statistiques');
@@ -43,7 +42,6 @@ const StatsPage = () => {
     return () => clearTimeout(initialSync);
   }, []);
   
-  // Synchronisation des données
   const syncData = () => {
     setIsSyncing(true);
     console.log('Récupération des dernières données depuis tous les modules connectés...');
@@ -56,7 +54,6 @@ const StatsPage = () => {
     }, 2000);
   };
   
-  // Colonnes du tableau éditable
   const columns: Column[] = [
     { id: 'name', header: 'Indicateur', accessorKey: 'name', isEditable: true },
     { id: 'current', header: 'Valeur actuelle', accessorKey: 'current', type: 'number', isEditable: true },
@@ -64,12 +61,10 @@ const StatsPage = () => {
     { id: 'unit', header: 'Unité', accessorKey: 'unit', isEditable: true },
   ];
   
-  // Gestionnaire de mise à jour du tableau
   const handleTableUpdate = (rowIndex: number, columnId: string, value: any) => {
     const newData = [...performanceData];
     const updatedRow = { ...newData[rowIndex] } as PerformanceData;
     
-    // Typages corrects et explicites pour chaque propriété
     if (columnId === 'current' || columnId === 'target') {
       updatedRow[columnId as 'current' | 'target'] = Number(value);
     } else if (columnId === 'name' || columnId === 'unit') {
@@ -83,7 +78,6 @@ const StatsPage = () => {
     console.log(`Les modules connectés ont été informés de la mise à jour de ${updatedRow.name}`);
   };
   
-  // Gestionnaire de suppression de ligne
   const handleDeleteRow = (rowIndex: number) => {
     const newData = [...performanceData];
     const deletedItem = newData[rowIndex];
@@ -94,7 +88,6 @@ const StatsPage = () => {
     console.log(`Les modules connectés ont été informés de la suppression de ${deletedItem.name}`);
   };
   
-  // Gestionnaire d'ajout de ligne
   const handleAddRow = (newRow: Record<string, any>) => {
     const typedRow: PerformanceData = {
       name: String(newRow.name || ''),
@@ -108,7 +101,6 @@ const StatsPage = () => {
     console.log(`Les modules connectés ont été informés de l'ajout de ${typedRow.name}`);
   };
 
-  // Handlers de titre
   const handleTitleChange = (value: string | number) => {
     setPageTitle(String(value));
     console.log('Le titre de la page a été mis à jour.');
@@ -119,7 +111,6 @@ const StatsPage = () => {
     console.log('La description de la page a été mise à jour.');
   };
   
-  // Handler de changement de vue
   const handleViewChange = (view: 'performance' | 'harvest' | 'detailed') => {
     setActiveView(view);
     console.log(`Vous consultez maintenant la vue ${
@@ -130,7 +121,6 @@ const StatsPage = () => {
     console.log(`Les modules connectés ont été adaptés à la vue ${view === 'performance' ? 'indicateurs' : view === 'harvest' ? 'récoltes' : 'détaillée'}`);
   };
   
-  // Handler d'export des données
   const handleExportData = () => {
     console.log('Les données statistiques ont été exportées avec succès.');
     console.log("Les données exportées sont disponibles pour tous les modules");
@@ -210,6 +200,20 @@ const StatsPage = () => {
                   <TrendingUp className="h-4 w-4 mr-1.5" />
                   Détaillé
                 </button>
+                
+                <PreviewPrintButton
+                  data={performanceData}
+                  moduleName="performance-indicators"
+                  title="Indicateurs de Performance Agricole"
+                  columns={[
+                    { key: "name", header: "Indicateur" },
+                    { key: "current", header: "Valeur actuelle" },
+                    { key: "target", header: "Objectif" },
+                    { key: "unit", header: "Unité" }
+                  ]}
+                  className="px-3 py-1.5 rounded-md flex items-center text-sm bg-muted hover:bg-muted/80 transition-colors"
+                  variant="ghost"
+                />
                 
                 <button 
                   onClick={handleExportData}
