@@ -37,7 +37,7 @@ const Index = () => {
           <div className="flex flex-wrap gap-3">
             <Button 
               variant="outline" 
-              className="flex items-center gap-2 bg-white border-gray-200 hover:bg-gray-50"
+              className="flex items-center gap-2 bg-white border-gray-200 hover:bg-gray-50 transition-colors"
               onClick={syncDataAcrossCRM}
             >
               <RefreshCw className={`h-4 w-4 text-gray-600 ${isRefreshing ? 'animate-spin' : ''}`} />
@@ -45,7 +45,7 @@ const Index = () => {
             </Button>
             <Button
               variant="outline"
-              className="flex items-center gap-2 bg-white border-gray-200 hover:bg-gray-50"
+              className="flex items-center gap-2 bg-white border-gray-200 hover:bg-gray-50 transition-colors"
               onClick={() => handleExportData('dashboard')}
             >
               <Download className="h-4 w-4 text-gray-600" />
@@ -53,7 +53,7 @@ const Index = () => {
             </Button>
             <Button
               variant="outline"
-              className="flex items-center gap-2 bg-white border-gray-200 hover:bg-gray-50"
+              className="flex items-center gap-2 bg-white border-gray-200 hover:bg-gray-50 transition-colors"
               onClick={() => handleImportData()}
             >
               <Upload className="h-4 w-4 text-gray-600" />
@@ -61,7 +61,7 @@ const Index = () => {
             </Button>
             <Button
               variant="outline"
-              className="flex items-center gap-2 bg-white border-gray-200 hover:bg-gray-50"
+              className="flex items-center gap-2 bg-white border-gray-200 hover:bg-gray-50 transition-colors"
               onClick={() => handlePrintData('dashboard')}
             >
               <Printer className="h-4 w-4 text-gray-600" />
@@ -144,6 +144,7 @@ const Index = () => {
 
   const handleTabChange = (value: string) => {
     setActiveTab(value);
+    console.log(`Changement d'onglet vers: ${value}`);
   };
 
   // Manipulations des données
@@ -156,11 +157,11 @@ const Index = () => {
     };
     
     const module = moduleMapping[tab] || 'statistiques';
-    
     const format = tab === 'dashboard' ? 'excel' : 'csv';
     
     try {
       await exportModuleData(module, format as 'csv' | 'excel' | 'pdf');
+      console.log(`Export des données ${module} au format ${format} lancé`);
     } catch (error) {
       console.error(`Error exporting ${module}:`, error);
     }
@@ -187,6 +188,7 @@ const Index = () => {
     
     try {
       await importModuleData(module, selectedFile);
+      console.log(`Importation du fichier ${selectedFile.name} réussie`);
     } catch (error) {
       console.error(`Error importing ${module}:`, error);
     }
@@ -207,6 +209,7 @@ const Index = () => {
     
     try {
       await printModuleData(module);
+      console.log(`Impression des données ${module} lancée`);
     } catch (error) {
       console.error(`Error printing ${module}:`, error);
     }
@@ -256,7 +259,7 @@ const Index = () => {
           />
           
           <Dialog open={importDialogOpen} onOpenChange={setImportDialogOpen}>
-            <DialogContent>
+            <DialogContent className="sm:max-w-md">
               <DialogHeader>
                 <DialogTitle>Importer des données</DialogTitle>
               </DialogHeader>

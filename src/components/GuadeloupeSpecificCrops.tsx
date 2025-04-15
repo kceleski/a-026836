@@ -12,6 +12,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { motion } from 'framer-motion';
 
 const GuadeloupeSpecificCrops = () => {
   const [showAddForm, setShowAddForm] = useState(false);
@@ -22,6 +23,7 @@ const GuadeloupeSpecificCrops = () => {
 
   const handleAddCulture = () => {
     setShowAddForm(true);
+    console.log("Ouverture du formulaire d'ajout de culture");
   };
 
   const handleExportData = async (format: 'csv' | 'pdf' = 'csv') => {
@@ -60,7 +62,12 @@ const GuadeloupeSpecificCrops = () => {
   ];
 
   return (
-    <div className="space-y-6">
+    <motion.div 
+      initial={{ opacity: 0, y: 10 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.3 }}
+      className="space-y-6"
+    >
       <div className="flex justify-between items-center mb-4">
         <div>
           <h2 className="text-xl font-bold">Cultures Spécifiques de Guadeloupe</h2>
@@ -69,16 +76,16 @@ const GuadeloupeSpecificCrops = () => {
         <div className="flex space-x-2">
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="outline">
+              <Button variant="outline" className="transition-colors hover:bg-gray-100">
                 <Download className="mr-2 h-4 w-4" />
                 Exporter
               </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              <DropdownMenuItem onClick={() => handleExportData('csv')}>
+            <DropdownMenuContent align="end" className="bg-white border shadow-lg">
+              <DropdownMenuItem onClick={() => handleExportData('csv')} className="cursor-pointer">
                 Export CSV
               </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => handleExportData('pdf')}>
+              <DropdownMenuItem onClick={() => handleExportData('pdf')} className="cursor-pointer">
                 Export PDF
               </DropdownMenuItem>
             </DropdownMenuContent>
@@ -86,13 +93,13 @@ const GuadeloupeSpecificCrops = () => {
           
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="outline">
+              <Button variant="outline" className="transition-colors hover:bg-gray-100">
                 <Upload className="mr-2 h-4 w-4" />
                 Importer
               </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              <DropdownMenuItem onClick={handleImportClick}>
+            <DropdownMenuContent align="end" className="bg-white border shadow-lg">
+              <DropdownMenuItem onClick={handleImportClick} className="cursor-pointer">
                 <FileUp className="mr-2 h-4 w-4" />
                 Sélectionner un fichier
               </DropdownMenuItem>
@@ -107,7 +114,10 @@ const GuadeloupeSpecificCrops = () => {
             onChange={handleFileChange}
           />
           
-          <Button onClick={handleAddCulture}>
+          <Button 
+            onClick={handleAddCulture} 
+            className="transition-colors hover:bg-green-700"
+          >
             <Plus className="mr-2 h-4 w-4" />
             Ajouter une culture
           </Button>
@@ -120,7 +130,7 @@ const GuadeloupeSpecificCrops = () => {
           <Input 
             type="text" 
             placeholder="Rechercher une culture..." 
-            className="pl-10"
+            className="pl-10 transition-all focus:border-green-500"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
           />
@@ -128,7 +138,7 @@ const GuadeloupeSpecificCrops = () => {
         <div className="relative">
           <select 
             className={cn(
-              "h-10 appearance-none pl-3 pr-10 py-2 border border-input rounded-md focus:outline-none focus:ring-2 focus:ring-ring bg-white"
+              "h-10 appearance-none pl-3 pr-10 py-2 border border-input rounded-md focus:outline-none focus:ring-2 focus:ring-ring bg-white transition-all"
             )}
             value={filterType}
             onChange={(e) => setFilterType(e.target.value)}
@@ -143,15 +153,20 @@ const GuadeloupeSpecificCrops = () => {
         </div>
       </div>
       
-      <div className="bg-white rounded-xl border p-6 mb-6 shadow-sm">
+      <motion.div 
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ delay: 0.1 }}
+        className="bg-white rounded-xl border p-6 mb-6 shadow-sm"
+      >
         <CultureDetailTable 
           showAddForm={showAddForm} 
           setShowAddForm={setShowAddForm} 
           searchTerm={searchTerm}
           filterType={filterType}
         />
-      </div>
-    </div>
+      </motion.div>
+    </motion.div>
   );
 };
 

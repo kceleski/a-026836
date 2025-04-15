@@ -1,6 +1,5 @@
 
 import React, { useState, useEffect } from 'react';
-import { Toaster } from 'sonner';
 import Navbar from '../components/Navbar';
 import Statistics from '../components/Statistics';
 import GuadeloupeHarvestTracking from '../components/GuadeloupeHarvestTracking';
@@ -8,9 +7,8 @@ import { ChartConfig } from '../components/ui/chart-config';
 import { EditableTable, Column } from '../components/ui/editable-table';
 import { EditableField } from '../components/ui/editable-field';
 import { StatisticsProvider } from '../contexts/StatisticsContext';
-import { toast } from 'sonner';
 import { BarChart, PieChart, TrendingUp, Download, Filter, RefreshCw, Bell } from 'lucide-react';
-import { useToast } from '@/hooks/use-toast';
+import { motion } from 'framer-motion';
 
 interface PerformanceData {
   name: string;
@@ -20,7 +18,6 @@ interface PerformanceData {
 }
 
 const StatsPage = () => {
-  const { toast: shadowToast } = useToast();
   const [pageTitle, setPageTitle] = useState('Statistiques et Analyses');
   const [pageDescription, setPageDescription] = useState('Visualisez et analysez les données de votre exploitation en Guadeloupe');
   const [activeView, setActiveView] = useState<'performance' | 'harvest' | 'detailed'>('performance');
@@ -40,9 +37,7 @@ const StatsPage = () => {
   // Simuler la synchronisation des données avec les autres modules
   useEffect(() => {
     const initialSync = setTimeout(() => {
-      toast.success('Modules connectés', {
-        description: 'Les modules Parcelles, Cultures et Finances sont maintenant connectés aux statistiques'
-      });
+      console.log('Les modules Parcelles, Cultures et Finances sont maintenant connectés aux statistiques');
     }, 1000);
     
     return () => clearTimeout(initialSync);
@@ -51,22 +46,13 @@ const StatsPage = () => {
   // Synchronisation des données
   const syncData = () => {
     setIsSyncing(true);
-    toast.info('Synchronisation des données', {
-      description: 'Récupération des dernières données depuis tous les modules connectés...'
-    });
+    console.log('Récupération des dernières données depuis tous les modules connectés...');
     
     setTimeout(() => {
       setIsSyncing(false);
       setLastSyncDate(new Date());
-      toast.success('Données synchronisées', {
-        description: 'Toutes les statistiques sont à jour avec les dernières données des modules'
-      });
-      
-      // Notification aux autres modules
-      shadowToast({
-        title: "Statistiques mises à jour",
-        description: "Les indicateurs de performance ont été recalculés avec les dernières données"
-      });
+      console.log('Toutes les statistiques sont à jour avec les dernières données des modules');
+      console.log("Les indicateurs de performance ont été recalculés avec les dernières données");
     }, 2000);
   };
   
@@ -93,16 +79,8 @@ const StatsPage = () => {
     newData[rowIndex] = updatedRow;
     setPerformanceData(newData);
     
-    // Notification pour l'utilisateur
-    toast.success('Données mises à jour', {
-      description: `L'indicateur ${updatedRow.name} a été mis à jour avec succès.`
-    });
-    
-    // Synchronisation avec les autres modules
-    shadowToast({
-      title: "Mise à jour des indicateurs",
-      description: `Les modules connectés ont été informés de la mise à jour de ${updatedRow.name}`
-    });
+    console.log(`L'indicateur ${updatedRow.name} a été mis à jour avec succès.`);
+    console.log(`Les modules connectés ont été informés de la mise à jour de ${updatedRow.name}`);
   };
   
   // Gestionnaire de suppression de ligne
@@ -112,16 +90,8 @@ const StatsPage = () => {
     newData.splice(rowIndex, 1);
     setPerformanceData(newData);
     
-    // Notification pour l'utilisateur
-    toast.success('Indicateur supprimé', {
-      description: `L'indicateur ${deletedItem.name} a été supprimé avec succès.`
-    });
-    
-    // Synchronisation avec les autres modules
-    shadowToast({
-      title: "Suppression d'indicateur",
-      description: `Les modules connectés ont été informés de la suppression de ${deletedItem.name}`
-    });
+    console.log(`L'indicateur ${deletedItem.name} a été supprimé avec succès.`);
+    console.log(`Les modules connectés ont été informés de la suppression de ${deletedItem.name}`);
   };
   
   // Gestionnaire d'ajout de ligne
@@ -134,70 +104,55 @@ const StatsPage = () => {
     };
     setPerformanceData([...performanceData, typedRow]);
     
-    // Notification pour l'utilisateur
-    toast.success('Nouvel indicateur ajouté', {
-      description: `L'indicateur ${typedRow.name} a été ajouté avec succès.`
-    });
-    
-    // Synchronisation avec les autres modules
-    shadowToast({
-      title: "Nouvel indicateur ajouté",
-      description: `Les modules connectés ont été informés de l'ajout de ${typedRow.name}`
-    });
+    console.log(`L'indicateur ${typedRow.name} a été ajouté avec succès.`);
+    console.log(`Les modules connectés ont été informés de l'ajout de ${typedRow.name}`);
   };
 
   // Handlers de titre
   const handleTitleChange = (value: string | number) => {
     setPageTitle(String(value));
-    toast.success('Titre modifié', {
-      description: 'Le titre de la page a été mis à jour.'
-    });
+    console.log('Le titre de la page a été mis à jour.');
   };
 
   const handleDescriptionChange = (value: string | number) => {
     setPageDescription(String(value));
-    toast.success('Description modifiée', {
-      description: 'La description de la page a été mise à jour.'
-    });
+    console.log('La description de la page a été mise à jour.');
   };
   
   // Handler de changement de vue
   const handleViewChange = (view: 'performance' | 'harvest' | 'detailed') => {
     setActiveView(view);
-    toast.info('Vue modifiée', {
-      description: `Vous consultez maintenant la vue ${
-        view === 'performance' ? 'Indicateurs de performance' : 
-        view === 'harvest' ? 'Suivi des récoltes' : 'Statistiques détaillées'
-      }`
-    });
+    console.log(`Vous consultez maintenant la vue ${
+      view === 'performance' ? 'Indicateurs de performance' : 
+      view === 'harvest' ? 'Suivi des récoltes' : 'Statistiques détaillées'
+    }`);
     
-    // Notification aux autres modules
-    shadowToast({
-      title: "Changement de vue statistique",
-      description: `Les modules connectés ont été adaptés à la vue ${view === 'performance' ? 'indicateurs' : view === 'harvest' ? 'récoltes' : 'détaillée'}`
-    });
+    console.log(`Les modules connectés ont été adaptés à la vue ${view === 'performance' ? 'indicateurs' : view === 'harvest' ? 'récoltes' : 'détaillée'}`);
   };
   
   // Handler d'export des données
   const handleExportData = () => {
-    toast.success('Export des données', {
-      description: 'Les données statistiques ont été exportées avec succès.'
-    });
-    
-    // Notification aux autres modules
-    shadowToast({
-      title: "Export des statistiques",
-      description: "Les données exportées sont disponibles pour tous les modules"
-    });
+    console.log('Les données statistiques ont été exportées avec succès.');
+    console.log("Les données exportées sont disponibles pour tous les modules");
   };
 
   return (
     <StatisticsProvider>
       <div className="flex h-screen overflow-hidden bg-background">
         <Navbar />
-        <div className="flex-1 overflow-y-auto">
+        <motion.div 
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.3 }}
+          className="flex-1 overflow-y-auto"
+        >
           <div className="p-6 animate-enter">
-            <header className="flex flex-col md:flex-row md:justify-between md:items-center mb-6 gap-4">
+            <motion.header 
+              initial={{ opacity: 0, y: -10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.3, delay: 0.1 }}
+              className="flex flex-col md:flex-row md:justify-between md:items-center mb-6 gap-4"
+            >
               <div>
                 <h1 className="text-2xl font-bold mb-1">
                   <EditableField
@@ -222,7 +177,7 @@ const StatsPage = () => {
               <div className="flex flex-wrap gap-2">
                 <button 
                   onClick={() => handleViewChange('performance')}
-                  className={`px-3 py-1.5 rounded-md flex items-center text-sm ${
+                  className={`px-3 py-1.5 rounded-md flex items-center text-sm transition-colors ${
                     activeView === 'performance' 
                       ? 'bg-primary text-primary-foreground' 
                       : 'bg-muted hover:bg-muted/80'
@@ -234,7 +189,7 @@ const StatsPage = () => {
                 
                 <button 
                   onClick={() => handleViewChange('harvest')}
-                  className={`px-3 py-1.5 rounded-md flex items-center text-sm ${
+                  className={`px-3 py-1.5 rounded-md flex items-center text-sm transition-colors ${
                     activeView === 'harvest' 
                       ? 'bg-primary text-primary-foreground' 
                       : 'bg-muted hover:bg-muted/80'
@@ -246,7 +201,7 @@ const StatsPage = () => {
                 
                 <button 
                   onClick={() => handleViewChange('detailed')}
-                  className={`px-3 py-1.5 rounded-md flex items-center text-sm ${
+                  className={`px-3 py-1.5 rounded-md flex items-center text-sm transition-colors ${
                     activeView === 'detailed' 
                       ? 'bg-primary text-primary-foreground' 
                       : 'bg-muted hover:bg-muted/80'
@@ -258,7 +213,7 @@ const StatsPage = () => {
                 
                 <button 
                   onClick={handleExportData}
-                  className="px-3 py-1.5 rounded-md flex items-center text-sm bg-muted hover:bg-muted/80"
+                  className="px-3 py-1.5 rounded-md flex items-center text-sm bg-muted hover:bg-muted/80 transition-colors"
                 >
                   <Download className="h-4 w-4 mr-1.5" />
                   Exporter
@@ -266,7 +221,7 @@ const StatsPage = () => {
                 
                 <button 
                   onClick={syncData}
-                  className="px-3 py-1.5 rounded-md flex items-center text-sm bg-muted hover:bg-muted/80"
+                  className="px-3 py-1.5 rounded-md flex items-center text-sm bg-muted hover:bg-muted/80 transition-colors"
                   disabled={isSyncing}
                 >
                   <RefreshCw className={`h-4 w-4 mr-1.5 ${isSyncing ? 'animate-spin' : ''}`} />
@@ -275,37 +230,34 @@ const StatsPage = () => {
                 
                 <button 
                   onClick={() => {
-                    toast.success('Notifications configurées', {
-                      description: 'Vos préférences de notification ont été mises à jour'
-                    });
+                    console.log('Vos préférences de notification ont été mises à jour');
                   }}
-                  className="px-3 py-1.5 rounded-md flex items-center text-sm bg-muted hover:bg-muted/80"
+                  className="px-3 py-1.5 rounded-md flex items-center text-sm bg-muted hover:bg-muted/80 transition-colors"
                 >
                   <Bell className="h-4 w-4 mr-1.5" />
                   Alertes
                 </button>
               </div>
-            </header>
+            </motion.header>
             
             {activeView === 'performance' && (
-              <div className="mb-8">
+              <motion.div 
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.3 }}
+                className="mb-8"
+              >
                 <ChartConfig 
                   title="Indicateurs de performance agricole en Guadeloupe"
                   description="Suivez vos performances par rapport à vos objectifs pour les cultures guadeloupéennes"
                   onTitleChange={(title) => {
-                    toast.success('Titre modifié', {
-                      description: 'Le titre du graphique a été mis à jour.'
-                    });
+                    console.log('Le titre du graphique a été mis à jour.');
                   }}
                   onDescriptionChange={(desc) => {
-                    toast.success('Description modifiée', {
-                      description: 'La description du graphique a été mise à jour.'
-                    });
+                    console.log('La description du graphique a été mise à jour.');
                   }}
                   onOptionsChange={(options) => {
-                    toast.success('Options mises à jour', {
-                      description: 'Les options du graphique ont été mises à jour.'
-                    });
+                    console.log('Les options du graphique ont été mises à jour.');
                   }}
                   className="mb-6"
                 >
@@ -320,19 +272,30 @@ const StatsPage = () => {
                     />
                   </div>
                 </ChartConfig>
-              </div>
+              </motion.div>
             )}
             
             {activeView === 'harvest' && (
-              <GuadeloupeHarvestTracking />
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.3 }}
+              >
+                <GuadeloupeHarvestTracking />
+              </motion.div>
             )}
             
             {activeView === 'detailed' && (
-              <Statistics />
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.3 }}
+              >
+                <Statistics />
+              </motion.div>
             )}
           </div>
-        </div>
-        <Toaster position="top-right" />
+        </motion.div>
       </div>
     </StatisticsProvider>
   );

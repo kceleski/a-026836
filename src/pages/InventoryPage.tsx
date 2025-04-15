@@ -12,7 +12,6 @@ import { Download, Plus, Upload, FileUp, FileDown, BarChart2, Calendar, Package 
 import { DatePickerWithRange } from '../components/ui/date-range-picker';
 import { DateRange } from 'react-day-picker';
 import { useToast } from "@/hooks/use-toast";
-import { toast } from 'sonner';
 import usePageMetadata from '../hooks/use-page-metadata';
 import { downloadInventoryTemplate } from '../components/inventory/ImportExportFunctions';
 import {
@@ -44,18 +43,11 @@ const InventoryPage = () => {
 
   const handleExportData = () => {
     if (activeTab === 'inventory') {
-      // The actual export is handled in the Inventory component
-      toast.success("Export des données d'inventaire lancé");
+      console.log("Export des données d'inventaire lancé");
     } else if (activeTab === 'crops') {
-      toast.info("Export des données de cultures");
-      shadowToast({
-        description: "L'export des cultures sera disponible prochainement"
-      });
+      console.log("Export des données de cultures");
     } else if (activeTab === 'weather') {
-      toast.info("Export des données météo");
-      shadowToast({
-        description: "L'export des données météo sera disponible prochainement"
-      });
+      console.log("Export des données météo");
     }
   };
 
@@ -69,10 +61,7 @@ const InventoryPage = () => {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    toast.info(`Importation du fichier ${file.name}`);
-    
-    // The actual import is handled in the Inventory component
-    // This is just a placeholder for the top-level action
+    console.log(`Importation du fichier ${file.name}`);
     
     // Reset file input
     if (fileInputRef.current) {
@@ -85,7 +74,7 @@ const InventoryPage = () => {
                       activeTab === 'crops' ? 'culture' : 
                       activeTab === 'weather' ? 'alerte' : 'élément';
                       
-    toast.info(`Fonctionnalité d'ajout de ${actionText} activée`);
+    console.log(`Fonctionnalité d'ajout de ${actionText} activée`);
   };
 
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -95,6 +84,7 @@ const InventoryPage = () => {
 
   const handleDownloadTemplate = () => {
     downloadInventoryTemplate();
+    console.log("Téléchargement du modèle d'inventaire");
   };
 
   const renderTabActions = () => {
@@ -102,17 +92,17 @@ const InventoryPage = () => {
       <div className="flex flex-wrap gap-2">
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button variant="outline" className="whitespace-nowrap">
+            <Button variant="outline" className="whitespace-nowrap transition-colors hover:bg-gray-100">
               <Download className="mr-2 h-4 w-4" />
               Exporter
             </Button>
           </DropdownMenuTrigger>
-          <DropdownMenuContent align="end">
-            <DropdownMenuItem onClick={handleExportData}>
+          <DropdownMenuContent align="end" className="bg-white border shadow-lg">
+            <DropdownMenuItem onClick={handleExportData} className="cursor-pointer">
               <FileDown className="mr-2 h-4 w-4" />
               Exporter CSV
             </DropdownMenuItem>
-            <DropdownMenuItem onClick={handleExportData}>
+            <DropdownMenuItem onClick={handleExportData} className="cursor-pointer">
               <BarChart2 className="mr-2 h-4 w-4" />
               Exporter PDF
             </DropdownMenuItem>
@@ -121,18 +111,18 @@ const InventoryPage = () => {
         
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button variant="outline" className="whitespace-nowrap">
+            <Button variant="outline" className="whitespace-nowrap transition-colors hover:bg-gray-100">
               <Upload className="mr-2 h-4 w-4" />
               Importer
             </Button>
           </DropdownMenuTrigger>
-          <DropdownMenuContent align="end">
-            <DropdownMenuItem onClick={handleImportClick}>
+          <DropdownMenuContent align="end" className="bg-white border shadow-lg">
+            <DropdownMenuItem onClick={handleImportClick} className="cursor-pointer">
               <FileUp className="mr-2 h-4 w-4" />
               Importer un fichier
             </DropdownMenuItem>
             <DropdownMenuSeparator />
-            <DropdownMenuItem onClick={handleDownloadTemplate}>
+            <DropdownMenuItem onClick={handleDownloadTemplate} className="cursor-pointer">
               <Package className="mr-2 h-4 w-4" />
               Télécharger modèle
             </DropdownMenuItem>
@@ -147,7 +137,10 @@ const InventoryPage = () => {
           className="hidden" 
         />
         
-        <Button onClick={handleAddItem} className="whitespace-nowrap">
+        <Button 
+          onClick={handleAddItem} 
+          className="whitespace-nowrap transition-colors hover:bg-green-700"
+        >
           <Plus className="mr-2 h-4 w-4" />
           {activeTab === 'inventory' ? 'Ajouter un stock' : 
            activeTab === 'crops' ? 'Ajouter une culture' : 
@@ -225,7 +218,7 @@ const InventoryPage = () => {
       weather: 'les Alertes Météo'
     };
     
-    toast.info(`Vous consultez maintenant ${tabLabels[value as keyof typeof tabLabels] || value}`);
+    console.log(`Vous consultez maintenant ${tabLabels[value as keyof typeof tabLabels] || value}`);
   };
 
   return (

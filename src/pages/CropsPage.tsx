@@ -9,6 +9,13 @@ import { Button } from '@/components/ui/button';
 import { Download, Plus, Upload, Filter, RefreshCw, CalendarRange } from 'lucide-react';
 import { StatisticsProvider } from '../contexts/StatisticsContext';
 import { CRMProvider } from '../contexts/CRMContext';
+import { motion } from 'framer-motion';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 const CropsPage = () => {
   const [activeTab, setActiveTab] = useState<string>('harvest');
@@ -19,19 +26,38 @@ const CropsPage = () => {
       case 'harvest':
         return (
           <div className="flex flex-wrap gap-2">
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="outline" className="flex items-center gap-2 transition-colors">
+                  <Download className="h-4 w-4" />
+                  Exporter
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="bg-white border shadow-lg">
+                <DropdownMenuItem 
+                  onClick={() => console.log("Export CSV des données de récolte")}
+                  className="cursor-pointer"
+                >
+                  Export CSV
+                </DropdownMenuItem>
+                <DropdownMenuItem 
+                  onClick={() => console.log("Export Excel des données de récolte")}
+                  className="cursor-pointer"
+                >
+                  Export Excel
+                </DropdownMenuItem>
+                <DropdownMenuItem 
+                  onClick={() => console.log("Export PDF des données de récolte")}
+                  className="cursor-pointer"
+                >
+                  Export PDF
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+            
             <Button 
               variant="outline" 
-              className="flex items-center gap-2"
-              onClick={() => {
-                console.log("Export des données de récolte");
-              }}
-            >
-              <Download className="h-4 w-4" />
-              Exporter
-            </Button>
-            <Button 
-              variant="outline" 
-              className="flex items-center gap-2"
+              className="flex items-center gap-2 transition-colors"
               onClick={() => {
                 console.log("Synchronisation des données de récolte");
               }}
@@ -41,7 +67,7 @@ const CropsPage = () => {
             </Button>
             <Button 
               variant="outline" 
-              className="flex items-center gap-2"
+              className="flex items-center gap-2 transition-colors"
               onClick={() => {
                 console.log("Filtres appliqués aux données de récolte");
               }}
@@ -55,7 +81,7 @@ const CropsPage = () => {
         return (
           <div className="flex flex-wrap gap-2">
             <Button 
-              className="flex items-center gap-2 bg-agri-primary hover:bg-agri-primary-dark"
+              className="flex items-center gap-2 bg-agri-primary hover:bg-agri-primary-dark transition-colors"
               onClick={() => {
                 console.log("Ajout de nouvelle culture");
               }}
@@ -65,7 +91,7 @@ const CropsPage = () => {
             </Button>
             <Button 
               variant="outline" 
-              className="flex items-center gap-2"
+              className="flex items-center gap-2 transition-colors"
               onClick={() => {
                 console.log("Export des données des cultures");
               }}
@@ -80,7 +106,7 @@ const CropsPage = () => {
           <div className="flex flex-wrap gap-2">
             <Button 
               variant="outline" 
-              className="flex items-center gap-2"
+              className="flex items-center gap-2 transition-colors"
               onClick={() => {
                 console.log("Planification du calendrier des cultures");
               }}
@@ -89,7 +115,7 @@ const CropsPage = () => {
               Planifier
             </Button>
             <Button 
-              className="flex items-center gap-2"
+              className="flex items-center gap-2 transition-colors"
               onClick={() => {
                 console.log("Ajout de nouvelle tâche culturale");
               }}
@@ -139,7 +165,12 @@ const CropsPage = () => {
     <CRMProvider>
       <StatisticsProvider>
         <PageLayout>
-          <div className="p-6 animate-enter">
+          <motion.div 
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.3 }}
+            className="p-6 animate-enter"
+          >
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
               <div>
                 <h1 className="text-3xl font-bold">Gestion des Cultures</h1>
@@ -155,7 +186,7 @@ const CropsPage = () => {
               defaultValue={activeTab}
               onValueChange={handleTabChange}
             />
-          </div>
+          </motion.div>
         </PageLayout>
       </StatisticsProvider>
     </CRMProvider>

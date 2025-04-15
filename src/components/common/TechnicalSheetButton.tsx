@@ -1,7 +1,7 @@
 
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { FileText, Loader2 } from 'lucide-react';
+import { FileText, Loader2, Download } from 'lucide-react';
 import { useCRM } from '../../contexts/CRMContext';
 import {
   Tooltip,
@@ -56,6 +56,7 @@ const TechnicalSheetButton: React.FC<TechnicalSheetButtonProps> = ({
     
     try {
       await exportModuleData('fiche_technique', 'pdf', techSheetData);
+      console.log("Fiche technique générée avec succès");
     } catch (error) {
       console.error("Error generating technical sheet:", error);
     } finally {
@@ -70,7 +71,7 @@ const TechnicalSheetButton: React.FC<TechnicalSheetButtonProps> = ({
           <Button
             variant={variant}
             size={size}
-            className={className || `bg-green-600 hover:bg-green-700 text-white transition-colors duration-200`}
+            className={`transition-all duration-300 ${className || `bg-green-600 hover:bg-green-700 text-white`}`}
             onClick={downloadTechnicalSheet}
             disabled={isGenerating}
           >
@@ -78,13 +79,13 @@ const TechnicalSheetButton: React.FC<TechnicalSheetButtonProps> = ({
               <Loader2 className="h-4 w-4 animate-spin" />
             ) : children || (
               <>
-                <FileText className="mr-2 h-4 w-4" />
+                <Download className="mr-2 h-4 w-4" />
                 Télécharger fiche technique
               </>
             )}
           </Button>
         </TooltipTrigger>
-        <TooltipContent>
+        <TooltipContent className="bg-white border shadow-lg">
           <p>Générer une fiche technique détaillée</p>
         </TooltipContent>
       </Tooltip>
