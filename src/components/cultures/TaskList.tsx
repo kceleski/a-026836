@@ -1,9 +1,15 @@
 
 import React, { useState } from 'react';
-import { Check, Trash2, ChevronDown, Plus } from 'lucide-react';
+import { Check, Trash2, ChevronDown, Plus, Calendar, Tag } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Table, TableHeader, TableBody, TableHead, TableRow, TableCell } from '@/components/ui/table';
-import { toast } from 'sonner';
+import { Badge } from '@/components/ui/badge';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 interface Task {
   id: number;
@@ -34,23 +40,23 @@ const TaskList = () => {
   const getPriorityStyle = (priority: string) => {
     switch (priority) {
       case 'Haute':
-        return 'bg-red-100 text-red-800';
+        return 'bg-red-100 text-red-800 border-red-200';
       case 'Moyenne':
-        return 'bg-orange-100 text-orange-800';
+        return 'bg-orange-100 text-orange-800 border-orange-200';
       case 'Basse':
-        return 'bg-green-100 text-green-800';
+        return 'bg-green-100 text-green-800 border-green-200';
       default:
-        return 'bg-gray-100 text-gray-800';
+        return 'bg-gray-100 text-gray-800 border-gray-200';
     }
   };
 
   const handleTaskComplete = (id: number) => {
-    toast.success('Tâche marquée comme terminée');
+    console.log('Tâche marquée comme terminée');
     setTasks(tasks.filter(task => task.id !== id));
   };
 
   const handleTaskDelete = (id: number) => {
-    toast.success('Tâche supprimée avec succès');
+    console.log('Tâche supprimée avec succès');
     setTasks(tasks.filter(task => task.id !== id));
   };
 
@@ -58,12 +64,12 @@ const TaskList = () => {
     setTasks(tasks.map(task => 
       task.id === id ? { ...task, priority } : task
     ));
-    toast.success(`Priorité modifiée en "${priority}"`);
+    console.log(`Priorité modifiée en "${priority}"`);
   };
 
   const handleAddTask = () => {
     if (!newTask.task || !newTask.culture || !newTask.date) {
-      toast.error('Veuillez remplir tous les champs obligatoires');
+      console.error('Veuillez remplir tous les champs obligatoires');
       return;
     }
 
@@ -83,16 +89,19 @@ const TaskList = () => {
       priority: 'Moyenne'
     });
     setShowAddTask(false);
-    toast.success('Nouvelle tâche ajoutée avec succès');
+    console.log('Nouvelle tâche ajoutée avec succès');
   };
 
   return (
-    <div className="bg-white rounded-xl border overflow-hidden">
+    <div className="bg-white rounded-xl border overflow-hidden shadow-sm">
       <div className="p-4 flex items-center justify-between border-b">
-        <h2 className="text-xl font-semibold">Tâches à venir</h2>
+        <div className="flex items-center gap-2">
+          <Calendar className="h-5 w-5 text-agri-primary" />
+          <h2 className="text-xl font-semibold">Tâches à venir</h2>
+        </div>
         <Button 
           onClick={() => setShowAddTask(!showAddTask)}
-          className="bg-green-500 hover:bg-green-600 text-white"
+          className="bg-green-500 hover:bg-green-600 text-white transition-colors"
         >
           <Plus className="h-4 w-4 mr-2" />
           Ajouter une tâche
@@ -108,7 +117,7 @@ const TaskList = () => {
                 type="text"
                 value={newTask.task}
                 onChange={(e) => setNewTask({...newTask, task: e.target.value})}
-                className="w-full p-2 border rounded"
+                className="w-full p-2 border rounded focus:ring-2 focus:ring-agri-primary focus:border-agri-primary"
                 placeholder="Description de la tâche"
               />
             </div>
@@ -117,7 +126,7 @@ const TaskList = () => {
               <select
                 value={newTask.culture}
                 onChange={(e) => setNewTask({...newTask, culture: e.target.value})}
-                className="w-full p-2 border rounded"
+                className="w-full p-2 border rounded focus:ring-2 focus:ring-agri-primary focus:border-agri-primary"
               >
                 <option value="">Sélectionner une culture</option>
                 <option value="Canne à Sucre">Canne à Sucre</option>
@@ -133,7 +142,7 @@ const TaskList = () => {
                 type="date"
                 value={newTask.date}
                 onChange={(e) => setNewTask({...newTask, date: e.target.value})}
-                className="w-full p-2 border rounded"
+                className="w-full p-2 border rounded focus:ring-2 focus:ring-agri-primary focus:border-agri-primary"
               />
             </div>
             <div>
@@ -141,7 +150,7 @@ const TaskList = () => {
               <select
                 value={newTask.priority}
                 onChange={(e) => setNewTask({...newTask, priority: e.target.value as Task['priority']})}
-                className="w-full p-2 border rounded"
+                className="w-full p-2 border rounded focus:ring-2 focus:ring-agri-primary focus:border-agri-primary"
               >
                 <option value="Haute">Haute</option>
                 <option value="Moyenne">Moyenne</option>
@@ -173,39 +182,57 @@ const TaskList = () => {
           </TableHeader>
           <TableBody>
             {tasks.map((task) => (
-              <TableRow key={task.id}>
-                <TableCell>{task.task}</TableCell>
-                <TableCell>{task.culture}</TableCell>
+              <TableRow key={task.id} className="hover:bg-muted/20 transition-colors">
+                <TableCell className="font-medium">{task.task}</TableCell>
+                <TableCell>
+                  <div className="flex items-center">
+                    <Tag className="h-3 w-3 mr-1.5 text-agri-primary" />
+                    {task.culture}
+                  </div>
+                </TableCell>
                 <TableCell>
                   {new Date(task.date).toLocaleDateString('fr-FR')}
                 </TableCell>
                 <TableCell>
-                  <div className="relative">
-                    <button
-                      className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium ${getPriorityStyle(task.priority)}`}
-                    >
-                      {task.priority} <ChevronDown className="ml-1 h-3 w-3" />
-                    </button>
-                    
-                    {/* Dropdown menu for priority change would be implemented here */}
-                  </div>
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Badge className={`cursor-pointer ${getPriorityStyle(task.priority)}`}>
+                        {task.priority} <ChevronDown className="ml-1 h-3 w-3 inline" />
+                      </Badge>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end">
+                      <DropdownMenuItem onClick={() => handlePriorityChange(task.id, 'Haute')}>
+                        Haute
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => handlePriorityChange(task.id, 'Moyenne')}>
+                        Moyenne
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => handlePriorityChange(task.id, 'Basse')}>
+                        Basse
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
                 </TableCell>
                 <TableCell>
                   <div className="flex space-x-2">
-                    <button 
+                    <Button
+                      variant="ghost" 
+                      size="icon"
                       onClick={() => handleTaskComplete(task.id)}
-                      className="p-1 text-green-600 hover:bg-green-50 rounded"
+                      className="h-8 w-8 text-green-600 hover:bg-green-50 hover:text-green-700"
                       title="Marquer comme terminée"
                     >
                       <Check className="h-4 w-4" />
-                    </button>
-                    <button 
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="icon"
                       onClick={() => handleTaskDelete(task.id)}
-                      className="p-1 text-red-600 hover:bg-red-50 rounded"
+                      className="h-8 w-8 text-red-600 hover:bg-red-50 hover:text-red-700"
                       title="Supprimer"
                     >
                       <Trash2 className="h-4 w-4" />
-                    </button>
+                    </Button>
                   </div>
                 </TableCell>
               </TableRow>

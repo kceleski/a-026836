@@ -15,13 +15,15 @@ interface TechnicalSheetButtonProps {
   className?: string;
   variant?: "default" | "destructive" | "outline" | "secondary" | "ghost" | "link";
   children?: React.ReactNode;
+  size?: "default" | "sm" | "lg" | "icon";
 }
 
 const TechnicalSheetButton: React.FC<TechnicalSheetButtonProps> = ({ 
   data, 
   className = "",
   variant = "default",
-  children
+  children,
+  size = "default"
 }) => {
   const { exportModuleData } = useCRM();
   const [isGenerating, setIsGenerating] = useState(false);
@@ -34,7 +36,7 @@ const TechnicalSheetButton: React.FC<TechnicalSheetButtonProps> = ({
 
     setIsGenerating(true);
     
-    // Create a specific format for the technical sheet
+    // Format amélioré pour la fiche technique
     const techSheetData = [{
       nom: data.name || data.nom || "Non spécifié",
       nomScientifique: data.scientificName || data.nomScientifique || "Non spécifié",
@@ -67,7 +69,8 @@ const TechnicalSheetButton: React.FC<TechnicalSheetButtonProps> = ({
         <TooltipTrigger asChild>
           <Button
             variant={variant}
-            className={className || `bg-green-600 hover:bg-green-700 text-white`}
+            size={size}
+            className={className || `bg-green-600 hover:bg-green-700 text-white transition-colors duration-200`}
             onClick={downloadTechnicalSheet}
             disabled={isGenerating}
           >

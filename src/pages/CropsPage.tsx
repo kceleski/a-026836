@@ -3,16 +3,14 @@ import React, { useState } from 'react';
 import PageLayout from '../components/layout/PageLayout';
 import GuadeloupeHarvestTracking from '../components/GuadeloupeHarvestTracking';
 import GuadeloupeSpecificCrops from '../components/GuadeloupeSpecificCrops';
+import CropPlanning from '../components/CropPlanning';
 import TabContainer, { TabItem } from '../components/layout/TabContainer';
-import { useToast } from '@/hooks/use-toast';
-import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
-import { PlusCircle, Download, Filter, RefreshCw } from 'lucide-react';
+import { Download, Plus, Upload, Filter, RefreshCw, CalendarRange } from 'lucide-react';
 import { StatisticsProvider } from '../contexts/StatisticsContext';
 import { CRMProvider } from '../contexts/CRMContext';
 
 const CropsPage = () => {
-  const { toast: shadowToast } = useToast();
   const [activeTab, setActiveTab] = useState<string>('harvest');
 
   // Actions based on the active tab
@@ -25,9 +23,7 @@ const CropsPage = () => {
               variant="outline" 
               className="flex items-center gap-2"
               onClick={() => {
-                toast.success("Export des données", {
-                  description: "Les données de récolte ont été exportées"
-                });
+                console.log("Export des données de récolte");
               }}
             >
               <Download className="h-4 w-4" />
@@ -37,9 +33,7 @@ const CropsPage = () => {
               variant="outline" 
               className="flex items-center gap-2"
               onClick={() => {
-                toast.success("Synchronisation", {
-                  description: "Les données ont été synchronisées"
-                });
+                console.log("Synchronisation des données de récolte");
               }}
             >
               <RefreshCw className="h-4 w-4" />
@@ -49,9 +43,7 @@ const CropsPage = () => {
               variant="outline" 
               className="flex items-center gap-2"
               onClick={() => {
-                toast.success("Filtres appliqués", {
-                  description: "Les données ont été filtrées"
-                });
+                console.log("Filtres appliqués aux données de récolte");
               }}
             >
               <Filter className="h-4 w-4" />
@@ -65,25 +57,45 @@ const CropsPage = () => {
             <Button 
               className="flex items-center gap-2 bg-agri-primary hover:bg-agri-primary-dark"
               onClick={() => {
-                toast.success("Ajout de culture", {
-                  description: "Vous pouvez maintenant ajouter une nouvelle culture"
-                });
+                console.log("Ajout de nouvelle culture");
               }}
             >
-              <PlusCircle className="h-4 w-4" />
+              <Plus className="h-4 w-4" />
               Ajouter
             </Button>
             <Button 
               variant="outline" 
               className="flex items-center gap-2"
               onClick={() => {
-                toast.success("Export des données", {
-                  description: "Les données des cultures ont été exportées"
-                });
+                console.log("Export des données des cultures");
               }}
             >
               <Download className="h-4 w-4" />
               Exporter
+            </Button>
+          </div>
+        );
+      case 'planning':
+        return (
+          <div className="flex flex-wrap gap-2">
+            <Button 
+              variant="outline" 
+              className="flex items-center gap-2"
+              onClick={() => {
+                console.log("Planification du calendrier des cultures");
+              }}
+            >
+              <CalendarRange className="h-4 w-4" />
+              Planifier
+            </Button>
+            <Button 
+              className="flex items-center gap-2"
+              onClick={() => {
+                console.log("Ajout de nouvelle tâche culturale");
+              }}
+            >
+              <Plus className="h-4 w-4" />
+              Nouvelle tâche
             </Button>
           </div>
         );
@@ -97,18 +109,12 @@ const CropsPage = () => {
     
     const tabLabels = {
       harvest: 'Suivi des Récoltes',
-      specific: 'Cultures Spécifiques'
+      specific: 'Cultures Spécifiques',
+      planning: 'Planification'
     };
     
     const label = tabLabels[value as keyof typeof tabLabels] || value;
-    
-    // Use both toast systems for better user experience
-    shadowToast({
-      title: `${label} activé`,
-      description: `Vous consultez maintenant les données de ${label.toLowerCase()}`
-    });
-    
-    toast.success(`${label} activé`);
+    console.log(`${label} activé - Affichage des données correspondantes`);
   };
 
   const tabs: TabItem[] = [
@@ -121,6 +127,11 @@ const CropsPage = () => {
       value: 'specific',
       label: 'Cultures Spécifiques',
       content: <GuadeloupeSpecificCrops />
+    },
+    {
+      value: 'planning',
+      label: 'Planification',
+      content: <CropPlanning />
     }
   ];
 
