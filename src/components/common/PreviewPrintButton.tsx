@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Button } from '@/components/ui/button';
-import { Eye, Printer, FileText, Loader2 } from 'lucide-react';
+import { Eye, Printer, FileText, Loader2, Download } from 'lucide-react';
 import {
   DropdownMenu,
   DropdownMenuContent,

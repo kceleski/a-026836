@@ -12,7 +12,10 @@ import {
   X,
   Sun,
   Moon,
-  ChevronRight
+  ChevronRight,
+  Settings,
+  Users,
+  FileText
 } from 'lucide-react';
 
 const Navbar = () => {
@@ -56,6 +59,8 @@ const Navbar = () => {
     { title: 'Inventaire', path: '/inventaire', icon: Package },
     { title: 'Finances', path: '/finances', icon: Wallet },
     { title: 'Statistiques', path: '/statistiques', icon: BarChart2 },
+    { title: 'Rapports', path: '/rapports', icon: FileText },
+    { title: 'Paramètres', path: '/parametres', icon: Settings },
   ];
 
   const isActive = (path: string) => {
