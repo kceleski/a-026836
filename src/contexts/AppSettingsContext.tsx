@@ -98,10 +98,20 @@ export const AppSettingsProvider: React.FC<AppSettingsProviderProps> = ({ childr
     value: AppSettings[K][NK]
   ) => {
     setSettings(prev => {
+      // Create a new object to avoid mutating the previous state
       const updatedSettings = { ...prev };
-      const section = { ...updatedSettings[key] };
-      section[nestedKey] = value;
-      updatedSettings[key] = section;
+      
+      // Explicitly type the nested section
+      // This ensures TypeScript knows we're dealing with an object
+      const nestedSection = updatedSettings[key] as Record<string, any>;
+      
+      // Create a new nested object with the updated value
+      const updatedSection = { ...nestedSection };
+      updatedSection[nestedKey as string] = value;
+      
+      // Update the section in the new settings object
+      updatedSettings[key] = updatedSection as AppSettings[K];
+      
       return updatedSettings;
     });
   };
