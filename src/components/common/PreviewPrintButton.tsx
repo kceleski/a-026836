@@ -131,6 +131,13 @@ const PreviewPrintButton: React.FC<PreviewPrintButtonProps> = ({
     }
   };
 
+  const handleKeyDown = (e: React.KeyboardEvent, action: () => void) => {
+    if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault();
+      action();
+    }
+  };
+
   return (
     <>
       <DropdownMenu>
@@ -143,11 +150,12 @@ const PreviewPrintButton: React.FC<PreviewPrintButtonProps> = ({
                   size="sm"
                   className={`transition-all ${className}`}
                   disabled={isActionInProgress}
+                  aria-label="Options d'aperçu et d'impression"
                 >
                   {isActionInProgress ? (
-                    <Loader2 className="h-4 w-4 animate-spin" />
+                    <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
                   ) : (
-                    <Eye className="h-4 w-4" />
+                    <Eye className="h-4 w-4" aria-hidden="true" />
                   )}
                   <span className="ml-2 hidden sm:inline">Aperçu</span>
                 </Button>
@@ -160,18 +168,30 @@ const PreviewPrintButton: React.FC<PreviewPrintButtonProps> = ({
         </TooltipProvider>
         <DropdownMenuContent align="end" className="w-56">
           {showPreview && (
-            <DropdownMenuItem onClick={handleShowPreview} className="cursor-pointer">
-              <Eye className="mr-2 h-4 w-4" />
+            <DropdownMenuItem 
+              onClick={handleShowPreview} 
+              className="cursor-pointer"
+              onKeyDown={(e) => handleKeyDown(e, handleShowPreview)}
+            >
+              <Eye className="mr-2 h-4 w-4" aria-hidden="true" />
               <span>Aperçu à l'écran</span>
             </DropdownMenuItem>
           )}
-          <DropdownMenuItem onClick={handlePrint} className="cursor-pointer">
-            <Printer className="mr-2 h-4 w-4" />
+          <DropdownMenuItem 
+            onClick={handlePrint} 
+            className="cursor-pointer"
+            onKeyDown={(e) => handleKeyDown(e, handlePrint)}
+          >
+            <Printer className="mr-2 h-4 w-4" aria-hidden="true" />
             <span>Imprimer</span>
           </DropdownMenuItem>
           <DropdownMenuSeparator />
-          <DropdownMenuItem onClick={handleExportPDF} className="cursor-pointer">
-            <FileText className="mr-2 h-4 w-4" />
+          <DropdownMenuItem 
+            onClick={handleExportPDF} 
+            className="cursor-pointer"
+            onKeyDown={(e) => handleKeyDown(e, handleExportPDF)}
+          >
+            <FileText className="mr-2 h-4 w-4" aria-hidden="true" />
             <span>Exporter en PDF</span>
           </DropdownMenuItem>
         </DropdownMenuContent>
@@ -189,10 +209,11 @@ const PreviewPrintButton: React.FC<PreviewPrintButtonProps> = ({
             <iframe
               srcDoc={`
                 <!DOCTYPE html>
-                <html>
+                <html lang="${settings.locale || 'fr'}">
                   <head>
                     <meta charset="UTF-8">
                     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+                    <title>${title || `Aperçu - ${moduleName}`}</title>
                     <style>
                       :root {
                         --font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
@@ -279,11 +300,15 @@ const PreviewPrintButton: React.FC<PreviewPrintButtonProps> = ({
                         body {
                           padding: 0;
                           background-color: white;
+                          color: black;
                         }
                         button { display: none; }
                         .preview-container {
                           box-shadow: none;
                           border: none;
+                        }
+                        table, th, td {
+                          color: black;
                         }
                       }
                     </style>
@@ -297,14 +322,18 @@ const PreviewPrintButton: React.FC<PreviewPrintButtonProps> = ({
               `}
               className="w-full h-full border-none"
               title="Preview"
+              aria-label={`Aperçu du document: ${title || moduleName}`}
             />
           </div>
           <div className="flex justify-end gap-2 mt-4">
-            <Button variant="outline" onClick={() => setPreviewOpen(false)}>
+            <Button 
+              variant="outline" 
+              onClick={() => setPreviewOpen(false)}
+            >
               Fermer
             </Button>
             <Button onClick={handlePrint}>
-              <Printer className="mr-2 h-4 w-4" />
+              <Printer className="mr-2 h-4 w-4" aria-hidden="true" />
               Imprimer
             </Button>
           </div>
