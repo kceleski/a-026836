@@ -97,13 +97,13 @@ export const AppSettingsProvider: React.FC<AppSettingsProviderProps> = ({ childr
     nestedKey: NK, 
     value: AppSettings[K][NK]
   ) => {
-    setSettings(prev => ({
-      ...prev,
-      [key]: {
-        ...prev[key],
-        [nestedKey]: value
-      }
-    }));
+    setSettings(prev => {
+      const updatedSettings = { ...prev };
+      const section = { ...updatedSettings[key] };
+      section[nestedKey] = value;
+      updatedSettings[key] = section;
+      return updatedSettings;
+    });
   };
 
   // Reset all settings to default
