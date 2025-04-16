@@ -13,6 +13,8 @@ import NotFound from "./pages/NotFound";
 import { useEffect } from "react";
 import { CRMProvider } from "./contexts/CRMContext";
 import { StatisticsProvider } from "./contexts/StatisticsContext";
+import { AppSettingsProvider } from "./contexts/AppSettingsContext";
+import { trackPageView } from "./utils/analytics";
 
 // Define routes configuration with redirects
 const routes = [
@@ -44,6 +46,11 @@ const RouterChangeHandler = () => {
   useEffect(() => {
     // Scroll to top on route change
     window.scrollTo(0, 0);
+    
+    // Track page view for analytics
+    const currentPath = window.location.pathname;
+    const pageName = currentPath === '/' ? 'dashboard' : currentPath.replace(/^\//, '');
+    trackPageView(pageName);
   }, [location.pathname]);
   
   return null;
@@ -53,22 +60,24 @@ const RouterChangeHandler = () => {
 const App = () => {
   return (
     <QueryClientProvider client={queryClient}>
-      <CRMProvider>
-        <BrowserRouter>
-          <TooltipProvider>
-            <RouterChangeHandler />
-            <Routes>
-              {routes.map((route) => (
-                <Route 
-                  key={route.path} 
-                  path={route.path} 
-                  element={route.element} 
-                />
-              ))}
-            </Routes>
-          </TooltipProvider>
-        </BrowserRouter>
-      </CRMProvider>
+      <AppSettingsProvider>
+        <CRMProvider>
+          <BrowserRouter>
+            <TooltipProvider>
+              <RouterChangeHandler />
+              <Routes>
+                {routes.map((route) => (
+                  <Route 
+                    key={route.path} 
+                    path={route.path} 
+                    element={route.element} 
+                  />
+                ))}
+              </Routes>
+            </TooltipProvider>
+          </BrowserRouter>
+        </CRMProvider>
+      </AppSettingsProvider>
     </QueryClientProvider>
   );
 };
