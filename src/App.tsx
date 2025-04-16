@@ -12,6 +12,7 @@ import StatsPage from "./pages/StatsPage";
 import NotFound from "./pages/NotFound";
 import { useEffect } from "react";
 import { CRMProvider } from "./contexts/CRMContext";
+import { StatisticsProvider } from "./contexts/StatisticsContext";
 
 // Define routes configuration with redirects
 const routes = [
@@ -21,7 +22,7 @@ const routes = [
   { path: "/cultures", element: <CropsPage /> },
   { path: "/inventaire", element: <InventoryPage /> },
   { path: "/finances", element: <FinancePage /> },
-  { path: "/statistiques", element: <StatsPage /> },
+  { path: "/statistiques", element: <StatisticsProvider><StatsPage /></StatisticsProvider> },
   { path: "/dashboard", element: <Navigate to="/" replace /> },
   { path: "*", element: <NotFound /> }
 ];

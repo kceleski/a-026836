@@ -1,4 +1,3 @@
-
 import React, { useState, useRef } from 'react';
 import PageLayout from '../components/layout/PageLayout';
 import PageHeader from '../components/layout/PageHeader';
@@ -14,6 +13,7 @@ import { DateRange } from 'react-day-picker';
 import { useToast } from "@/hooks/use-toast";
 import usePageMetadata from '../hooks/use-page-metadata';
 import { downloadInventoryTemplate } from '../components/inventory/ImportExportFunctions';
+import { StatisticsProvider } from '../contexts/StatisticsContext';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -186,6 +186,15 @@ const InventoryPage = () => {
     );
   };
 
+  const cropsContent = (
+    <StatisticsProvider>
+      <div className="space-y-8">
+        <GuadeloupeSpecificCrops />
+        <GuadeloupeHarvestTracking />
+      </div>
+    </StatisticsProvider>
+  );
+
   const tabs: TabItem[] = [
     {
       value: 'inventory',
@@ -195,12 +204,7 @@ const InventoryPage = () => {
     {
       value: 'crops',
       label: 'Cultures',
-      content: (
-        <div className="space-y-8">
-          <GuadeloupeSpecificCrops />
-          <GuadeloupeHarvestTracking />
-        </div>
-      )
+      content: cropsContent
     },
     {
       value: 'weather',
