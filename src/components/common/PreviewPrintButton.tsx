@@ -23,6 +23,8 @@ import {
   DialogTitle,
   DialogDescription,
 } from "@/components/ui/dialog";
+import { useAppSettings } from '@/contexts/AppSettingsContext';
+import PreviewContainer from './PreviewContainer';
 
 interface PreviewPrintButtonProps {
   data: any[];
@@ -44,6 +46,7 @@ const PreviewPrintButton: React.FC<PreviewPrintButtonProps> = ({
   title
 }) => {
   const { printModuleData, exportModuleData } = useCRM();
+  const { settings } = useAppSettings();
   const [isActionInProgress, setIsActionInProgress] = useState(false);
   const [previewOpen, setPreviewOpen] = useState(false);
   const [previewHTML, setPreviewHTML] = useState<string>('');
@@ -99,7 +102,7 @@ const PreviewPrintButton: React.FC<PreviewPrintButtonProps> = ({
           </table>
         </div>
         <div class="mt-6 text-sm text-gray-500 text-right">
-          <p>Date: ${new Date().toLocaleDateString()}</p>
+          <p>Date: ${new Date().toLocaleDateString(settings.locale)}</p>
         </div>
       </div>
     `;
@@ -191,17 +194,104 @@ const PreviewPrintButton: React.FC<PreviewPrintButtonProps> = ({
                     <meta charset="UTF-8">
                     <meta name="viewport" content="width=device-width, initial-scale=1.0">
                     <style>
-                      body { font-family: Arial, sans-serif; margin: 0; padding: 0; }
-                      table { width: 100%; border-collapse: collapse; }
-                      th { text-align: left; }
+                      :root {
+                        --font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+                        --primary-color: ${settings.darkMode ? '#8BADE3' : '#4CAF50'};
+                        --border-color: ${settings.darkMode ? '#3A3A3A' : '#e5e7eb'};
+                        --bg-color: ${settings.darkMode ? '#1F1F1F' : '#ffffff'};
+                        --text-color: ${settings.darkMode ? '#E1E1E1' : '#333333'};
+                        --muted-color: ${settings.darkMode ? '#A0A0A0' : '#6B7280'};
+                        --header-bg: ${settings.darkMode ? '#2D2D2D' : '#F9FAFB'};
+                      }
+                      
+                      body {
+                        font-family: var(--font-family);
+                        margin: 0;
+                        padding: 0;
+                        background-color: var(--bg-color);
+                        color: var(--text-color);
+                      }
+                      
+                      .preview-container {
+                        max-width: 100%;
+                        margin: 0 auto;
+                        border: 1px solid var(--border-color);
+                        border-radius: 8px;
+                        overflow: hidden;
+                        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+                      }
+                      
+                      .preview-header {
+                        background-color: var(--header-bg);
+                        padding: 20px;
+                        border-bottom: 1px solid var(--border-color);
+                      }
+                      
+                      .preview-header h2 {
+                        margin: 0;
+                        font-size: 20px;
+                        color: var(--text-color);
+                      }
+                      
+                      .preview-content {
+                        padding: 20px;
+                      }
+                      
+                      table {
+                        width: 100%;
+                        border-collapse: collapse;
+                        margin-bottom: 20px;
+                        font-size: 14px;
+                      }
+                      
+                      th {
+                        background-color: var(--header-bg);
+                        padding: 10px 15px;
+                        text-align: left;
+                        font-weight: 600;
+                        border-bottom: 2px solid var(--border-color);
+                        color: var(--text-color);
+                      }
+                      
+                      td {
+                        padding: 10px 15px;
+                        border-bottom: 1px solid var(--border-color);
+                      }
+                      
+                      tr:nth-child(even) {
+                        background-color: ${settings.darkMode ? '#2A2A2A' : '#f9fafb'};
+                      }
+                      
+                      tr:hover {
+                        background-color: ${settings.darkMode ? '#333333' : '#f3f4f6'};
+                      }
+                      
+                      .footer {
+                        margin-top: 30px;
+                        text-align: right;
+                        font-size: 12px;
+                        color: var(--muted-color);
+                        padding-top: 10px;
+                        border-top: 1px solid var(--border-color);
+                      }
+
                       @media print {
-                        body { padding: 1cm; }
+                        body {
+                          padding: 0;
+                          background-color: white;
+                        }
                         button { display: none; }
+                        .preview-container {
+                          box-shadow: none;
+                          border: none;
+                        }
                       }
                     </style>
                   </head>
                   <body>
-                    ${previewHTML}
+                    <div class="preview-container">
+                      ${previewHTML}
+                    </div>
                   </body>
                 </html>
               `}

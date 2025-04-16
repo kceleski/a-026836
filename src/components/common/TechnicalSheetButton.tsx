@@ -3,6 +3,7 @@ import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { FileText, Loader2, Download, Eye, Printer } from 'lucide-react';
 import { useCRM } from '../../contexts/CRMContext';
+import { useAppSettings } from '@/contexts/AppSettingsContext';
 import {
   Tooltip,
   TooltipContent,
@@ -22,6 +23,7 @@ import {
   DialogTitle,
   DialogDescription,
 } from "@/components/ui/dialog";
+import PreviewContainer from './PreviewContainer';
 
 interface TechnicalSheetButtonProps {
   data: any;
@@ -39,6 +41,7 @@ const TechnicalSheetButton: React.FC<TechnicalSheetButtonProps> = ({
   size = "default"
 }) => {
   const { exportModuleData } = useCRM();
+  const { settings } = useAppSettings();
   const [isGenerating, setIsGenerating] = useState(false);
   const [previewOpen, setPreviewOpen] = useState(false);
   const [previewHTML, setPreviewHTML] = useState<string>('');
@@ -89,16 +92,17 @@ const TechnicalSheetButton: React.FC<TechnicalSheetButtonProps> = ({
     if (!techSheetData) return '';
     
     const item = techSheetData[0];
+    const isDarkMode = settings.darkMode;
     
     return `
-      <div class="technical-sheet p-6 max-w-4xl mx-auto">
+      <div class="technical-sheet">
         <div class="technical-sheet-header text-center mb-8">
-          <h1 class="text-2xl font-bold text-green-700">${item.nom}</h1>
+          <h1 class="text-2xl font-bold ${isDarkMode ? 'text-green-400' : 'text-green-700'}">${item.nom}</h1>
           <p class="italic">${item.nomScientifique}</p>
         </div>
         
         <div class="section mb-6">
-          <h2 class="text-lg font-semibold text-blue-800 border-b pb-2 mb-4">Informations générales</h2>
+          <h2 class="text-lg font-semibold ${isDarkMode ? 'text-blue-400' : 'text-blue-800'} border-b pb-2 mb-4">Informations générales</h2>
           <div class="grid grid-cols-2 gap-4">
             <div>
               <span class="font-medium">Famille:</span>
@@ -120,7 +124,7 @@ const TechnicalSheetButton: React.FC<TechnicalSheetButtonProps> = ({
         </div>
         
         <div class="section mb-6">
-          <h2 class="text-lg font-semibold text-blue-800 border-b pb-2 mb-4">Conditions de culture</h2>
+          <h2 class="text-lg font-semibold ${isDarkMode ? 'text-blue-400' : 'text-blue-800'} border-b pb-2 mb-4">Conditions de culture</h2>
           <div class="grid grid-cols-2 gap-4">
             <div>
               <span class="font-medium">Type de sol:</span>
@@ -146,7 +150,7 @@ const TechnicalSheetButton: React.FC<TechnicalSheetButtonProps> = ({
         </div>
         
         <div class="section mb-6">
-          <h2 class="text-lg font-semibold text-blue-800 border-b pb-2 mb-4">Problèmes phytosanitaires</h2>
+          <h2 class="text-lg font-semibold ${isDarkMode ? 'text-blue-400' : 'text-blue-800'} border-b pb-2 mb-4">Problèmes phytosanitaires</h2>
           <div class="grid grid-cols-2 gap-4">
             <div>
               <span class="font-medium">Ravageurs:</span>
@@ -160,14 +164,10 @@ const TechnicalSheetButton: React.FC<TechnicalSheetButtonProps> = ({
         </div>
         
         <div class="section mb-6">
-          <h2 class="text-lg font-semibold text-blue-800 border-b pb-2 mb-4">Notes</h2>
-          <div class="bg-gray-50 p-4 rounded-md">
+          <h2 class="text-lg font-semibold ${isDarkMode ? 'text-blue-400' : 'text-blue-800'} border-b pb-2 mb-4">Notes</h2>
+          <div class="${isDarkMode ? 'bg-gray-800' : 'bg-gray-50'} p-4 rounded-md">
             ${item.notes}
           </div>
-        </div>
-        
-        <div class="footer text-center text-sm text-gray-500 mt-8">
-          <p>Fiche technique générée le ${new Date().toLocaleDateString()}</p>
         </div>
       </div>
     `;
@@ -181,6 +181,8 @@ const TechnicalSheetButton: React.FC<TechnicalSheetButtonProps> = ({
   const handlePrint = () => {
     const printWindow = window.open('', '_blank');
     if (printWindow) {
+      const isDarkMode = settings.darkMode;
+      
       printWindow.document.write(`
         <!DOCTYPE html>
         <html>
@@ -189,21 +191,71 @@ const TechnicalSheetButton: React.FC<TechnicalSheetButtonProps> = ({
             <meta charset="UTF-8">
             <meta name="viewport" content="width=device-width, initial-scale=1.0">
             <style>
-              body { font-family: Arial, sans-serif; margin: 0; padding: 20px; }
-              .technical-sheet { max-width: 800px; margin: 0 auto; }
-              h1 { color: #2e7d32; }
-              h2 { color: #1565c0; border-bottom: 1px solid #eee; padding-bottom: 5px; }
+              :root {
+                --font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+                --primary-color: ${isDarkMode ? '#8BADE3' : '#4CAF50'};
+                --border-color: ${isDarkMode ? '#3A3A3A' : '#e5e7eb'};
+                --bg-color: ${isDarkMode ? '#1F1F1F' : '#ffffff'};
+                --text-color: ${isDarkMode ? '#E1E1E1' : '#333333'};
+                --muted-color: ${isDarkMode ? '#A0A0A0' : '#6B7280'};
+                --header-bg: ${isDarkMode ? '#2D2D2D' : '#F9FAFB'};
+              }
+              
+              body { 
+                font-family: var(--font-family);
+                margin: 0; 
+                padding: 20px;
+                background-color: var(--bg-color);
+                color: var(--text-color);
+              }
+              
+              .technical-sheet {
+                max-width: 800px;
+                margin: 0 auto;
+                background-color: var(--bg-color);
+                padding: 30px;
+                border-radius: 8px;
+                box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+              }
+              
+              h1 { color: var(--primary-color); margin-top: 0; }
+              
+              h2 { 
+                color: ${isDarkMode ? '#4B96E6' : '#1565c0'}; 
+                border-bottom: 1px solid var(--border-color); 
+                padding-bottom: 5px;
+              }
+              
               .section { margin-bottom: 20px; }
-              .grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px; }
+              
+              .grid {
+                display: grid;
+                grid-template-columns: repeat(2, 1fr);
+                gap: 15px;
+              }
+              
               .font-medium { font-weight: bold; }
-              .bg-gray-50 { background-color: #f9f9f9; padding: 15px; border-radius: 5px; }
+              
+              .bg-gray-50 { 
+                background-color: ${isDarkMode ? '#2A2A2A' : '#f9f9f9'}; 
+                padding: 15px; 
+                border-radius: 5px;
+              }
+              
               @media print {
-                body { padding: 0; }
+                body { background-color: white; }
+                .technical-sheet { box-shadow: none; }
               }
             </style>
           </head>
           <body>
-            ${generatePreviewHTML()}
+            <div class="technical-sheet">
+              ${generatePreviewHTML()}
+              
+              <div class="footer text-center text-sm text-muted-color mt-8">
+                <p>Fiche technique générée le ${new Date().toLocaleDateString(settings.locale)}</p>
+              </div>
+            </div>
           </body>
         </html>
       `);
@@ -278,15 +330,95 @@ const TechnicalSheetButton: React.FC<TechnicalSheetButtonProps> = ({
                     <meta charset="UTF-8">
                     <meta name="viewport" content="width=device-width, initial-scale=1.0">
                     <style>
-                      body { font-family: Arial, sans-serif; margin: 0; padding: 0; }
+                      :root {
+                        --font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+                        --primary-color: ${settings.darkMode ? '#8BADE3' : '#4CAF50'};
+                        --border-color: ${settings.darkMode ? '#3A3A3A' : '#e5e7eb'};
+                        --bg-color: ${settings.darkMode ? '#1F1F1F' : '#ffffff'};
+                        --text-color: ${settings.darkMode ? '#E1E1E1' : '#333333'};
+                        --muted-color: ${settings.darkMode ? '#A0A0A0' : '#6B7280'};
+                        --header-bg: ${settings.darkMode ? '#2D2D2D' : '#F9FAFB'};
+                        --card-bg: ${settings.darkMode ? '#2A2A2A' : '#f9fafb'};
+                      }
+                      
+                      body {
+                        font-family: var(--font-family);
+                        margin: 0; 
+                        padding: 0;
+                        background-color: var(--bg-color);
+                        color: var(--text-color);
+                      }
+                      
+                      .technical-sheet {
+                        max-width: 800px;
+                        margin: 20px auto;
+                        padding: 30px;
+                      }
+                      
+                      .technical-sheet-header {
+                        text-align: center;
+                        padding-bottom: 20px;
+                        margin-bottom: 30px;
+                        border-bottom: 1px solid var(--border-color);
+                      }
+                      
+                      .technical-sheet-header h1 {
+                        margin: 0 0 10px 0;
+                        color: var(--primary-color);
+                      }
+                      
+                      .section {
+                        margin-bottom: 30px;
+                      }
+                      
+                      .section h2 {
+                        color: ${settings.darkMode ? '#4B96E6' : '#1565c0'};
+                        padding-bottom: 8px;
+                        margin-top: 0;
+                        border-bottom: 1px solid var(--border-color);
+                      }
+                      
+                      .grid {
+                        display: grid;
+                        grid-template-columns: repeat(2, 1fr);
+                        gap: 16px;
+                      }
+                      
+                      .grid > div {
+                        padding: 10px;
+                        border-radius: 6px;
+                        background-color: var(--card-bg);
+                      }
+                      
+                      .font-medium {
+                        font-weight: 600;
+                        color: ${settings.darkMode ? '#A4C2F4' : '#2E7D32'};
+                        margin-right: 6px;
+                      }
+                      
+                      .footer {
+                        margin-top: 40px;
+                        padding-top: 15px;
+                        text-align: center;
+                        font-size: 12px;
+                        color: var(--muted-color);
+                        border-top: 1px solid var(--border-color);
+                      }
+                      
                       @media print {
-                        body { padding: 1cm; }
+                        body { padding: 0; background-color: white; }
                         button { display: none; }
                       }
                     </style>
                   </head>
                   <body>
-                    ${previewHTML}
+                    <div class="technical-sheet">
+                      ${previewHTML}
+                      
+                      <div class="footer">
+                        <p>Fiche technique générée le ${new Date().toLocaleDateString(settings.locale)}</p>
+                      </div>
+                    </div>
                   </body>
                 </html>
               `}
