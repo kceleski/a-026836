@@ -3,12 +3,13 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import Index from "./pages/Index";
-import ParcelsPage from "./pages/ParcelsPage";
-import ParcelsDetailsPage from "./pages/ParcelsDetailsPage";
-import CropsPage from "./pages/CropsPage";
-import InventoryPage from "./pages/InventoryPage";
-import FinancePage from "./pages/FinancePage";
-import StatsPage from "./pages/StatsPage";
+import ClientsPage from "./pages/ClientsPage";
+import FacilitiesPage from "./pages/FacilitiesPage";
+import TasksPage from "./pages/TasksPage";
+import CalendarPage from "./pages/CalendarPage";
+import AnalyticsPage from "./pages/AnalyticsPage";
+import ContactsPage from "./pages/ContactsPage";
+import SettingsPage from "./pages/SettingsPage";
 import NotFound from "./pages/NotFound";
 import { useEffect } from "react";
 import { CRMProvider } from "./contexts/CRMContext";
@@ -16,17 +17,25 @@ import { StatisticsProvider } from "./contexts/StatisticsContext";
 import { AppSettingsProvider } from "./contexts/AppSettingsContext";
 import { trackPageView } from "./utils/analytics";
 
-// Define routes configuration with redirects
+// Define routes configuration for Senior Care Dashboard
 const routes = [
   { path: "/", element: <Index /> },
-  { path: "/parcelles", element: <ParcelsPage /> },
-  { path: "/parcelles/:id", element: <ParcelsDetailsPage /> },
-  { path: "/cultures", element: <CropsPage /> },
-  { path: "/inventaire", element: <InventoryPage /> },
-  { path: "/finances", element: <FinancePage /> },
-  { path: "/statistiques", element: <StatisticsProvider><StatsPage /></StatisticsProvider> },
-  { path: "/rapports", element: <Navigate to="/statistiques" replace /> },
-  { path: "/parametres", element: <Navigate to="/" replace /> },
+  { path: "/clients", element: <ClientsPage /> },
+  { path: "/facilities", element: <FacilitiesPage /> },
+  { path: "/tasks", element: <TasksPage /> },
+  { path: "/calendar", element: <CalendarPage /> },
+  { path: "/analytics", element: <StatisticsProvider><AnalyticsPage /></StatisticsProvider> },
+  { path: "/contacts", element: <ContactsPage /> },
+  { path: "/settings", element: <SettingsPage /> },
+  
+  // Legacy redirects from agricultural app
+  { path: "/parcelles", element: <Navigate to="/facilities" replace /> },
+  { path: "/cultures", element: <Navigate to="/clients" replace /> },
+  { path: "/inventaire", element: <Navigate to="/tasks" replace /> },
+  { path: "/finances", element: <Navigate to="/analytics" replace /> },
+  { path: "/statistiques", element: <Navigate to="/analytics" replace /> },
+  { path: "/rapports", element: <Navigate to="/analytics" replace /> },
+  { path: "/parametres", element: <Navigate to="/settings" replace /> },
   { path: "/dashboard", element: <Navigate to="/" replace /> },
   { path: "*", element: <NotFound /> }
 ];
@@ -58,7 +67,7 @@ const RouterChangeHandler = () => {
   return null;
 };
 
-// Application main component with properly nested providers
+// Senior Care Application main component
 const App = () => {
   return (
     <QueryClientProvider client={queryClient}>

@@ -63,23 +63,23 @@ export default {
 					border: 'hsl(var(--sidebar-border))',
 					ring: 'hsl(var(--sidebar-ring))'
 				},
-				// Custom color palette for agricultural theme
-				agri: {
-					'primary': '#4CAF50',
-					'primary-light': '#81C784',
-					'primary-dark': '#388E3C',
-					'secondary': '#8D6E63',
-					'secondary-light': '#A1887F',
-					'secondary-dark': '#6D4C41',
-					'accent': '#FFB74D',
-					'background': '#F5F7FA',
-					'surface': '#FFFFFF',
-					'text': '#263238',
-					'text-light': '#546E7A',
-					'success': '#66BB6A',
-					'warning': '#FFA726',
-					'danger': '#EF5350',
-					'info': '#29B6F6'
+				// Senior Care color palette with sky blue, white, and gray
+				care: {
+					'primary': '#0EA5E9',        // Sky blue
+					'primary-light': '#38BDF8',   // Light sky blue
+					'primary-dark': '#0284C7',    // Dark sky blue
+					'secondary': '#64748B',       // Slate gray
+					'secondary-light': '#94A3B8', // Light slate gray
+					'secondary-dark': '#475569',  // Dark slate gray
+					'accent': '#F8FAFC',         // Off white
+					'background': '#FFFFFF',      // Pure white
+					'surface': '#F8FAFC',        // Light gray surface
+					'text': '#1E293B',           // Dark gray text
+					'text-light': '#64748B',     // Light gray text
+					'success': '#10B981',        // Green for success
+					'warning': '#F59E0B',        // Amber for warnings
+					'danger': '#EF4444',         // Red for errors
+					'info': '#3B82F6'           // Blue for info
 				}
 			},
 			borderRadius: {
