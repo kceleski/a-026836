@@ -65,7 +65,7 @@ export const usePreviewActions = ({
     setPreviewOpen(true);
   };
 
-  const handleExportPDF = async () => {
+  const handleExportPDF = async (moduleName, data, title, columns) => { // ... } `
     if (!data || data.length === 0) {
       toast.error("No data to export", {
         description: "Please check your filters or select a different period."
