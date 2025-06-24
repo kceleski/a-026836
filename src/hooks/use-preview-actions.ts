@@ -60,7 +60,7 @@ export const usePreviewActions = ({
       return;
     }
     
-    const html = generatePreviewHTML(data, moduleName, title, columns);
+    const html = generatePreviewHTML(data, moduleName, title, columns, settings.locale);
     setPreviewHTML(html);
     setPreviewOpen(true);
   };
