@@ -1011,6 +1011,10 @@ export type Database = {
         Args: { "": unknown }
         Returns: unknown
       }
+      interact_with_database: {
+        Args: { command: string; params: Json }
+        Returns: Json
+      }
       is_admin: {
         Args: { user_id: string }
         Returns: boolean

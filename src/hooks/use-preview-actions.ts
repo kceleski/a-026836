@@ -76,10 +76,7 @@ export const usePreviewActions = ({
     setIsActionInProgress(true);
     
     try {
-      await exportModuleData(moduleName, 'pdf', data, {
-        title: title || `Report - ${moduleName}`,
-        columns: columns
-      });
+      await exportModuleData(moduleName, 'pdf', data);
       toast.success("PDF generated successfully", {
         description: "The document has been downloaded."
       });
